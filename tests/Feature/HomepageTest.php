@@ -7,5 +7,6 @@ test('homepage loads', function () {
 
     $response->assertSuccessful();
     $response->assertSee('Squash Marathon Tracker');
-    $response->assertSee('Event Status');
+    $response->assertSee('Leaderboard');
+    $response->assertSee('Participants');
 });

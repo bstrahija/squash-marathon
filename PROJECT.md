@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project will track a 24-hour squash marathon event where participants play continuously over a 24-hour window. The homepage will be simple Blade views (optionally Livewire later). The main application UI will be a Vue 3 SPA using Inertia.
+This project will track a 24-hour squash marathon event where participants play continuously over a 24-hour window. The homepage is currently a static Blade landing page built from Blade components, while the main application UI will be a Vue 3 SPA using Inertia.
 
 ## Current Stack (Installed)
 
@@ -21,7 +21,7 @@ Tailwind CSS is already installed and wired:
 
 ## Livewire Status
 
-- Livewire is installed and ready for Blade-based components on the homepage.
+- Livewire is installed and available, but the current homepage is fully static Blade.
 
 ## Product Goals
 
@@ -46,14 +46,19 @@ Tailwind CSS is already installed and wired:
 
 ## Rules and Constraints (Draft)
 
-- Event lasts exactly 24 hours from start time.
-- A player cannot be scheduled for overlapping matches.
-- Courts can host only one match at a time.
-- Match duration should be recorded even if a score is not.
+- Event lasts exactly 24 hours from start time (Squash Arena Cakovec, April 17, 19:00).
+- A player cannot be scheduled for overlapping games.
+- Courts can host only one game at a time; current plan uses 2 courts.
+- Each game is a single race to 11 points.
+- Wins count 2 points; losses count 1 point.
+- Record only the finished-game timestamp (no durations).
+- Participant limit: 15 players.
 
 ## UX Notes
 
-- Homepage: Blade pages for public info, schedule, and highlights.
+- Homepage: Static Blade components for nav, hero, event info, scoring, participants, leaderboard, courts, timeline, and footer.
+- Navigation: Fixed top bar with smooth-scroll anchors.
+- Dark mode: Toggle with persisted preference.
 - App: Inertia + Vue pages for admin and operations workflow.
 - Keep data entry quick: keyboard-first, minimal clicks.
 
