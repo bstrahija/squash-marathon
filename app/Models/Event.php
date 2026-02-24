@@ -6,11 +6,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use InvalidArgumentException;
+use Spatie\Image\Enums\Fit;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-class Event extends Model
+class Event extends Model implements HasMedia
 {
     /** @use HasFactory<\Database\Factories\EventFactory> */
-    use HasFactory;
+    use HasFactory, InteractsWithMedia;
 
     protected static function booted(): void
     {
@@ -43,6 +47,24 @@ class Event extends Model
             'start_at' => 'datetime',
             'end_at' => 'datetime',
         ];
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('photo')->singleFile();
+    }
+
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        $this->addMediaConversion('thumb')
+            ->fit(Fit::Crop, 480, 270)
+            ->nonQueued();
+    }
+
+    public function photoUrl(string $conversion = ''): string
+    {
+        return $this->getFirstMediaUrl('photo', $conversion)
+            ?: asset('images/placeholder-event.svg');
     }
 
     public function users(): BelongsToMany
