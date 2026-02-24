@@ -67,6 +67,15 @@ class Event extends Model implements HasMedia
             ?: asset('images/placeholder-event.svg');
     }
 
+    public function getFallbackMediaUrl(string $collectionName = 'default', string $conversionName = ''): string
+    {
+        if ($collectionName !== 'photo') {
+            return '';
+        }
+
+        return asset('images/placeholder-event.svg');
+    }
+
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class)->withTimestamps();

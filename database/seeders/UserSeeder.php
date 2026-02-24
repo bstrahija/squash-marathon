@@ -18,12 +18,15 @@ class UserSeeder extends Seeder
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         $playerRole = Role::firstOrCreate(['name' => RoleName::Player->value]);
-        $adminRole = Role::firstOrCreate(['name' => RoleName::Admin->value]);
+        Role::firstOrCreate(['name' => RoleName::Admin->value]);
 
-        User::factory()->create([
-            'name' => 'Test User',
+        $testUser = User::factory()->create([
+            'first_name' => 'Test',
+            'last_name' => 'User',
             'email' => 'test@example.com',
-        ])->assignRole([$playerRole, $adminRole]);
+        ]);
+
+        $testUser->assignRole($playerRole);
 
         User::factory()->count(14)->create()->each(fn (User $user) => $user->assignRole($playerRole));
     }
