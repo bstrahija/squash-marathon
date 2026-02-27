@@ -1,47 +1,47 @@
 <section class="grid gap-6 lg:grid-cols-3">
-    <div class="rounded-3xl border border-border bg-card p-6">
-        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Why this marathon</p>
-        <h2 class="mt-3 text-2xl font-semibold">A full night of squash with live energy.</h2>
+    <div class="rounded-3xl border border-border/70 bg-card p-6 shadow-sm">
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Zašto baš maraton</p>
+        <h2 class="font-display mt-3 text-2xl font-semibold">Cijela noć squasha i dobre energije.</h2>
         <p class="mt-3 text-sm text-muted-foreground">
-            Players rotate through two courts for 24 hours. Every finished game is timestamped
-            so we can replay the flow later.
+            Igrači se rotiraju na dva terena 24 sata. Svaka završena igra dobiva vremensku oznaku
+            da kasnije možemo pratiti kako je teklo.
         </p>
     </div>
-    <div class="rounded-3xl border border-border bg-card p-6">
-        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Game rules</p>
+    <div class="rounded-3xl border border-border/70 bg-card p-6 shadow-sm">
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Pravila igre</p>
         <ul class="mt-4 space-y-3 text-sm text-foreground">
             <li class="flex items-start gap-3">
                 <span class="mt-1 h-2 w-2 rounded-full bg-amber-400"></span>
-                Each game is a single race to 11 points.
+                Svaka igra je utrka do 11 bodova.
             </li>
             <li class="flex items-start gap-3">
                 <span class="mt-1 h-2 w-2 rounded-full bg-emerald-400"></span>
-                Wins are worth 2 points, losses worth 1 point.
+                Pobjede vrijede 2 boda, porazi 1 bod.
             </li>
             <li class="flex items-start gap-3">
                 <span class="mt-1 h-2 w-2 rounded-full bg-sky-400"></span>
-                No match series. Every game stands alone.
+                Nema serija. Svaka igra je svoja priča.
             </li>
         </ul>
     </div>
-    <div class="rounded-3xl border border-border bg-card p-6">
-        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Event details</p>
+    <div class="rounded-3xl border border-border/70 bg-card p-6 shadow-sm">
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Detalji događaja</p>
         <div class="mt-4 space-y-3 text-sm text-foreground">
             <div class="flex items-center justify-between">
-                <span class="text-muted-foreground">Location</span>
-                <span class="font-semibold">Squash Arena Cakovec</span>
+                <span class="text-muted-foreground">Lokacija</span>
+                <span class="font-semibold">Squash Arena Čakovec</span>
             </div>
             <div class="flex items-center justify-between">
-                <span class="text-muted-foreground">Start</span>
-                <span class="font-semibold">April 17, 19:00</span>
+                <span class="text-muted-foreground">Početak</span>
+                <span class="font-semibold">17. travnja, 19:00</span>
             </div>
             <div class="flex items-center justify-between">
-                <span class="text-muted-foreground">Courts</span>
-                <span class="font-semibold">2 active courts</span>
+                <span class="text-muted-foreground">Terena</span>
+                <span class="font-semibold">2 terena u pogonu</span>
             </div>
             <div class="flex items-center justify-between">
-                <span class="text-muted-foreground">Duration</span>
-                <span class="font-semibold">24 hours</span>
+                <span class="text-muted-foreground">Trajanje</span>
+                <span class="font-semibold">24 sata</span>
             </div>
         </div>
     </div>

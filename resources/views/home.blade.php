@@ -4,17 +4,23 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Squash Marathon Tracker</title>
+    <title>Squash maraton - praćenje</title>
     @vite(['resources/css/app.css'])
 </head>
 
 <body class="min-h-screen bg-background text-foreground">
     <div class="relative overflow-hidden">
         <div
-            class="pointer-events-none absolute -left-32 top-0 h-96 w-96 rounded-full bg-emerald-400/20 blur-3xl dark:bg-emerald-500/10">
+            class="pointer-events-none absolute -left-32 top-[-4rem] h-[26rem] w-[26rem] rounded-full bg-emerald-400/30 blur-3xl dark:bg-emerald-500/15">
         </div>
         <div
-            class="pointer-events-none absolute right-0 top-16 h-80 w-80 rounded-full bg-amber-300/20 blur-3xl dark:bg-amber-400/10">
+            class="pointer-events-none absolute right-[-6rem] top-10 h-[22rem] w-[22rem] rounded-full bg-amber-300/35 blur-3xl dark:bg-amber-400/15">
+        </div>
+        <div
+            class="pointer-events-none absolute left-1/2 top-[22rem] h-[18rem] w-[18rem] -translate-x-1/2 rounded-full bg-sky-300/25 blur-3xl dark:bg-sky-400/10">
+        </div>
+        <div
+            class="pointer-events-none absolute left-8 top-[18rem] hidden h-64 w-64 rotate-6 rounded-[2.5rem] border border-emerald-400/30 bg-emerald-400/5 dark:border-emerald-400/10 dark:bg-emerald-500/5 lg:block">
         </div>
 
         <x-nav />
@@ -65,8 +71,8 @@
                 toggle.setAttribute('aria-pressed', isDark ? 'true' : 'false');
             }
             if (toggle) {
-                toggle.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
-                toggle.setAttribute('title', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+                toggle.setAttribute('aria-label', isDark ? 'Prebaci na svijetlo' : 'Prebaci na tamno');
+                toggle.setAttribute('title', isDark ? 'Prebaci na svijetlo' : 'Prebaci na tamno');
             }
             if (iconSun) {
                 iconSun.classList.toggle('opacity-0', !isDark);

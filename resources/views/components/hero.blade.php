@@ -2,50 +2,56 @@
     <div class="space-y-6">
         <div
             class="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            <span class="rounded-full border border-border bg-card px-3 py-1">Squash Arena Cakovec</span>
-            <span class="rounded-full border border-border bg-card px-3 py-1">April 17, 19:00</span>
-            <span class="rounded-full border border-border bg-card px-3 py-1">24 hours</span>
+            <span
+                class="rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-emerald-700 dark:text-emerald-300">Squash
+                Arena Čakovec</span>
+            <span
+                class="rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-amber-700 dark:text-amber-300">17.
+                travnja, 19:00</span>
+            <span class="rounded-full border border-sky-400/40 bg-sky-400/10 px-3 py-1 text-sky-700 dark:text-sky-300">24
+                sata</span>
         </div>
-        <h1 class="text-4xl font-semibold leading-tight sm:text-5xl">
-            A playful marathon of squash, scores, and nonstop energy.
+        <h1 class="font-display text-4xl font-semibold leading-tight sm:text-5xl">
+            Razigrani squash maraton, jake razmjene i dobra vibra.
         </h1>
         <p class="max-w-xl text-base text-muted-foreground">
-            We track every game to 11, update the leaderboard instantly, and keep the whole
-            event moving across two courts. Wins count 2 points, losses count 1 point.
+            Pratimo svaku igru do 11, poredak se osvježava odmah, a na dva terena nema stajanja.
+            Pobjeda nosi 2 boda, poraz 1 bod.
         </p>
         <div class="flex flex-wrap items-center gap-4">
-            <a class="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:-translate-y-0.5"
+            <a class="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:-translate-y-0.5"
                 href="#participants">
-                Meet the players
+                Upoznaj ekipu
             </a>
             <a class="rounded-full border border-border bg-card px-5 py-3 text-sm font-semibold text-foreground transition hover:-translate-y-0.5"
                 href="#leaderboard">
-                Jump to leaderboard
+                Skoči na poredak
             </a>
         </div>
     </div>
-    <div class="rounded-3xl border border-border bg-card p-6 shadow-xl">
+    <div class="rounded-3xl border border-border bg-card/90 p-6 shadow-xl">
         <div class="flex items-center justify-between">
-            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Event snapshot</p>
-            <span class="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-600">
-                Planning
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Brzi pregled</p>
+            <span
+                class="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                Pripremamo teren
             </span>
         </div>
         <div class="mt-6 grid gap-4">
-            <div class="rounded-2xl border border-border/70 bg-background/70 p-4">
+            <div class="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 p-4">
                 <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Format</p>
-                <p class="mt-2 text-sm font-semibold">Single game to 11 points</p>
-                <p class="mt-1 text-xs text-muted-foreground">No best-of series, just one game.</p>
+                <p class="mt-2 text-sm font-semibold">Jedna igra do 11 bodova</p>
+                <p class="mt-1 text-xs text-muted-foreground">Bez serija, samo jedna runda.</p>
             </div>
-            <div class="rounded-2xl border border-border/70 bg-background/70 p-4">
-                <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Scoring</p>
-                <p class="mt-2 text-sm font-semibold">Win = 2 points, Loss = 1 point</p>
-                <p class="mt-1 text-xs text-muted-foreground">Leaderboard updates with every result.</p>
+            <div class="rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4">
+                <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Bodovanje</p>
+                <p class="mt-2 text-sm font-semibold">Pobjeda = 2 boda, poraz = 1 bod</p>
+                <p class="mt-1 text-xs text-muted-foreground">Poredak ide dalje nakon svake igre.</p>
             </div>
-            <div class="rounded-2xl border border-border/70 bg-background/70 p-4">
-                <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Courts</p>
-                <p class="mt-2 text-sm font-semibold">2 courts running in parallel</p>
-                <p class="mt-1 text-xs text-muted-foreground">Double the games, double the energy.</p>
+            <div class="rounded-2xl border border-sky-400/30 bg-sky-400/10 p-4">
+                <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Terena</p>
+                <p class="mt-2 text-sm font-semibold">2 terena rade paralelno</p>
+                <p class="mt-1 text-xs text-muted-foreground">Više igara, više dobre energije.</p>
             </div>
         </div>
     </div>
