@@ -31,15 +31,15 @@
             </section>
 
             <section id="participants" class="scroll-mt-24">
-                <x-participants />
+                <x-participants :participants="$participants" />
             </section>
 
             <section id="leaderboard" class="scroll-mt-24">
-                <x-leaderboard />
+                <x-leaderboard :leaderboard="$leaderboard" />
             </section>
 
             <section id="timeline" class="scroll-mt-24">
-                <x-timeline />
+                <x-timeline :timeline="$timeline" />
             </section>
         </main>
 

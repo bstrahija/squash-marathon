@@ -7,6 +7,7 @@ use App\Models\Game;
 use App\Models\Set;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Carbon;
 
 class GameSeeder extends Seeder
 {
@@ -15,9 +16,23 @@ class GameSeeder extends Seeder
      */
     public function run(): void
     {
-        $eventId = Event::query()->latest('start_at')->value('id');
+        $event = Event::query()->latest('start_at')->first();
 
-        if (! $eventId) {
+        if (! $event) {
+            return;
+        }
+
+        $startAt = $event->start_at ?? $event->created_at;
+        $endAt = $event->end_at ?? $event->created_at;
+
+        if (! $startAt || ! $endAt) {
+            return;
+        }
+
+        $startTimestamp = $startAt->getTimestamp();
+        $endTimestamp = $endAt->getTimestamp();
+
+        if ($endTimestamp < $startTimestamp) {
             return;
         }
 
@@ -30,11 +45,17 @@ class GameSeeder extends Seeder
         for ($i = 0; $i < 150; $i++) {
             [$playerOne, $playerTwo] = $players->random(2)->values();
 
+            $createdAt = Carbon::createFromTimestamp(
+                random_int($startTimestamp, $endTimestamp)
+            );
+
             $game = Game::factory()->create([
-                'event_id' => $eventId,
+                'event_id' => $event->id,
                 'best_of' => 1,
                 'player_one_id' => $playerOne->id,
                 'player_two_id' => $playerTwo->id,
+                'created_at' => $createdAt,
+                'updated_at' => $createdAt,
             ]);
 
             $scores = $this->generateSetScores();
@@ -45,6 +66,8 @@ class GameSeeder extends Seeder
                 'player_two_id' => $playerTwo->id,
                 'player_one_score' => $scores['player_one_score'],
                 'player_two_score' => $scores['player_two_score'],
+                'created_at' => $createdAt,
+                'updated_at' => $createdAt,
             ]);
         }
     }
