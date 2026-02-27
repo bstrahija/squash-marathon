@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Squash maraton - praćenje</title>
     @vite(['resources/css/app.css'])
+    @livewireStyles
 </head>
 
 <body class="min-h-screen bg-background text-foreground">
@@ -41,11 +42,11 @@
             </section>
 
             <section id="leaderboard" class="scroll-mt-24">
-                <x-leaderboard :leaderboard="$leaderboard" />
+                <livewire:leaderboard />
             </section>
 
             <section id="timeline" class="scroll-mt-24">
-                <x-timeline :timeline="$timeline" />
+                <livewire:timeline />
             </section>
         </main>
 
@@ -98,6 +99,8 @@
 
         updateLabel();
     </script>
+
+    @livewireScripts
 </body>
 
 </html>
