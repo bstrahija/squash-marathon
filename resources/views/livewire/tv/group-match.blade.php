@@ -24,7 +24,7 @@ new class extends Component {
         }
 
         $games = Game::query()
-            ->with(['sets', 'playerOne', 'playerTwo', 'group'])
+            ->with(['sets', 'playerOne', 'playerTwo', 'group', 'gameLogs' => fn($query) => $query->orderBy('sequence')])
             ->where('event_id', $event->id)
             ->whereHas('group', fn($query) => $query->where('number', $this->groupNumber))
             ->get();
@@ -64,6 +64,7 @@ new class extends Component {
     {
         $orderedSets = $game->sets->sortBy('created_at')->values();
         $latestSet = $orderedSets->last();
+        $latestLog = $game->gameLogs->last();
 
         $result = Game::determineMatchResultFromSetScores(
             $orderedSets
@@ -87,10 +88,12 @@ new class extends Component {
         return [
             'id' => $game->id,
             'group_name' => $game->group?->name ?? "Group {$this->groupNumber}",
-            'player_one' => $game->playerOne?->full_name ?? 'Igrac 1',
-            'player_two' => $game->playerTwo?->full_name ?? 'Igrac 2',
-            'player_one_current' => $latestSet?->player_one_score ?? 0,
-            'player_two_current' => $latestSet?->player_two_score ?? 0,
+            'player_one' => $this->formatPlayerDisplayName($game->playerOne?->full_name),
+            'player_two' => $this->formatPlayerDisplayName($game->playerTwo?->full_name),
+            'player_one_full' => $game->playerOne?->full_name ?? 'Igrac 1',
+            'player_two_full' => $game->playerTwo?->full_name ?? 'Igrac 2',
+            'player_one_current' => (int) ($latestLog?->player_one_score ?? ($latestSet?->player_one_score ?? 0)),
+            'player_two_current' => (int) ($latestLog?->player_two_score ?? ($latestSet?->player_two_score ?? 0)),
             'sets_one' => $result['player_one_wins'],
             'sets_two' => $result['player_two_wins'],
             'timeline' => $orderedSets
@@ -163,6 +166,31 @@ new class extends Component {
 
         return 'text-foreground';
     }
+
+    private function formatPlayerDisplayName(?string $fullName): string
+    {
+        $fullName = trim((string) $fullName);
+
+        if ($fullName === '') {
+            return 'Igrac';
+        }
+
+        $parts = preg_split('/\s+/u', $fullName) ?: [];
+        $firstName = $parts[0] ?? '';
+
+        if ($firstName === '') {
+            return $fullName;
+        }
+
+        $firstInitial = mb_substr($firstName, 0, 1);
+        $lastName = trim(implode(' ', array_slice($parts, 1)));
+
+        if ($lastName === '') {
+            return sprintf('%s.', $firstInitial);
+        }
+
+        return sprintf('%s. %s', $firstInitial, $lastName);
+    }
 };
 ?>
 
@@ -174,7 +202,8 @@ new class extends Component {
     @if ($match)
         <div class="tv-group-grid grid h-full min-h-0 flex-1 items-stretch overflow-hidden bg-background/35">
             <div class="tv-group-player-column flex h-full min-h-0 flex-col justify-center text-right">
-                <p class="tv-group-player-name font-semibold leading-tight {{ $match['player_one_class'] }}">
+                <p title="{{ $match['player_one_full'] }}"
+                    class="tv-group-player-name truncate whitespace-nowrap font-semibold leading-tight {{ $match['player_one_class'] }}">
                     {{ $match['player_one'] }}</p>
                 <p class="tv-group-point font-display font-semibold leading-none text-foreground">
                     {{ $match['player_one_current'] }}</p>
@@ -206,7 +235,8 @@ new class extends Component {
             </div>
 
             <div class="tv-group-player-column flex h-full min-h-0 flex-col justify-center text-left">
-                <p class="tv-group-player-name font-semibold leading-tight {{ $match['player_two_class'] }}">
+                <p title="{{ $match['player_two_full'] }}"
+                    class="tv-group-player-name truncate whitespace-nowrap font-semibold leading-tight {{ $match['player_two_class'] }}">
                     {{ $match['player_two'] }}</p>
                 <p class="tv-group-point font-display font-semibold leading-none text-foreground">
                     {{ $match['player_two_current'] }}</p>
