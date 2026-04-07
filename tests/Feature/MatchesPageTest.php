@@ -88,6 +88,19 @@ test('matches score page loads', function () {
     $response->assertSuccessful();
 });
 
+test('matches score livewire starts match and closes overlay', function () {
+    $game = createMatchForList();
+
+    expect($game->started_at)->toBeNull();
+
+    Livewire::test('matches-score', ['gameId' => $game->id])
+        ->assertSet('showStartOverlay', true)
+        ->call('startMatch')
+        ->assertSet('showStartOverlay', false);
+
+    expect($game->fresh()->started_at)->not->toBeNull();
+});
+
 test('matches create livewire creates a game and redirects to score page', function () {
     $event = Event::factory()->create();
     $round = Round::factory()->create([

@@ -98,6 +98,11 @@ class Game extends Model
         return $this->hasMany(Set::class);
     }
 
+    public function gameLogs(): HasMany
+    {
+        return $this->hasMany(GameLog::class);
+    }
+
     /**
      * @param  array<int, array<string, mixed>>  $sets
      */
