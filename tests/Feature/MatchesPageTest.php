@@ -70,6 +70,14 @@ test('matches page loads', function () {
     $response->assertSee('Lista svih mečeva');
 });
 
+test('matches create page loads', function () {
+    $this->withoutVite();
+
+    $response = $this->get('/matches/create');
+
+    $response->assertSuccessful();
+});
+
 test('admin can delete match through livewire list', function () {
     $game = createMatchForList();
 

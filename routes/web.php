@@ -6,6 +6,7 @@ use Inertia\Inertia;
 
 Route::get('/', HomeController::class)->name('home');
 Route::view('/matches', 'matches')->name('matches.index');
+Route::view('/matches/create', 'matches-create')->name('matches.create');
 Route::view('/tv', 'tv')->name('tv');
 
 Route::get('dashboard', function () {
