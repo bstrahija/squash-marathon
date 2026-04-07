@@ -44,7 +44,7 @@ class GroupSeeder extends Seeder
                     'round_id' => $round->id,
                     'number' => $number,
                 ], [
-                    'name' => "Group {$number}",
+                    'name' => "Grupa {$number}",
                 ]);
 
                 $group->users()->sync($members->pluck('id')->all());
