@@ -27,10 +27,17 @@ return new class extends Migration
                 ->constrained()
                 ->cascadeOnDelete();
             $table->unsignedTinyInteger('best_of');
+            $table->unsignedTinyInteger('player_one_sets')->default(0);
+            $table->unsignedTinyInteger('player_two_sets')->default(0);
             $table->foreignIdFor(User::class, 'player_one_id')
                 ->constrained('users');
             $table->foreignIdFor(User::class, 'player_two_id')
                 ->constrained('users');
+            $table->foreignIdFor(User::class, 'winner_id')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+            $table->boolean('is_draw')->default(false);
             $table->timestamp('started_at')->nullable();
             $table->timestamp('finished_at')->nullable();
             $table->unsignedInteger('duration_seconds')->nullable();

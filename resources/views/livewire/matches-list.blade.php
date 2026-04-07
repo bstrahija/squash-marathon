@@ -25,7 +25,7 @@ new class extends Component {
     {
         return Game::query()
             ->with(['group', 'round', 'playerOne', 'playerTwo', 'sets' => fn($query) => $query->orderBy('created_at')])
-            ->latest('created_at')
+            ->latest('id')
             ->paginate(50);
     }
 

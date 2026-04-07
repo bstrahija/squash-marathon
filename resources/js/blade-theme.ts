@@ -1,3 +1,5 @@
+import confetti from 'canvas-confetti';
+
 const root = document.documentElement;
 
 const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -82,4 +84,81 @@ const initializeThemeToggle = (): void => {
     });
 };
 
+const registerMatchDoneConfetti = (): void => {
+    let matchDoneConfettiInterval: number | null = null;
+
+    const stopConfetti = (): void => {
+        if (matchDoneConfettiInterval === null) {
+            return;
+        }
+
+        window.clearInterval(matchDoneConfettiInterval);
+        matchDoneConfettiInterval = null;
+    };
+
+    window.launchMatchDoneConfetti = (): void => {
+        if (matchDoneConfettiInterval !== null) {
+            return;
+        }
+
+        const hasOverlay = (): boolean => {
+            return (
+                document.querySelector('[data-match-done-overlay="true"]') !==
+                null
+            );
+        };
+
+        if (!hasOverlay()) {
+            stopConfetti();
+
+            return;
+        }
+
+        const defaults: confetti.Options = {
+            startVelocity: 34,
+            spread: 360,
+            ticks: 80,
+            zIndex: 80,
+            scalar: 1.25,
+            colors: [
+                '#22c55e',
+                '#06b6d4',
+                '#f59e0b',
+                '#ef4444',
+                '#3b82f6',
+                '#f43f5e',
+            ],
+        };
+
+        matchDoneConfettiInterval = window.setInterval((): void => {
+            if (!hasOverlay()) {
+                stopConfetti();
+
+                return;
+            }
+
+            const particleCount = Math.floor(Math.random() * 10) + 20;
+
+            confetti({
+                ...defaults,
+                particleCount,
+                origin: {
+                    x: Math.random() * 0.3 + 0.1,
+                    y: Math.random() * 0.18 + 0.02,
+                },
+            });
+
+            confetti({
+                ...defaults,
+                particleCount,
+                origin: {
+                    x: Math.random() * 0.3 + 0.6,
+                    y: Math.random() * 0.18 + 0.02,
+                },
+            });
+        }, 280);
+    };
+};
+
 initializeThemeToggle();
+registerMatchDoneConfetti();

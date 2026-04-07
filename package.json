@@ -33,6 +33,7 @@
     "dependencies": {
         "@inertiajs/vue3": "^2.3.7",
         "@vueuse/core": "^12.8.2",
+        "canvas-confetti": "^1.9.4",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "laravel-vite-plugin": "^2.0.0",

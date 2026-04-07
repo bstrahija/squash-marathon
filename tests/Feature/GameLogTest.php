@@ -4,6 +4,7 @@ use App\Enums\GameLogSide;
 use App\Enums\GameLogType;
 use App\Models\Game;
 use App\Models\GameLog;
+use App\Models\Set;
 use Livewire\Livewire;
 
 test('game log can be created with expected structure', function () {
@@ -233,4 +234,225 @@ test('matches score component can restart game after confirmation', function () 
     expect($refreshedGame)->not->toBeNull();
     expect($refreshedGame->started_at)->not->toBeNull();
     expect($refreshedGame->started_at->gt($originalStartedAt))->toBeTrue();
+});
+
+test('set ends only when score is at least 11 with a two-point lead', function () {
+    $game = Game::factory()->create([
+        'started_at' => now(),
+        'best_of' => 1,
+    ]);
+
+    $component = Livewire::test('matches-score', ['gameId' => $game->id])
+        ->call('selectServe', 'left');
+
+    for ($i = 0; $i < 10; $i++) {
+        $component->call('awardLeftPoint');
+        $component->call('awardRightPoint');
+    }
+
+    $component
+        ->call('awardLeftPoint')
+        ->assertSet('playerOneScore', 11)
+        ->assertSet('playerTwoScore', 10)
+        ->assertSet('showMatchDoneOverlay', false)
+        ->call('awardRightPoint')
+        ->call('awardLeftPoint')
+        ->call('awardRightPoint')
+        ->call('awardLeftPoint')
+        ->assertSet('playerOneScore', 13)
+        ->assertSet('playerTwoScore', 12)
+        ->assertSet('showMatchDoneOverlay', false)
+        ->call('awardLeftPoint')
+        ->assertSet('playerOneScore', 14)
+        ->assertSet('playerTwoScore', 12)
+        ->assertSet('showMatchDoneOverlay', true)
+        ->assertSet('showNextSetOverlay', false);
+
+    $set = Set::query()->where('game_id', $game->id)->latest('id')->first();
+
+    expect($set)->not->toBeNull();
+    expect($set?->player_one_score)->toBe(14);
+    expect($set?->player_two_score)->toBe(12);
+    expect($set?->finished_at)->not->toBeNull();
+});
+
+test('after non-final set end next set dialog appears and next set resets live score', function () {
+    $game = Game::factory()->create([
+        'started_at' => now(),
+        'best_of' => 2,
+    ]);
+
+    $component = Livewire::test('matches-score', ['gameId' => $game->id])
+        ->call('selectServe', 'left');
+
+    for ($i = 0; $i < 11; $i++) {
+        $component->call('awardLeftPoint');
+    }
+
+    $component
+        ->assertSet('showNextSetOverlay', true)
+        ->assertSet('showMatchDoneOverlay', false)
+        ->call('startNextSet')
+        ->assertSet('showNextSetOverlay', false)
+        ->assertSet('playerOneScore', 0)
+        ->assertSet('playerTwoScore', 0)
+        ->assertSet('historyScores', []);
+
+    $game->refresh();
+
+    expect(Set::query()->where('game_id', $game->id)->whereNotNull('finished_at')->count())->toBe(1);
+    expect(Set::query()->where('game_id', $game->id)->whereNull('finished_at')->count())->toBe(1);
+    expect(GameLog::query()->where('game_id', $game->id)->count())->toBe(0);
+    expect($game->player_one_sets)->toBe(1);
+    expect($game->player_two_sets)->toBe(0);
+    expect($game->finished_at)->toBeNull();
+});
+
+test('next set dialog undo reverts mistaken final point', function () {
+    $game = Game::factory()->create([
+        'started_at' => now(),
+        'best_of' => 2,
+    ]);
+
+    $component = Livewire::test('matches-score', ['gameId' => $game->id])
+        ->call('selectServe', 'left');
+
+    for ($i = 0; $i < 11; $i++) {
+        $component->call('awardLeftPoint');
+    }
+
+    $component
+        ->assertSet('showNextSetOverlay', true)
+        ->call('undoLastLog')
+        ->assertSet('showNextSetOverlay', false)
+        ->assertSet('playerOneScore', 10)
+        ->assertSet('playerTwoScore', 0);
+
+    $game->refresh();
+
+    expect(Set::query()->where('game_id', $game->id)->whereNotNull('finished_at')->count())->toBe(0);
+    expect(Set::query()->where('game_id', $game->id)->whereNull('finished_at')->count())->toBe(1);
+    expect($game->player_one_sets)->toBe(0);
+    expect($game->player_two_sets)->toBe(0);
+    expect(GameLog::query()->where('game_id', $game->id)->count())->toBe(10);
+});
+
+test('undoing to zero points in next set shows next set dialog and allows going back to previous set', function () {
+    $game = Game::factory()->create([
+        'started_at' => now(),
+        'best_of' => 2,
+    ]);
+
+    $component = Livewire::test('matches-score', ['gameId' => $game->id])
+        ->call('selectServe', 'left');
+
+    for ($i = 0; $i < 11; $i++) {
+        $component->call('awardLeftPoint');
+    }
+
+    $component
+        ->assertSet('showNextSetOverlay', true)
+        ->call('startNextSet')
+        ->assertSet('showNextSetOverlay', false)
+        ->call('selectServe', 'left')
+        ->call('awardLeftPoint')
+        ->call('awardLeftPoint')
+        ->assertSet('playerOneScore', 2)
+        ->call('undoLastLog')
+        ->assertSet('playerOneScore', 1)
+        ->assertSet('showNextSetOverlay', false)
+        ->call('undoLastLog')
+        ->assertSet('playerOneScore', 0)
+        ->assertSet('showNextSetOverlay', true)
+        ->call('undoLastLog')
+        ->assertSet('showNextSetOverlay', false)
+        ->assertSet('playerOneSets', 0)
+        ->assertSet('playerTwoSets', 0)
+        ->assertSet('playerOneScore', 0)
+        ->assertSet('playerTwoScore', 0)
+        ->assertSet('historyScores', []);
+
+    $game->refresh();
+
+    expect(Set::query()->where('game_id', $game->id)->whereNotNull('finished_at')->count())->toBe(0);
+    expect(Set::query()->where('game_id', $game->id)->whereNull('finished_at')->count())->toBe(1);
+    expect($game->player_one_sets)->toBe(0);
+    expect($game->player_two_sets)->toBe(0);
+    expect(GameLog::query()->where('game_id', $game->id)->count())->toBe(0);
+});
+
+test('match done dialog undo removes last point and reopens set', function () {
+    $game = Game::factory()->create([
+        'started_at' => now(),
+        'best_of' => 1,
+    ]);
+
+    $component = Livewire::test('matches-score', ['gameId' => $game->id])
+        ->call('selectServe', 'left');
+
+    for ($i = 0; $i < 11; $i++) {
+        $component->call('awardLeftPoint');
+    }
+
+    $component
+        ->assertSet('showMatchDoneOverlay', true)
+        ->assertSet('playerOneScore', 11)
+        ->call('undoLastLog')
+        ->assertSet('showMatchDoneOverlay', false)
+        ->assertSet('playerOneScore', 10)
+        ->assertSet('playerTwoScore', 0);
+
+    $game->refresh();
+
+    expect($game->finished_at)->toBeNull();
+    expect($game->player_one_sets)->toBe(0);
+    expect($game->player_two_sets)->toBe(0);
+    expect(Set::query()->where('game_id', $game->id)->whereNotNull('finished_at')->count())->toBe(0);
+    expect(Set::query()->where('game_id', $game->id)->whereNull('finished_at')->count())->toBe(1);
+    expect(GameLog::query()->where('game_id', $game->id)->count())->toBe(10);
+});
+
+test('match done dialog shows winner result and durations', function () {
+    $game = Game::factory()->create([
+        'started_at' => now(),
+        'best_of' => 1,
+    ]);
+
+    $playerOneName = $game->playerOne->full_name;
+
+    $component = Livewire::test('matches-score', ['gameId' => $game->id])
+        ->call('selectServe', 'left');
+
+    for ($i = 0; $i < 11; $i++) {
+        $component->call('awardLeftPoint');
+    }
+
+    $component
+        ->assertSet('showMatchDoneOverlay', true)
+        ->assertSee('Winner')
+        ->assertSee($playerOneName)
+        ->assertSee('Final Result')
+        ->assertSee('1 - 0')
+        ->assertSee('Match Duration')
+        ->assertSee('Set Durations')
+        ->assertSee('Set 1 (11-0)');
+});
+
+test('match done finish action redirects to matches list', function () {
+    $game = Game::factory()->create([
+        'started_at' => now(),
+        'best_of' => 1,
+    ]);
+
+    $component = Livewire::test('matches-score', ['gameId' => $game->id])
+        ->call('selectServe', 'left');
+
+    for ($i = 0; $i < 11; $i++) {
+        $component->call('awardLeftPoint');
+    }
+
+    $component
+        ->assertSet('showMatchDoneOverlay', true)
+        ->call('finishMatch')
+        ->assertRedirect(route('matches.index'));
 });

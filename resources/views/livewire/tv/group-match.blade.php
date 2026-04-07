@@ -17,7 +17,7 @@ new class extends Component {
     #[Computed]
     public function match(): ?array
     {
-        $event = Event::query()->latest('start_at')->first();
+        $event = Event::query()->latest('id')->first();
 
         if (!$event) {
             return null;

@@ -14,9 +14,17 @@ it('creates a game with players and event', function () {
     expect($game->playerTwo)->toBeInstanceOf(User::class);
 });
 
-it('rejects invalid best_of values', function () {
+it('accepts supported best_of values and rejects unsupported ones', function () {
+    foreach ([1, 2, 3, 5] as $bestOf) {
+        $game = Game::factory()->create([
+            'best_of' => $bestOf,
+        ]);
+
+        expect($game->best_of)->toBe($bestOf);
+    }
+
     expect(fn () => Game::factory()->create([
-        'best_of' => 1,
+        'best_of' => 4,
     ]))->toThrow(InvalidArgumentException::class);
 });
 
@@ -75,6 +83,28 @@ it('determines the match result from set scores', function () {
     expect($result['is_complete'])->toBeTrue();
     expect($result['is_draw'])->toBeTrue();
     expect($result['winner_id'])->toBeNull();
+});
+
+it('determines completion only after all sets are played for best_of 3', function () {
+    $playerOne = User::factory()->create();
+    $playerTwo = User::factory()->create();
+
+    $incomplete = Game::determineMatchResultFromSetScores([
+        ['player_one_score' => 11, 'player_two_score' => 8],
+        ['player_one_score' => 8, 'player_two_score' => 11],
+    ], 3, $playerOne->id, $playerTwo->id);
+
+    expect($incomplete['is_complete'])->toBeFalse();
+
+    $complete = Game::determineMatchResultFromSetScores([
+        ['player_one_score' => 11, 'player_two_score' => 8],
+        ['player_one_score' => 8, 'player_two_score' => 11],
+        ['player_one_score' => 11, 'player_two_score' => 6],
+    ], 3, $playerOne->id, $playerTwo->id);
+
+    expect($complete['is_complete'])->toBeTrue();
+    expect($complete['is_draw'])->toBeFalse();
+    expect($complete['winner_id'])->toBe($playerOne->id);
 });
 
 it('allows sets without scores', function () {

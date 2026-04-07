@@ -13,6 +13,8 @@ class Game extends Model
     /** @use HasFactory<\Database\Factories\GameFactory> */
     use HasFactory;
 
+    public const ALLOWED_BEST_OF_VALUES = [1, 2, 3, 5];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -23,6 +25,10 @@ class Game extends Model
         'round_id',
         'group_id',
         'best_of',
+        'player_one_sets',
+        'player_two_sets',
+        'winner_id',
+        'is_draw',
         'started_at',
         'finished_at',
         'duration_seconds',
@@ -42,8 +48,8 @@ class Game extends Model
                 $game->duration_seconds = max(0, $duration);
             }
 
-            if (! in_array($game->best_of, [2], true)) {
-                throw new InvalidArgumentException('Game best_of must be 2.');
+            if (! in_array($game->best_of, self::ALLOWED_BEST_OF_VALUES, true)) {
+                throw new InvalidArgumentException('Game best_of must be one of: 1, 2, 3, 5.');
             }
 
             if ($game->player_one_id && $game->player_two_id && $game->player_one_id === $game->player_two_id) {
@@ -61,6 +67,10 @@ class Game extends Model
     {
         return [
             'best_of' => 'integer',
+            'player_one_sets' => 'integer',
+            'player_two_sets' => 'integer',
+            'winner_id' => 'integer',
+            'is_draw' => 'boolean',
             'round_id' => 'integer',
             'started_at' => 'datetime',
             'finished_at' => 'datetime',
@@ -133,7 +143,7 @@ class Game extends Model
         ?int $playerOneId,
         ?int $playerTwoId
     ): array {
-        if (! in_array($bestOf, [2], true)) {
+        if (! in_array($bestOf, self::ALLOWED_BEST_OF_VALUES, true)) {
             return [
                 'is_complete' => false,
                 'is_draw' => false,

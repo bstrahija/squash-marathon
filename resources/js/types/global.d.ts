@@ -31,3 +31,11 @@ declare module 'vue' {
         $headManager: ReturnType<typeof createHeadManager>;
     }
 }
+
+declare global {
+    interface Window {
+        launchMatchDoneConfetti?: () => void;
+    }
+}
+
+export {};
