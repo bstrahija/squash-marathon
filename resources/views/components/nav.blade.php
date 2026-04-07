@@ -1,6 +1,6 @@
 <nav class="fixed inset-x-0 top-0 z-40 border-b border-border/70 bg-background/80 backdrop-blur">
     <div class="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
-        <div class="flex items-center gap-3">
+        <a class="flex items-center gap-3" href="{{ route('home') }}">
             <span
                 class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 via-lime-500 to-amber-400 text-xs font-semibold text-black shadow-sm">
                 SM
@@ -9,13 +9,17 @@
                 <p class="text-sm font-semibold text-foreground">Squash Marathon</p>
                 <p class="text-xs text-muted-foreground">24 sata u pokretu</p>
             </div>
-        </div>
+        </a>
         <div class="hidden items-center gap-6 text-sm md:flex">
-            <a class="text-muted-foreground transition hover:text-foreground" href="#about">O eventu</a>
-            <a class="text-muted-foreground transition hover:text-foreground" href="#scoring">Bodovi</a>
-            <a class="text-muted-foreground transition hover:text-foreground" href="#participants">Ekipa</a>
-            <a class="text-muted-foreground transition hover:text-foreground" href="#leaderboard">Poredak</a>
-            <a class="text-muted-foreground transition hover:text-foreground" href="#timeline">Kronologija</a>
+            <a class="text-muted-foreground transition hover:text-foreground" href="{{ route('home') }}">O eventu</a>
+            <a class="text-muted-foreground transition hover:text-foreground"
+                href="{{ route('matches.index') }}#scoring">Mečevi</a>
+            <a class="text-muted-foreground transition hover:text-foreground"
+                href="{{ route('home') }}#participants">Ekipa</a>
+            <a class="text-muted-foreground transition hover:text-foreground"
+                href="{{ route('home') }}#leaderboard">Poredak</a>
+            <a class="text-muted-foreground transition hover:text-foreground"
+                href="{{ route('home') }}#timeline">Kronologija</a>
         </div>
         <div class="flex items-center gap-3">
             <button aria-label="Toggle theme" aria-pressed="false"
@@ -36,9 +40,10 @@
                         stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" />
                 </svg>
             </button>
+
             <a class="rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold uppercase tracking-wide text-foreground transition hover:-translate-y-0.5 hover:border-foreground/40"
-                href="#leaderboard">
-                Baci oko na poredak
+                href="{{ route('tv') }}">
+                Live
             </a>
         </div>
     </div>

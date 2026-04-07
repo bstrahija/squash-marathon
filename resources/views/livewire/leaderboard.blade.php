@@ -121,7 +121,7 @@ new class extends Component {
 };
 ?>
 
-<div class="rounded-3xl border border-border bg-card p-6 shadow-sm" wire:poll.5s>
+<div class="rounded-3xl border border-border bg-card p-6 shadow-sm">
     <div class="flex flex-wrap items-end justify-between gap-4">
         <div>
             <p class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Poredak</p>

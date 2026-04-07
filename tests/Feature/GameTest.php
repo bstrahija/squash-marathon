@@ -4,6 +4,7 @@ use App\Models\Event;
 use App\Models\Game;
 use App\Models\Set;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 
 it('creates a game with players and event', function () {
     $game = Game::factory()->create();
@@ -84,4 +85,18 @@ it('allows sets without scores', function () {
 
     expect($set->player_one_score)->toBeNull();
     expect($set->player_two_score)->toBeNull();
+});
+
+it('stores started and finished timestamps and calculates duration', function () {
+    $startedAt = CarbonImmutable::parse('2026-04-07 10:00:00');
+    $finishedAt = CarbonImmutable::parse('2026-04-07 10:19:30');
+
+    $game = Game::factory()->create([
+        'started_at' => $startedAt,
+        'finished_at' => $finishedAt,
+    ]);
+
+    expect($game->started_at?->toDateTimeString())->toBe('2026-04-07 10:00:00');
+    expect($game->finished_at?->toDateTimeString())->toBe('2026-04-07 10:19:30');
+    expect($game->duration_seconds)->toBe(1170);
 });

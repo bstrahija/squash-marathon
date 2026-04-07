@@ -14,7 +14,7 @@ class EventSeeder extends Seeder
      */
     public function run(): void
     {
-        $startAt = CarbonImmutable::create(2026, 4, 17, 19, 0, 0);
+        $startAt = CarbonImmutable::create(2026, 4, 24, 17, 0, 0);
 
         $event = Event::query()->updateOrCreate(
             [

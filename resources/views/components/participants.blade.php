@@ -6,7 +6,7 @@
     <div class="flex flex-wrap items-end justify-between gap-4">
         <div>
             <p class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Ekipa</p>
-            <h2 class="font-display mt-2 text-2xl font-semibold">Lista za 24 sata</h2>
+            <h2 class="font-display mt-2 text-2xl font-semibold">Svi igrači</h2>
         </div>
         <p class="text-sm text-muted-foreground">Rotiramo se na dva terena cijelu noć.</p>
     </div>

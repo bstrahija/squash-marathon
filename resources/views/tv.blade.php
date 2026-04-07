@@ -5,17 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>TV prikaz</title>
-    <script>
-        (function() {
-            const storedTheme = localStorage.getItem('theme');
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-            if (storedTheme === 'dark' || (!storedTheme && prefersDark)) {
-                document.documentElement.classList.add('dark');
-            }
-        })();
-    </script>
-    @vite(['resources/css/app.css', 'resources/css/tv.css'])
+    @vite(['resources/css/app.css', 'resources/css/tv.css', 'resources/js/blade-theme.ts'])
     @livewireStyles
 </head>
 
@@ -32,7 +22,7 @@
             </section>
             <section
                 class="tv-panel-leaderboard col-start-3 row-span-4 min-h-0 rounded-3xl border border-border bg-card shadow-sm">
-                <livewire:tv.leaderboard wire:poll.3s />
+                <livewire:tv.leaderboard wire:poll.20s />
             </section>
             <section
                 class="tv-panel-latest col-start-3 row-start-5 row-span-2 min-h-0 rounded-3xl border border-border bg-card shadow-sm">

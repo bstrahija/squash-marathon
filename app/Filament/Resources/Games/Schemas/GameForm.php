@@ -6,6 +6,7 @@ use App\Models\Game;
 use App\Models\Group;
 use App\Models\Round;
 use App\Models\User;
+use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
@@ -23,24 +24,49 @@ class GameForm
             ->components([
                 Select::make('event_id')
                     ->label('Event')
-                    ->disabled()
-                    ->dehydrated()
-                    ->visible(fn (Get $get): bool => filled($get('event_id'))),
+                    ->relationship('event', 'name')
+                    ->required()
+                    ->preload()
+                    ->searchable()
+                    ->live()
+                    ->afterStateUpdated(function (Set $set): void {
+                        $set('round_id', null);
+                        $set('group_id', null);
+                    }),
                 Select::make('round_id')
                     ->label('Round')
-                    ->relationship('round', 'name')
+                    ->options(function (Get $get): array {
+                        $eventId = $get('event_id');
+
+                        if (! $eventId) {
+                            return [];
+                        }
+
+                        return Round::query()
+                            ->where('event_id', $eventId)
+                            ->orderBy('number')
+                            ->pluck('name', 'id')
+                            ->all();
+                    })
                     ->required()
                     ->searchable()
                     ->live()
                     ->afterStateUpdated(function (Get $get, Set $set, ?int $state): void {
                         if (! $state) {
+                            $set('group_id', null);
+
                             return;
                         }
 
                         $eventId = Round::query()->whereKey($state)->value('event_id');
-                        $set('event_id', $eventId);
+
+                        if ($eventId && (int) $eventId !== (int) $get('event_id')) {
+                            $set('event_id', $eventId);
+                        }
+
                         $set('group_id', null);
-                    }),
+                    })
+                    ->disabled(fn (Get $get): bool => blank($get('event_id'))),
                 Select::make('group_id')
                     ->label('Group')
                     ->options(function (Get $get): array {
@@ -57,7 +83,8 @@ class GameForm
                             ->all();
                     })
                     ->required()
-                    ->searchable(),
+                    ->searchable()
+                    ->disabled(fn (Get $get): bool => blank($get('round_id'))),
                 Select::make('best_of')
                     ->label('Best of')
                     ->options([
@@ -111,6 +138,12 @@ class GameForm
                     ->required()
                     ->preload()
                     ->searchable(),
+                DateTimePicker::make('started_at')
+                    ->label('Started at')
+                    ->seconds(false),
+                DateTimePicker::make('finished_at')
+                    ->label('Finished at')
+                    ->seconds(false),
                 Repeater::make('sets')
                     ->relationship()
                     ->columns([
@@ -155,13 +188,11 @@ class GameForm
                         TextInput::make('player_one_score')
                             ->hiddenLabel()
                             ->numeric()
-                            ->minValue(0)
-                            ->required(fn (Get $get): bool => self::shouldRequireSetScores($get)),
+                            ->minValue(0),
                         TextInput::make('player_two_score')
                             ->hiddenLabel()
                             ->numeric()
-                            ->minValue(0)
-                            ->required(fn (Get $get): bool => self::shouldRequireSetScores($get)),
+                            ->minValue(0),
                     ])
                     ->minItems(fn (Get $get): int => max((int) $get('best_of'), 1))
                     ->maxItems(fn (Get $get): int => max((int) $get('best_of'), 1))
@@ -208,52 +239,6 @@ class GameForm
                     })
                     ->columnSpanFull(),
             ]);
-    }
-
-    private static function shouldRequireSetScores(Get $get): bool
-    {
-        if (filled($get('player_one_score')) || filled($get('player_two_score'))) {
-            return true;
-        }
-
-        $bestOf = max((int) $get('../../best_of'), 1);
-        $setNumber = (int) $get('set_number');
-
-        if ($bestOf % 2 === 0 && $setNumber <= $bestOf) {
-            return true;
-        }
-
-        $targetWins = (int) ceil($bestOf / 2);
-
-        if ($setNumber <= $targetWins) {
-            return true;
-        }
-
-        $playerOneId = $get('../../player_one_id');
-        $playerTwoId = $get('../../player_two_id');
-
-        if (! $playerOneId || ! $playerTwoId) {
-            return false;
-        }
-
-        $sets = $get('../../sets') ?? [];
-
-        if (! is_array($sets)) {
-            return false;
-        }
-
-        $previousSets = array_values(array_filter($sets, function ($set) use ($setNumber): bool {
-            return (int) data_get($set, 'set_number') < $setNumber;
-        }));
-
-        $result = Game::determineMatchResultFromSetScores(
-            $previousSets,
-            $bestOf,
-            (int) $playerOneId,
-            (int) $playerTwoId
-        );
-
-        return ! $result['is_complete'];
     }
 
     private static function formatSetLabel(int $setNumber): string

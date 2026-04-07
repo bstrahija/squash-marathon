@@ -126,5 +126,7 @@ new class extends Component {
         </div>
     @endif
 
-    <p class="mt-3 text-[11px] text-muted-foreground">Automatsko osvježavanje svakih 5 sekundi</p>
+    <p class="mt-3 text-[11px] text-muted-foreground">
+        Automatsko osvježavanje svakih {{ config('polling.components.event_countdown') }} sekundi
+    </p>
 </div>

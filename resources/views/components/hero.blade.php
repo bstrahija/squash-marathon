@@ -3,20 +3,21 @@
         <div
             class="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
             <span
-                class="rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-emerald-700 dark:text-emerald-300">Squash
-                Arena Čakovec</span>
+                class="rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-emerald-700 dark:text-emerald-300">
+                Squash Arena Čakovec
+            </span>
             <span
-                class="rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-amber-700 dark:text-amber-300">17.
-                travnja, 19:00</span>
+                class="rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-amber-700 dark:text-amber-300">
+                24. travnja, 17:00</span>
             <span class="rounded-full border border-sky-400/40 bg-sky-400/10 px-3 py-1 text-sky-700 dark:text-sky-300">24
                 sata</span>
         </div>
-        <h1 class="font-display text-4xl font-semibold leading-tight sm:text-5xl">
-            Razigrani squash maraton, jake razmjene i dobra vibra.
+        <h1 class="font-display text-3xl font-semibold leading-tight sm:text-4xl">
+            Squash Marathon 24h
         </h1>
         <p class="max-w-xl text-base text-muted-foreground">
-            Pratimo svaku igru do 11, poredak se osvježava odmah, a na dva terena nema stajanja.
-            Pobjeda nosi 2 boda, poraz 1 bod.
+            Ultimativni test izdržljivosti u <strong>Squash Areni Čakovec</strong> koji će se pamtiti cijeli život (ili
+            barem dok se upala mišića ne smiri).
         </p>
         <div class="flex flex-wrap items-center gap-4">
             <a class="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:-translate-y-0.5"

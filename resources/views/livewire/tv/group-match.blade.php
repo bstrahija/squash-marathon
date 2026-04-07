@@ -19,41 +19,41 @@ new class extends Component {
     {
         $event = Event::query()->latest('start_at')->first();
 
-        if (! $event) {
+        if (!$event) {
             return null;
         }
 
         $games = Game::query()
             ->with(['sets', 'playerOne', 'playerTwo', 'group'])
             ->where('event_id', $event->id)
-            ->whereHas('group', fn ($query) => $query->where('number', $this->groupNumber))
+            ->whereHas('group', fn($query) => $query->where('number', $this->groupNumber))
             ->get();
 
         if ($games->isEmpty()) {
             return null;
         }
 
-        $liveGame = $games->filter(fn (Game $game): bool => $this->isLiveGame($game))->sortByDesc(fn (Game $game): int => $game->started_at?->timestamp ?? ($game->created_at?->timestamp ?? 0))->first();
+        $liveGame = $games->filter(fn(Game $game): bool => $this->isLiveGame($game))->sortByDesc(fn(Game $game): int => $game->started_at?->timestamp ?? ($game->created_at?->timestamp ?? 0))->first();
 
         if ($liveGame) {
             return $this->mapGame($liveGame);
         }
 
-        $waitingGame = $games->filter(fn (Game $game): bool => $this->isWaitingGame($game))->sortByDesc(fn (Game $game): int => $game->created_at?->timestamp ?? 0)->first();
+        $waitingGame = $games->filter(fn(Game $game): bool => $this->isWaitingGame($game))->sortByDesc(fn(Game $game): int => $game->created_at?->timestamp ?? 0)->first();
 
         if ($waitingGame) {
             return $this->mapGame($waitingGame);
         }
 
-        $finishedGame = $games->filter(fn (Game $game): bool => $this->isFinishedGame($game))->sortByDesc(fn (Game $game): int => $game->finished_at?->timestamp ?? ($game->created_at?->timestamp ?? 0))->first();
+        $finishedGame = $games->filter(fn(Game $game): bool => $this->isFinishedGame($game))->sortByDesc(fn(Game $game): int => $game->finished_at?->timestamp ?? ($game->created_at?->timestamp ?? 0))->first();
 
         if ($finishedGame) {
             return $this->mapGame($finishedGame);
         }
 
-        $latestGame = $games->sortByDesc(fn (Game $game): int => $game->created_at?->timestamp ?? 0)->first();
+        $latestGame = $games->sortByDesc(fn(Game $game): int => $game->created_at?->timestamp ?? 0)->first();
 
-        if (! $latestGame) {
+        if (!$latestGame) {
             return null;
         }
 
@@ -68,7 +68,7 @@ new class extends Component {
         $result = Game::determineMatchResultFromSetScores(
             $orderedSets
                 ->map(
-                    fn (Set $set): array => [
+                    fn(Set $set): array => [
                         'player_one_score' => $set->player_one_score,
                         'player_two_score' => $set->player_two_score,
                     ],
@@ -94,9 +94,9 @@ new class extends Component {
             'sets_one' => $result['player_one_wins'],
             'sets_two' => $result['player_two_wins'],
             'timeline' => $orderedSets
-                ->filter(fn (Set $set): bool => filled($set->player_one_score) && filled($set->player_two_score))
+                ->filter(fn(Set $set): bool => filled($set->player_one_score) && filled($set->player_two_score))
                 ->map(
-                    fn (Set $set): array => [
+                    fn(Set $set): array => [
                         'id' => $set->id,
                         'score' => "{$set->player_one_score}:{$set->player_two_score}",
                     ],
@@ -112,11 +112,11 @@ new class extends Component {
 
     private function isLiveGame(Game $game): bool
     {
-        if (! $game->started_at || $game->finished_at) {
+        if (!$game->started_at || $game->finished_at) {
             return false;
         }
 
-        return ! $this->isFinishedGame($game);
+        return !$this->isFinishedGame($game);
     }
 
     private function isFinishedGame(Game $game): bool
@@ -124,7 +124,7 @@ new class extends Component {
         $result = Game::determineMatchResultFromSetScores(
             $game->sets
                 ->map(
-                    fn (Set $set): array => [
+                    fn(Set $set): array => [
                         'player_one_score' => $set->player_one_score,
                         'player_two_score' => $set->player_two_score,
                     ],
@@ -140,12 +140,12 @@ new class extends Component {
 
     private function isWaitingGame(Game $game): bool
     {
-        return ! $game->started_at && ! $game->finished_at;
+        return !$game->started_at && !$game->finished_at;
     }
 
     private function playerClass(?int $playerId, ?int $winnerId, bool $isDraw): string
     {
-        if (! $playerId) {
+        if (!$playerId) {
             return 'text-foreground';
         }
 
