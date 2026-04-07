@@ -40,6 +40,7 @@ class HomeController extends Controller
                 $user->id => [
                     'player' => $user,
                     'wins' => 0,
+                    'draws' => 0,
                     'losses' => 0,
                     'games' => 0,
                     'last_game_at' => null,
@@ -48,7 +49,7 @@ class HomeController extends Controller
         });
 
         foreach ($games as $game) {
-            $winnerId = Game::determineWinnerIdFromSetScores(
+            $result = Game::determineMatchResultFromSetScores(
                 $game->sets
                     ->map(fn ($set): array => [
                         'player_one_score' => $set->player_one_score,
@@ -60,7 +61,7 @@ class HomeController extends Controller
                 $game->player_two_id
             );
 
-            if (! $winnerId) {
+            if (! $result['is_complete']) {
                 continue;
             }
 
@@ -72,7 +73,9 @@ class HomeController extends Controller
                 $row = $stats->get($playerId);
                 $row['games'] += 1;
 
-                if ($playerId === $winnerId) {
+                if ($result['is_draw']) {
+                    $row['draws'] += 1;
+                } elseif ($playerId === $result['winner_id']) {
                     $row['wins'] += 1;
                 } else {
                     $row['losses'] += 1;
@@ -92,6 +95,7 @@ class HomeController extends Controller
             ->map(fn (array $row): array => [
                 'name' => $row['player']->full_name,
                 'wins' => $row['wins'],
+                'draws' => $row['draws'],
                 'losses' => $row['losses'],
                 'games' => $row['games'],
             ])

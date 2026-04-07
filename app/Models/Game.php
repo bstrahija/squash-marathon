@@ -20,7 +20,13 @@ class Game extends Model
      */
     protected $fillable = [
         'event_id',
+        'round_id',
+        'group_id',
         'best_of',
+        'court_number',
+        'started_at',
+        'finished_at',
+        'duration_seconds',
         'player_one_id',
         'player_two_id',
     ];
@@ -28,8 +34,21 @@ class Game extends Model
     protected static function booted(): void
     {
         static::saving(function (Game $game): void {
-            if (! in_array($game->best_of, [1, 3, 5], true)) {
-                throw new InvalidArgumentException('Game best_of must be 1, 3, or 5.');
+            if (! $game->round_id && $game->group_id) {
+                $game->round_id = $game->group?->round_id;
+            }
+
+            if ($game->started_at && $game->finished_at) {
+                $duration = $game->started_at->diffInSeconds($game->finished_at);
+                $game->duration_seconds = max(0, $duration);
+            }
+
+            if (! in_array($game->best_of, [2], true)) {
+                throw new InvalidArgumentException('Game best_of must be 2.');
+            }
+
+            if ($game->court_number !== null && ! in_array($game->court_number, [1, 2], true)) {
+                throw new InvalidArgumentException('Game court_number must be 1 or 2.');
             }
 
             if ($game->player_one_id && $game->player_two_id && $game->player_one_id === $game->player_two_id) {
@@ -47,12 +66,27 @@ class Game extends Model
     {
         return [
             'best_of' => 'integer',
+            'court_number' => 'integer',
+            'round_id' => 'integer',
+            'started_at' => 'datetime',
+            'finished_at' => 'datetime',
+            'duration_seconds' => 'integer',
         ];
     }
 
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class);
+    }
+
+    public function round(): BelongsTo
+    {
+        return $this->belongsTo(Round::class);
+    }
+
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(Group::class);
     }
 
     public function playerOne(): BelongsTo
@@ -79,21 +113,58 @@ class Game extends Model
         ?int $playerOneId,
         ?int $playerTwoId
     ): ?int {
-        if (! in_array($bestOf, [1, 3, 5], true)) {
-            return null;
+        $result = self::determineMatchResultFromSetScores($sets, $bestOf, $playerOneId, $playerTwoId);
+
+        return $result['winner_id'];
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $sets
+     * @return array{
+     *     is_complete: bool,
+     *     is_draw: bool,
+     *     winner_id: int|null,
+     *     player_one_wins: int,
+     *     player_two_wins: int
+     * }
+     */
+    public static function determineMatchResultFromSetScores(
+        array $sets,
+        int $bestOf,
+        ?int $playerOneId,
+        ?int $playerTwoId
+    ): array {
+        if (! in_array($bestOf, [2], true)) {
+            return [
+                'is_complete' => false,
+                'is_draw' => false,
+                'winner_id' => null,
+                'player_one_wins' => 0,
+                'player_two_wins' => 0,
+            ];
         }
 
         if (! $playerOneId || ! $playerTwoId) {
-            return null;
+            return [
+                'is_complete' => false,
+                'is_draw' => false,
+                'winner_id' => null,
+                'player_one_wins' => 0,
+                'player_two_wins' => 0,
+            ];
         }
 
-        $targetWins = (int) ceil($bestOf / 2);
         $wins = [
             $playerOneId => 0,
             $playerTwoId => 0,
         ];
+        $completedSets = 0;
 
         foreach ($sets as $set) {
+            if ($completedSets >= $bestOf) {
+                break;
+            }
+
             $playerOneScore = data_get($set, 'player_one_score');
             $playerTwoScore = data_get($set, 'player_two_score');
 
@@ -122,12 +193,37 @@ class Game extends Model
 
             $winnerId = $playerOneScore > $playerTwoScore ? $playerOneId : $playerTwoId;
             $wins[$winnerId] += 1;
-
-            if ($wins[$winnerId] >= $targetWins) {
-                return $winnerId;
-            }
+            $completedSets += 1;
         }
 
-        return null;
+        if ($completedSets < $bestOf) {
+            return [
+                'is_complete' => false,
+                'is_draw' => false,
+                'winner_id' => null,
+                'player_one_wins' => $wins[$playerOneId],
+                'player_two_wins' => $wins[$playerTwoId],
+            ];
+        }
+
+        if ($wins[$playerOneId] === $wins[$playerTwoId]) {
+            return [
+                'is_complete' => true,
+                'is_draw' => true,
+                'winner_id' => null,
+                'player_one_wins' => $wins[$playerOneId],
+                'player_two_wins' => $wins[$playerTwoId],
+            ];
+        }
+
+        $winnerId = $wins[$playerOneId] > $wins[$playerTwoId] ? $playerOneId : $playerTwoId;
+
+        return [
+            'is_complete' => true,
+            'is_draw' => false,
+            'winner_id' => $winnerId,
+            'player_one_wins' => $wins[$playerOneId],
+            'player_two_wins' => $wins[$playerTwoId],
+        ];
     }
 }

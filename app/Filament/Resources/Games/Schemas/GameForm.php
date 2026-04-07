@@ -2,8 +2,9 @@
 
 namespace App\Filament\Resources\Games\Schemas;
 
-use App\Models\Event;
 use App\Models\Game;
+use App\Models\Group;
+use App\Models\Round;
 use App\Models\User;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
@@ -22,20 +23,51 @@ class GameForm
             ->components([
                 Select::make('event_id')
                     ->label('Event')
-                    ->relationship('event', 'name')
-                    ->default(fn (): ?int => Event::query()->latest('start_at')->value('id'))
+                    ->disabled()
+                    ->dehydrated()
+                    ->visible(fn (Get $get): bool => filled($get('event_id'))),
+                Select::make('round_id')
+                    ->label('Round')
+                    ->relationship('round', 'name')
+                    ->required()
+                    ->searchable()
+                    ->live()
+                    ->afterStateUpdated(function (Get $get, Set $set, ?int $state): void {
+                        if (! $state) {
+                            return;
+                        }
+
+                        $eventId = Round::query()->whereKey($state)->value('event_id');
+                        $set('event_id', $eventId);
+                        $set('group_id', null);
+                    }),
+                Select::make('group_id')
+                    ->label('Group')
+                    ->options(function (Get $get): array {
+                        $roundId = $get('round_id');
+
+                        if (! $roundId) {
+                            return [];
+                        }
+
+                        return Group::query()
+                            ->where('round_id', $roundId)
+                            ->orderBy('number')
+                            ->pluck('name', 'id')
+                            ->all();
+                    })
                     ->required()
                     ->searchable(),
                 Select::make('best_of')
                     ->label('Best of')
                     ->options([
-                        1 => 'Best of 1',
-                        3 => 'Best of 3',
-                        5 => 'Best of 5',
+                        2 => 'Best of 2',
                     ])
-                    ->default(1)
+                    ->default(2)
                     ->required()
                     ->live()
+                    ->disabled()
+                    ->dehydrated()
                     ->afterStateUpdated(function (Get $get, Set $set, ?int $state): void {
                         $count = max((int) $state, 1);
                         $sets = $get('sets') ?? [];
@@ -79,6 +111,14 @@ class GameForm
                     ->required()
                     ->preload()
                     ->searchable(),
+                Select::make('court_number')
+                    ->label('Court')
+                    ->options([
+                        1 => 'Court 1',
+                        2 => 'Court 2',
+                    ])
+                    ->default(1)
+                    ->required(),
                 Repeater::make('sets')
                     ->relationship()
                     ->columns([
@@ -137,7 +177,7 @@ class GameForm
                     ->deletable(false)
                     ->columnSpanFull(),
                 Placeholder::make('match_winner_preview')
-                    ->label('Game winner')
+                    ->label('Match outcome')
                     ->content(function (Get $get): string {
                         $playerOneId = $get('player_one_id');
                         $playerTwoId = $get('player_two_id');
@@ -152,15 +192,19 @@ class GameForm
                             return 'Enter set scores to calculate the game winner.';
                         }
 
-                        $winnerId = Game::determineWinnerIdFromSetScores(
+                        $result = Game::determineMatchResultFromSetScores(
                             $sets,
                             $bestOf,
                             (int) $playerOneId,
                             (int) $playerTwoId
                         );
 
-                        if (! $winnerId) {
-                            return 'No match winner yet.';
+                        if (! $result['is_complete']) {
+                            return 'Match not complete yet.';
+                        }
+
+                        if ($result['is_draw']) {
+                            return 'Match ends in a draw.';
                         }
 
                         $names = User::query()
@@ -168,7 +212,7 @@ class GameForm
                             ->get()
                             ->mapWithKeys(fn (User $user): array => [$user->id => $user->full_name]);
 
-                        return $names->get($winnerId, 'Winner unavailable.');
+                        return $names->get($result['winner_id'], 'Winner unavailable.');
                     })
                     ->columnSpanFull(),
             ]);
@@ -182,6 +226,11 @@ class GameForm
 
         $bestOf = max((int) $get('../../best_of'), 1);
         $setNumber = (int) $get('set_number');
+
+        if ($bestOf % 2 === 0 && $setNumber <= $bestOf) {
+            return true;
+        }
+
         $targetWins = (int) ceil($bestOf / 2);
 
         if ($setNumber <= $targetWins) {
@@ -205,14 +254,14 @@ class GameForm
             return (int) data_get($set, 'set_number') < $setNumber;
         }));
 
-        $winnerId = Game::determineWinnerIdFromSetScores(
+        $result = Game::determineMatchResultFromSetScores(
             $previousSets,
             $bestOf,
             (int) $playerOneId,
             (int) $playerTwoId
         );
 
-        return $winnerId === null;
+        return ! $result['is_complete'];
     }
 
     private static function formatSetLabel(int $setNumber): string

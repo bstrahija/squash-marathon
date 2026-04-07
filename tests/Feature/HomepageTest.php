@@ -33,7 +33,7 @@ test('homepage renders real data sections', function () {
 
     $game = Game::factory()->create([
         'event_id' => $event->id,
-        'best_of' => 1,
+        'best_of' => 2,
         'player_one_id' => $playerOne->id,
         'player_two_id' => $playerTwo->id,
     ]);
@@ -44,6 +44,14 @@ test('homepage renders real data sections', function () {
         'player_two_id' => $playerTwo->id,
         'player_one_score' => 11,
         'player_two_score' => 6,
+    ]);
+
+    Set::factory()->create([
+        'game_id' => $game->id,
+        'player_one_id' => $playerOne->id,
+        'player_two_id' => $playerTwo->id,
+        'player_one_score' => 11,
+        'player_two_score' => 8,
     ]);
 
     $response = $this->get('/');
@@ -62,7 +70,7 @@ test('leaderboard livewire component shows players and points', function () {
 
     $game = Game::factory()->create([
         'event_id' => $event->id,
-        'best_of' => 1,
+        'best_of' => 2,
         'player_one_id' => $playerOne->id,
         'player_two_id' => $playerTwo->id,
     ]);
@@ -75,10 +83,18 @@ test('leaderboard livewire component shows players and points', function () {
         'player_two_score' => 6,
     ]);
 
+    Set::factory()->create([
+        'game_id' => $game->id,
+        'player_one_id' => $playerOne->id,
+        'player_two_id' => $playerTwo->id,
+        'player_one_score' => 11,
+        'player_two_score' => 9,
+    ]);
+
     Livewire::test('leaderboard')
         ->assertSee($playerOne->full_name)
         ->assertSee($playerTwo->full_name)
-        ->assertSee('2')
+        ->assertSee('3')
         ->assertSee('1');
 });
 
@@ -92,7 +108,7 @@ test('timeline livewire component shows recent games', function () {
 
     $game = Game::factory()->create([
         'event_id' => $event->id,
-        'best_of' => 1,
+        'best_of' => 2,
         'player_one_id' => $playerOne->id,
         'player_two_id' => $playerTwo->id,
         'created_at' => $gameTime,
@@ -105,6 +121,16 @@ test('timeline livewire component shows recent games', function () {
         'player_two_id' => $playerTwo->id,
         'player_one_score' => 11,
         'player_two_score' => 6,
+        'created_at' => $gameTime,
+        'updated_at' => $gameTime,
+    ]);
+
+    Set::factory()->create([
+        'game_id' => $game->id,
+        'player_one_id' => $playerOne->id,
+        'player_two_id' => $playerTwo->id,
+        'player_one_score' => 11,
+        'player_two_score' => 9,
         'created_at' => $gameTime,
         'updated_at' => $gameTime,
     ]);

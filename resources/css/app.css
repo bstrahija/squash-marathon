@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Unbounded:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@600&family=Space+Grotesk:wght@400;500;600;700&family=Unbounded:wght@500;600;700&display=swap');
 
 @import 'tailwindcss';
 
@@ -92,6 +92,10 @@
 
     .font-display {
         font-family: 'Unbounded', var(--font-sans);
+    }
+
+    .font-initials {
+        font-family: 'Noto Sans', var(--font-sans);
     }
 }
 

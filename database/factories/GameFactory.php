@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use App\Models\Event;
+use App\Models\Group;
+use App\Models\Round;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -20,7 +22,15 @@ class GameFactory extends Factory
     {
         return [
             'event_id' => Event::factory(),
-            'best_of' => $this->faker->randomElement([1, 3, 5]),
+            'round_id' => fn (array $attributes): int => Round::factory()->create([
+                'event_id' => $attributes['event_id'],
+            ])->id,
+            'group_id' => fn (array $attributes): int => Group::factory()->create([
+                'event_id' => $attributes['event_id'],
+                'round_id' => $attributes['round_id'],
+            ])->id,
+            'best_of' => 2,
+            'court_number' => $this->faker->numberBetween(1, 2),
             'player_one_id' => User::factory(),
             'player_two_id' => User::factory(),
         ];

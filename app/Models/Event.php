@@ -86,4 +86,14 @@ class Event extends Model implements HasMedia
     {
         return $this->hasMany(Game::class);
     }
+
+    public function groups(): HasMany
+    {
+        return $this->hasMany(Group::class);
+    }
+
+    public function rounds(): HasMany
+    {
+        return $this->hasMany(Round::class);
+    }
 }

@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', HomeController::class)->name('home');
+Route::view('/tv', 'tv')->name('tv');
 
 Route::get('dashboard', function () {
     return Inertia::render('Dashboard');

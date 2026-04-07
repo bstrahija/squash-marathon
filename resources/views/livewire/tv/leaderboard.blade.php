@@ -7,7 +7,8 @@ use App\Models\User;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
-new class extends Component {
+new class extends Component
+{
     #[Computed]
     public function leaderboard(): array
     {
@@ -118,47 +119,82 @@ new class extends Component {
             ->values()
             ->all();
     }
+
+    #[Computed]
+    public function density(): string
+    {
+        $rows = count($this->leaderboard);
+
+        if ($rows <= 6) {
+            return 'comfortable';
+        }
+
+        if ($rows <= 10) {
+            return 'balanced';
+        }
+
+        return 'compact';
+    }
 };
 ?>
 
-<div class="rounded-3xl border border-border bg-card p-6 shadow-sm" wire:poll.5s>
-    <div class="flex flex-wrap items-end justify-between gap-4">
-        <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Poredak</p>
-            <h2 class="font-display mt-2 text-2xl font-semibold">Bodovi nakon svakog meča</h2>
-        </div>
-        <div class="text-xs text-muted-foreground">Pobjeda = 3 boda, remi = 2 boda, poraz = 1 bod</div>
+@php
+    $typography = match ($this->density) {
+        'comfortable' => [
+            'title' => 'text-[clamp(1.35rem,2.2vw,2.5rem)]',
+            'meta' => 'text-[clamp(0.9rem,1.2vw,1.2rem)]',
+            'table' => 'text-[clamp(1.15rem,1.7vw,1.7rem)]',
+            'head' => 'text-[clamp(0.72rem,1vw,1rem)]',
+            'cell' => 'px-5 py-4',
+        ],
+        'balanced' => [
+            'title' => 'text-[clamp(1.12rem,1.6vw,1.95rem)]',
+            'meta' => 'text-[clamp(0.76rem,0.95vw,1rem)]',
+            'table' => 'text-[clamp(0.96rem,1.25vw,1.22rem)]',
+            'head' => 'text-[clamp(0.64rem,0.82vw,0.84rem)]',
+            'cell' => 'px-4 py-3',
+        ],
+        default => [
+            'title' => 'text-[clamp(0.96rem,1.2vw,1.34rem)]',
+            'meta' => 'text-[clamp(0.64rem,0.78vw,0.84rem)]',
+            'table' => 'text-[clamp(0.78rem,0.95vw,0.98rem)]',
+            'head' => 'text-[clamp(0.55rem,0.64vw,0.72rem)]',
+            'cell' => 'px-3 py-2.5',
+        ],
+    };
+@endphp
+
+<div class="flex h-full min-h-0 flex-col p-[clamp(0.85rem,1.1vw,1.3rem)]" wire:poll.3s>
+    <div class="mb-3 flex items-end justify-between gap-3">
+        <h2 class="font-display font-semibold text-foreground {{ $typography['title'] }}">Leaderboard</h2>
+        <span class="text-muted-foreground {{ $typography['meta'] }}">3 / 2 / 1</span>
     </div>
-    <div class="mt-6 overflow-hidden rounded-2xl border border-border/70">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm">
+
+    <div class="min-h-0 flex-1 overflow-hidden bg-background/40">
+        <div class="h-full overflow-auto">
+            <table class="w-full text-left leading-tight {{ $typography['table'] }}">
                 <thead
-                    class="bg-gradient-to-r from-emerald-400/15 via-amber-400/10 to-sky-400/15 text-xs uppercase tracking-widest text-muted-foreground">
+                    class="sticky top-0 bg-background/90 uppercase tracking-widest text-muted-foreground backdrop-blur-sm {{ $typography['head'] }}">
                     <tr>
-                        <th class="px-4 py-3">Igrač</th>
-                        <th class="px-4 py-3">Pobjede</th>
-                        <th class="px-4 py-3">Remiji</th>
-                        <th class="px-4 py-3">Porazi</th>
-                        <th class="px-4 py-3">Bodovi</th>
-                        <th class="px-4 py-3">Zadnja partija</th>
+                        <th class="{{ $typography['cell'] }}">Igrač</th>
+                        <th class="{{ $typography['cell'] }}">W</th>
+                        <th class="{{ $typography['cell'] }}">D</th>
+                        <th class="{{ $typography['cell'] }}">L</th>
+                        <th class="{{ $typography['cell'] }}">Bod</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-border/70">
                     @forelse ($this->leaderboard as $row)
-                        <tr class="bg-card transition hover:bg-emerald-400/5"
-                            wire:key="leaderboard-{{ $row['id'] }}">
-                            <td class="px-4 py-3 font-semibold text-foreground">{{ $row['name'] }}</td>
-                            <td class="px-4 py-3 text-muted-foreground">{{ $row['wins'] }}</td>
-                            <td class="px-4 py-3 text-muted-foreground">{{ $row['draws'] }}</td>
-                            <td class="px-4 py-3 text-muted-foreground">{{ $row['losses'] }}</td>
-                            <td class="px-4 py-3 font-semibold text-foreground">{{ $row['points'] }}</td>
-                            <td class="px-4 py-3 text-muted-foreground">
-                                {{ $row['last_game_at']?->format('H:i') ?? '—' }}
-                            </td>
+                        <tr class="odd:bg-background/35 even:bg-transparent" wire:key="tv-leaderboard-{{ $row['id'] }}">
+                            <td class="font-medium text-foreground {{ $typography['cell'] }}">{{ $row['name'] }}</td>
+                            <td class="text-muted-foreground {{ $typography['cell'] }}">{{ $row['wins'] }}</td>
+                            <td class="text-muted-foreground {{ $typography['cell'] }}">{{ $row['draws'] }}</td>
+                            <td class="text-muted-foreground {{ $typography['cell'] }}">{{ $row['losses'] }}</td>
+                            <td class="font-semibold text-foreground {{ $typography['cell'] }}">{{ $row['points'] }}</td>
                         </tr>
                     @empty
-                        <tr class="bg-card">
-                            <td class="px-4 py-6 text-center text-sm text-muted-foreground" colspan="6">
+                        <tr>
+                            <td class="text-center text-muted-foreground {{ $typography['cell'] }}" colspan="5">
                                 Još nema upisanih partija.
                             </td>
                         </tr>

@@ -27,6 +27,8 @@ class SetFactory extends Factory
 
         return [
             'game_id' => Game::factory(),
+            'round_id' => fn (array $attributes): int => Game::query()->findOrFail($attributes['game_id'])->round_id,
+            'group_id' => fn (array $attributes): int => Game::query()->findOrFail($attributes['game_id'])->group_id,
             'player_one_id' => User::factory(),
             'player_two_id' => User::factory(),
             'winner_id' => null,

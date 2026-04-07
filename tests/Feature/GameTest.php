@@ -15,7 +15,7 @@ it('creates a game with players and event', function () {
 
 it('rejects invalid best_of values', function () {
     expect(fn () => Game::factory()->create([
-        'best_of' => 2,
+        'best_of' => 1,
     ]))->toThrow(InvalidArgumentException::class);
 });
 
@@ -62,17 +62,18 @@ it('determines the winner from the set score', function () {
     expect($set->winner_id)->toBe($playerOne->id);
 });
 
-it('determines the match winner from set scores', function () {
+it('determines the match result from set scores', function () {
     $playerOne = User::factory()->create();
     $playerTwo = User::factory()->create();
 
-    $winnerId = Game::determineWinnerIdFromSetScores([
+    $result = Game::determineMatchResultFromSetScores([
         ['player_one_score' => 11, 'player_two_score' => 7],
-        ['player_one_score' => 9, 'player_two_score' => 11],
-        ['player_one_score' => 11, 'player_two_score' => 5],
-    ], 3, $playerOne->id, $playerTwo->id);
+        ['player_one_score' => 8, 'player_two_score' => 11],
+    ], 2, $playerOne->id, $playerTwo->id);
 
-    expect($winnerId)->toBe($playerOne->id);
+    expect($result['is_complete'])->toBeTrue();
+    expect($result['is_draw'])->toBeTrue();
+    expect($result['winner_id'])->toBeNull();
 });
 
 it('allows sets without scores', function () {

@@ -15,14 +15,14 @@
                     <span
                         class="absolute left-2 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-400/20 text-xs font-semibold text-emerald-700 dark:text-emerald-300">1</span>
                     <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Igra gotova</p>
-                    <p class="mt-2 text-sm font-semibold">Jedna igra do 11 bodova</p>
-                    <p class="mt-1 text-xs text-muted-foreground">Rezultat je zaključan.</p>
+                    <p class="mt-2 text-sm font-semibold">Dva seta do 11 bodova</p>
+                    <p class="mt-1 text-xs text-muted-foreground">Remi je moguć nakon 1-1.</p>
                 </div>
                 <div class="relative pl-10">
                     <span
                         class="absolute left-2 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-sky-400/20 text-xs font-semibold text-sky-700 dark:text-sky-300">2</span>
                     <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Bodovi idu</p>
-                    <p class="mt-2 text-sm font-semibold">Pobjeda = 2 boda, poraz = 1 bod</p>
+                    <p class="mt-2 text-sm font-semibold">Pobjeda = 3 boda, remi = 2 boda, poraz = 1 bod</p>
                     <p class="mt-1 text-xs text-muted-foreground">Sve ide ravno u poredak.</p>
                 </div>
                 <div class="relative pl-10">
@@ -45,12 +45,12 @@
             <p class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Brzi primjer</p>
             <div class="mt-4 space-y-3 text-sm">
                 <div class="flex items-center justify-between rounded-xl border border-border/70 bg-card px-3 py-2">
-                    <span class="font-semibold">Ana pobjeđuje 11-8</span>
-                    <span class="text-muted-foreground">+2 boda</span>
+                    <span class="font-semibold">Ana pobjeđuje 2-0</span>
+                    <span class="text-muted-foreground">+3 boda</span>
                 </div>
                 <div class="flex items-center justify-between rounded-xl border border-border/70 bg-card px-3 py-2">
-                    <span class="font-semibold">Luka gubi 8-11</span>
-                    <span class="text-muted-foreground">+1 bod</span>
+                    <span class="font-semibold">Luka remizira 1-1</span>
+                    <span class="text-muted-foreground">+2 boda</span>
                 </div>
                 <div class="flex items-center justify-between rounded-xl border border-border/70 bg-card px-3 py-2">
                     <span class="font-semibold">Upisano</span>

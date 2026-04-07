@@ -102,4 +102,14 @@ class User extends Authenticatable implements HasMedia, HasName
     {
         return $this->belongsToMany(Event::class)->withTimestamps();
     }
+
+    public function groups(): BelongsToMany
+    {
+        return $this->belongsToMany(Group::class)->withTimestamps();
+    }
+
+    public function rounds(): BelongsToMany
+    {
+        return $this->belongsToMany(Round::class)->withTimestamps();
+    }
 }

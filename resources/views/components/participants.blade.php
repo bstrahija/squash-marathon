@@ -15,17 +15,17 @@
             @php
                 $initials = collect(explode(' ', $participant['name'] ?? ''))
                     ->filter()
-                    ->map(fn($part) => strtoupper(substr($part, 0, 1)))
+                    ->map(fn($part) => mb_strtoupper(mb_substr($part, 0, 1, 'UTF-8'), 'UTF-8'))
                     ->take(2)
                     ->join('');
                 $summary =
                     $participant['games'] > 0
-                        ? "{$participant['wins']} pobjede · {$participant['losses']} porazi"
+                        ? "{$participant['wins']} pobjede · {$participant['draws']} remija · {$participant['losses']} porazi"
                         : 'Još bez odigranih';
             @endphp
             <div class="rounded-2xl border border-border/70 bg-background/70 p-4">
                 <div
-                    class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-xs font-semibold text-primary-foreground">
+                    class="font-initials flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-xs font-semibold text-primary-foreground">
                     {{ $initials !== '' ? $initials : '—' }}
                 </div>
                 <p class="mt-3 text-sm font-semibold">{{ $participant['name'] }}</p>

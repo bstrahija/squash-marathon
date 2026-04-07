@@ -19,16 +19,34 @@ class Set extends Model
      */
     protected $fillable = [
         'game_id',
+        'round_id',
+        'group_id',
         'player_one_id',
         'player_two_id',
         'winner_id',
         'player_one_score',
         'player_two_score',
+        'started_at',
+        'finished_at',
+        'duration_seconds',
     ];
 
     protected static function booted(): void
     {
         static::saving(function (Set $set): void {
+            if (! $set->round_id && $set->game_id) {
+                $set->round_id = $set->game?->round_id;
+            }
+
+            if (! $set->group_id && $set->game_id) {
+                $set->group_id = $set->game?->group_id;
+            }
+
+            if ($set->started_at && $set->finished_at) {
+                $duration = $set->started_at->diffInSeconds($set->finished_at);
+                $set->duration_seconds = max(0, $duration);
+            }
+
             $playerOneScore = $set->player_one_score;
             $playerTwoScore = $set->player_two_score;
 
@@ -84,14 +102,29 @@ class Set extends Model
     protected function casts(): array
     {
         return [
+            'round_id' => 'integer',
+            'group_id' => 'integer',
             'player_one_score' => 'integer',
             'player_two_score' => 'integer',
+            'started_at' => 'datetime',
+            'finished_at' => 'datetime',
+            'duration_seconds' => 'integer',
         ];
     }
 
     public function game(): BelongsTo
     {
         return $this->belongsTo(Game::class);
+    }
+
+    public function round(): BelongsTo
+    {
+        return $this->belongsTo(Round::class);
+    }
+
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(Group::class);
     }
 
     public function playerOne(): BelongsTo
