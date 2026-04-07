@@ -25,6 +25,8 @@ class GameLog extends Model
         'sequence',
         'type',
         'side',
+        'serving_player_id',
+        'serving_side',
         'player_one_score',
         'player_two_score',
         'player_one_sets',
@@ -42,6 +44,8 @@ class GameLog extends Model
             'sequence' => 'integer',
             'type' => GameLogType::class,
             'side' => GameLogSide::class,
+            'serving_player_id' => 'integer',
+            'serving_side' => GameLogSide::class,
             'player_one_score' => 'integer',
             'player_two_score' => 'integer',
             'player_one_sets' => 'integer',
@@ -62,5 +66,10 @@ class GameLog extends Model
     public function playerTwo(): BelongsTo
     {
         return $this->belongsTo(User::class, 'player_two_id');
+    }
+
+    public function servingPlayer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'serving_player_id');
     }
 }

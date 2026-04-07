@@ -27,6 +27,12 @@ return new class extends Migration
             $table->unsignedInteger('sequence');
             $table->enum('type', GameLogType::values());
             $table->enum('side', GameLogSide::values());
+            $table->foreignIdFor(User::class, 'serving_player_id')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+            $table->enum('serving_side', GameLogSide::values())
+                ->nullable();
             $table->unsignedTinyInteger('player_one_score')->default(0);
             $table->unsignedTinyInteger('player_two_score')->default(0);
             $table->unsignedTinyInteger('player_one_sets')->default(0);

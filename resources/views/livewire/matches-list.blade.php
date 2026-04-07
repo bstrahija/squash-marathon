@@ -103,6 +103,11 @@ new class extends Component {
         return "{$result['player_one_wins']}-{$result['player_two_wins']}";
     }
 
+    public function scoreRoute(Game $game): string
+    {
+        return route('matches.score', ['game' => $game->id]);
+    }
+
     public function playerClass(Game $game, ?int $playerId): string
     {
         if (!$playerId) {
@@ -180,30 +185,51 @@ new class extends Component {
                 @forelse ($this->matches as $game)
                     <tr wire:key="matches-list-game-{{ $game->id }}">
                         <td class="px-3 py-3 text-muted-foreground">
-                            {{ $game->created_at ? $game->created_at->locale('hr')->dayName . ' ' . $game->created_at->format('H:i') : '—' }}
+                            <a href="{{ $this->scoreRoute($game) }}"
+                                class="block -mx-3 -my-3 rounded-lg px-3 py-3 transition hover:bg-muted/40 hover:text-foreground">
+                                {{ $game->created_at ? $game->created_at->locale('hr')->dayName . ' ' . $game->created_at->format('H:i') : '—' }}
+                            </a>
                         </td>
-                        <td class="px-3 py-3 font-medium">{{ $game->group?->name ?? '—' }}</td>
-                        <td class="px-3 py-3">
-                            <span class="{{ $this->playerClass($game, $game->player_one_id) }}">
-                                {{ $game->playerOne?->full_name ?? '—' }}
-                            </span>
-                            <span class="text-muted-foreground">vs</span>
-                            <span class="{{ $this->playerClass($game, $game->player_two_id) }}">
-                                {{ $game->playerTwo?->full_name ?? '—' }}
-                            </span>
-                        </td>
-                        <td class="px-3 py-3">
-                            <span
-                                class="inline-flex rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] {{ $this->statusBadgeClass($game) }}">
-                                {{ $this->statusLabel($game) }}
-                            </span>
+                        <td class="px-3 py-3 font-medium">
+                            <a href="{{ $this->scoreRoute($game) }}"
+                                class="block -mx-3 -my-3 rounded-lg px-3 py-3 transition hover:bg-muted/40">
+                                {{ $game->group?->name ?? '—' }}
+                            </a>
                         </td>
                         <td class="px-3 py-3">
-                            <p class="text-sm font-semibold text-foreground">{{ $this->setResultSummary($game) }}</p>
-                            <p class="text-xs text-muted-foreground">{{ $this->scoreSummary($game) }}</p>
+                            <a href="{{ $this->scoreRoute($game) }}"
+                                class="block -mx-3 -my-3 rounded-lg px-3 py-3 transition hover:bg-muted/40">
+                                <span class="{{ $this->playerClass($game, $game->player_one_id) }}">
+                                    {{ $game->playerOne?->full_name ?? '—' }}
+                                </span>
+                                <span class="text-muted-foreground">vs</span>
+                                <span class="{{ $this->playerClass($game, $game->player_two_id) }}">
+                                    {{ $game->playerTwo?->full_name ?? '—' }}
+                                </span>
+                            </a>
+                        </td>
+                        <td class="px-3 py-3">
+                            <a href="{{ $this->scoreRoute($game) }}"
+                                class="block -mx-3 -my-3 rounded-lg px-3 py-3 transition hover:bg-muted/40">
+                                <span
+                                    class="inline-flex rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] {{ $this->statusBadgeClass($game) }}">
+                                    {{ $this->statusLabel($game) }}
+                                </span>
+                            </a>
+                        </td>
+                        <td class="px-3 py-3">
+                            <a href="{{ $this->scoreRoute($game) }}"
+                                class="block -mx-3 -my-3 rounded-lg px-3 py-3 transition hover:bg-muted/40">
+                                <p class="text-sm font-semibold text-foreground">{{ $this->setResultSummary($game) }}
+                                </p>
+                                <p class="text-xs text-muted-foreground">{{ $this->scoreSummary($game) }}</p>
+                            </a>
                         </td>
                         <td class="px-3 py-3 text-muted-foreground">
-                            {{ $game->duration_seconds ? sprintf('%d:%02d', intdiv($game->duration_seconds, 60), $game->duration_seconds % 60) : '—' }}
+                            <a href="{{ $this->scoreRoute($game) }}"
+                                class="block -mx-3 -my-3 rounded-lg px-3 py-3 transition hover:bg-muted/40 hover:text-foreground">
+                                {{ $game->duration_seconds ? sprintf('%d:%02d', intdiv($game->duration_seconds, 60), $game->duration_seconds % 60) : '—' }}
+                            </a>
                         </td>
                         @if ($this->canManageMatches)
                             <td class="px-3 py-3">

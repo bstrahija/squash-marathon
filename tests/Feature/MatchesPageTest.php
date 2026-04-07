@@ -70,6 +70,17 @@ test('matches page loads', function () {
     $response->assertSee('Lista svih mečeva');
 });
 
+test('matches page includes links to score page for each match', function () {
+    $this->withoutVite();
+
+    $game = createMatchForList();
+
+    $response = $this->get('/matches');
+
+    $response->assertSuccessful();
+    $response->assertSee(route('matches.score', ['game' => $game->id]), false);
+});
+
 test('matches create page loads', function () {
     $this->withoutVite();
 

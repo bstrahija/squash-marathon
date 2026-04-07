@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\Event;
+use App\Models\Group;
+use App\Models\Round;
 use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -18,11 +20,20 @@ return new class extends Migration
             $table->foreignIdFor(Event::class)
                 ->constrained()
                 ->cascadeOnDelete();
+            $table->foreignIdFor(Group::class)
+                ->constrained()
+                ->cascadeOnDelete();
+            $table->foreignIdFor(Round::class)
+                ->constrained()
+                ->cascadeOnDelete();
             $table->unsignedTinyInteger('best_of');
             $table->foreignIdFor(User::class, 'player_one_id')
                 ->constrained('users');
             $table->foreignIdFor(User::class, 'player_two_id')
                 ->constrained('users');
+            $table->timestamp('started_at')->nullable();
+            $table->timestamp('finished_at')->nullable();
+            $table->unsignedInteger('duration_seconds')->nullable();
             $table->timestamps();
         });
     }

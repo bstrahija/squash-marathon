@@ -17,11 +17,15 @@ new class extends Component {
 
     public int $playerTwoScore = 0;
 
-    public string $playerOneServingSide = 'L';
+    public ?string $servingPlayer = null;
 
-    public string $playerTwoServingSide = 'R';
+    public string $servingSide = 'right';
+
+    public bool $servingPending = true;
 
     public bool $showStartOverlay = false;
+
+    public bool $showRestartConfirmation = false;
 
     public string $roundName = '—';
 
@@ -53,6 +57,46 @@ new class extends Component {
         $this->appendScoreLog(GameLogSide::Right);
     }
 
+    public function selectServe(string $player): void
+    {
+        if (! in_array($player, ['left', 'right'], true)) {
+            return;
+        }
+
+        if ($this->servingPlayer !== $player) {
+            $this->servingPlayer = $player;
+            $this->servingSide = 'right';
+            $this->servingPending = true;
+
+            return;
+        }
+
+        $this->servingSide = $this->toggleServeSide($this->servingSide);
+    }
+
+    public function serveButtonLabel(string $player): string
+    {
+        if (! in_array($player, ['left', 'right'], true)) {
+            return '?';
+        }
+
+        if ($this->servingPlayer === null) {
+            return '?';
+        }
+
+        if ($this->servingPlayer !== $player) {
+            return '?';
+        }
+
+        $label = $this->servingSide === 'right' ? 'R' : 'L';
+
+        if ($this->servingPending) {
+            return $label.'?';
+        }
+
+        return $label;
+    }
+
     public function undoLastLog(): void
     {
         if (! $this->gameId) {
@@ -73,6 +117,46 @@ new class extends Component {
         $this->syncGameState();
     }
 
+    public function requestRestartGame(): void
+    {
+        if (! $this->gameId) {
+            return;
+        }
+
+        $this->showRestartConfirmation = true;
+    }
+
+    public function cancelRestartGame(): void
+    {
+        $this->showRestartConfirmation = false;
+    }
+
+    public function confirmRestartGame(): void
+    {
+        if (! $this->gameId) {
+            return;
+        }
+
+        $game = Game::query()->find($this->gameId);
+
+        if (! $game) {
+            $this->showRestartConfirmation = false;
+
+            return;
+        }
+
+        $game->gameLogs()->delete();
+
+        $game
+            ->forceFill([
+                'started_at' => now(),
+            ])
+            ->save();
+
+        $this->showRestartConfirmation = false;
+        $this->syncGameState();
+    }
+
     private function appendScoreLog(GameLogSide $side): void
     {
         if (! $this->gameId) {
@@ -85,6 +169,10 @@ new class extends Component {
             return;
         }
 
+        if ($this->servingPlayer === null) {
+            return;
+        }
+
         $lastLog = GameLog::query()
             ->where('game_id', $game->id)
             ->orderByDesc('sequence')
@@ -94,6 +182,19 @@ new class extends Component {
 
         $playerOneScore = (int) ($lastLog?->player_one_score ?? 0);
         $playerTwoScore = (int) ($lastLog?->player_two_score ?? 0);
+
+        if ($side->value === $this->servingPlayer) {
+            if ($this->servingPending) {
+                $this->servingPending = false;
+                $this->servingSide = $this->toggleServeSide($this->servingSide);
+            } else {
+                $this->servingSide = $this->toggleServeSide($this->servingSide);
+            }
+        } else {
+            $this->servingPlayer = $side->value;
+            $this->servingSide = 'right';
+            $this->servingPending = true;
+        }
 
         if ($side === GameLogSide::Left) {
             $playerOneScore++;
@@ -108,13 +209,17 @@ new class extends Component {
             'sequence' => $nextSequence,
             'type' => GameLogType::Score,
             'side' => $side,
+            'serving_player_id' => $this->resolveServingPlayerId($game),
+            'serving_side' => GameLogSide::from($this->servingSide),
             'player_one_score' => $playerOneScore,
             'player_two_score' => $playerTwoScore,
             'player_one_sets' => $this->playerOneSets,
             'player_two_sets' => $this->playerTwoSets,
         ]);
 
-        $this->syncGameState();
+        $this->playerOneScore = $playerOneScore;
+        $this->playerTwoScore = $playerTwoScore;
+        array_unshift($this->historyScores, sprintf('%d - %d', $playerOneScore, $playerTwoScore));
     }
 
     private function syncGameState(): void
@@ -148,6 +253,7 @@ new class extends Component {
         $sets = $game->sets->filter(fn($set): bool => filled($set->player_one_score) && filled($set->player_two_score))->values();
 
         $this->historyScores = $game->gameLogs
+            ->sortByDesc('sequence')
             ->map(
                 fn($history): string => sprintf(
                     '%d - %d',
@@ -161,6 +267,23 @@ new class extends Component {
 
         $this->playerOneScore = (int) ($latestLog?->player_one_score ?? 0);
         $this->playerTwoScore = (int) ($latestLog?->player_two_score ?? 0);
+
+        if ($latestLog) {
+            $this->servingPlayer = $this->resolveServingPlayerSide($game, $latestLog->serving_player_id);
+            $this->servingSide = $latestLog->serving_side?->value ?? 'right';
+
+            $previousLog = $game->gameLogs->count() > 1
+                ? $game->gameLogs->get($game->gameLogs->count() - 2)
+                : null;
+
+            $this->servingPending = $previousLog
+                ? (int) $previousLog->serving_player_id !== (int) $latestLog->serving_player_id
+                : false;
+        } else {
+            $this->servingPlayer = null;
+            $this->servingSide = 'right';
+            $this->servingPending = true;
+        }
 
         $result = Game::determineMatchResultFromSetScores(
             $sets
@@ -178,6 +301,37 @@ new class extends Component {
 
         $this->playerOneSets = $result['player_one_wins'];
         $this->playerTwoSets = $result['player_two_wins'];
+    }
+
+    private function toggleServeSide(string $side): string
+    {
+        return $side === 'right' ? 'left' : 'right';
+    }
+
+    private function resolveServingPlayerId(Game $game): ?int
+    {
+        return match ($this->servingPlayer) {
+            'left' => $game->player_one_id,
+            'right' => $game->player_two_id,
+            default => null,
+        };
+    }
+
+    private function resolveServingPlayerSide(Game $game, ?int $servingPlayerId): ?string
+    {
+        if (! $servingPlayerId) {
+            return null;
+        }
+
+        if ((int) $game->player_one_id === $servingPlayerId) {
+            return 'left';
+        }
+
+        if ((int) $game->player_two_id === $servingPlayerId) {
+            return 'right';
+        }
+
+        return null;
     }
 
     public function startMatch(): void
@@ -215,6 +369,30 @@ new class extends Component {
         </div>
     @endif
 
+    @if ($showRestartConfirmation)
+        <div class="absolute inset-0 z-[60] flex items-center justify-center bg-background/90 backdrop-blur-sm">
+            <div class="w-full max-w-sm rounded-3xl border border-border bg-card p-6 shadow-xl">
+                <p class="text-center text-base font-semibold text-foreground">
+                    Restart this game?
+                </p>
+                <p class="mt-2 text-center text-sm text-muted-foreground">
+                    This will clear all score history and start a fresh game clock.
+                </p>
+
+                <div class="mt-5 flex items-center justify-center gap-3">
+                    <button type="button" wire:click="confirmRestartGame"
+                        class="cursor-pointer rounded-xl border border-red-500/50 bg-red-500/10 px-4 py-2 text-sm font-semibold uppercase tracking-[0.08em] text-red-600 transition hover:bg-red-500/15">
+                        Restart
+                    </button>
+                    <button type="button" wire:click="cancelRestartGame"
+                        class="cursor-pointer rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold uppercase tracking-[0.08em] text-foreground transition hover:border-foreground/40">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <div class="grid h-full w-full grid-cols-[40%_20%_40%]">
         <section class="flex h-full min-h-0 flex-col gap-3 pr-2 sm:gap-4 sm:pr-3">
             <div
@@ -226,14 +404,16 @@ new class extends Component {
                 class="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden rounded-3xl border border-emerald-950/70 bg-slate-900 px-4 py-5 text-emerald-50 shadow-lg">
                 <p class="font-display text-[clamp(5.25rem,16vw,10.5rem)] font-bold leading-none">
                     <span wire:click="awardLeftPoint" class="cursor-pointer select-none">
-                    {{ $playerOneScore }}
+                        {{ $playerOneScore }}
                     </span>
                 </p>
 
-                <button type="button"
-                    class="absolute bottom-3 left-3 text-6xl rounded-xl border border-slate-500/40 bg-slate-950 px-8 py-5 font-bold uppercase tracking-[0.08em] text-slate-100 transition hover:bg-slate-900">
-                    {{ $playerOneServingSide }}
-                </button>
+                @if ($servingPlayer === null || $servingPlayer === 'left')
+                    <button type="button" wire:click="selectServe('left')"
+                        class="absolute bottom-3 left-3 cursor-pointer text-6xl rounded-xl border border-slate-500/40 bg-slate-950 px-8 py-5 font-bold uppercase tracking-[0.08em] text-slate-100 transition hover:bg-slate-900">
+                        {{ $this->serveButtonLabel('left') }}
+                    </button>
+                @endif
             </div>
         </section>
 
@@ -263,11 +443,17 @@ new class extends Component {
                 </ul>
             </div>
 
-            <button type="button"
-                wire:click="undoLastLog"
-                class="rounded-2xl border border-border bg-card px-3 py-3 text-sm font-semibold uppercase tracking-[0.08em] text-foreground shadow-sm transition hover:-translate-y-0.5 hover:border-foreground/40">
-                Undo
-            </button>
+            <div class="grid grid-cols-2 gap-2">
+                <button type="button" wire:click="undoLastLog"
+                    class="rounded-2xl border border-border bg-card px-3 py-3 text-sm font-semibold uppercase tracking-[0.08em] text-foreground shadow-sm transition hover:-translate-y-0.5 hover:border-foreground/40">
+                    Undo
+                </button>
+
+                <button type="button" wire:click="requestRestartGame"
+                    class="rounded-2xl border border-red-500/50 bg-red-500/10 px-3 py-3 text-sm font-semibold uppercase tracking-[0.08em] text-red-600 shadow-sm transition hover:-translate-y-0.5 hover:bg-red-500/15">
+                    Restart
+                </button>
+            </div>
         </section>
 
         <section class="flex h-full min-h-0 flex-col gap-3 pl-2 sm:gap-4 sm:pl-3">
@@ -284,10 +470,12 @@ new class extends Component {
                     </span>
                 </p>
 
-                <button type="button"
-                    class="absolute bottom-3 right-3 text-6xl rounded-xl border border-slate-500/40 bg-slate-950 px-8 py-5 font-bold uppercase tracking-[0.08em] text-slate-100 transition hover:bg-slate-900">
-                    {{ $playerTwoServingSide }}
-                </button>
+                @if ($servingPlayer === null || $servingPlayer === 'right')
+                    <button type="button" wire:click="selectServe('right')"
+                        class="absolute bottom-3 right-3 cursor-pointer text-6xl rounded-xl border border-slate-500/40 bg-slate-950 px-8 py-5 font-bold uppercase tracking-[0.08em] text-slate-100 transition hover:bg-slate-900">
+                        {{ $this->serveButtonLabel('right') }}
+                    </button>
+                @endif
             </div>
         </section>
     </div>

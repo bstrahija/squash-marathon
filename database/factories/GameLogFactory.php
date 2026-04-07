@@ -29,6 +29,11 @@ class GameLogFactory extends Factory
             'sequence' => fake()->numberBetween(1, 20),
             'type' => $type,
             'side' => $side,
+            'serving_player_id' => fn (array $attributes): ?int => fake()->randomElement([
+                Game::query()->find($attributes['game_id'])?->player_one_id,
+                Game::query()->find($attributes['game_id'])?->player_two_id,
+            ]),
+            'serving_side' => fake()->randomElement(GameLogSide::cases()),
             'player_one_score' => fake()->numberBetween(0, 11),
             'player_two_score' => fake()->numberBetween(0, 11),
             'player_one_sets' => fake()->numberBetween(0, 2),
