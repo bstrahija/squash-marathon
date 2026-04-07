@@ -21,10 +21,6 @@
         <x-event-info />
     </section>
 
-    <section id="scoring" class="scroll-mt-24">
-        <x-scoring />
-    </section>
-
     <section id="participants" class="scroll-mt-24">
         <x-participants :participants="$participants" />
     </section>

@@ -12,15 +12,15 @@
         <ul class="mt-4 space-y-3 text-sm text-foreground">
             <li class="flex items-start gap-3">
                 <span class="mt-1 h-2 w-2 rounded-full bg-amber-400"></span>
-                Svaka igra je utrka do 11 bodova.
+                Svaki meč igra se na 2 seta (do 11 bodova).
             </li>
             <li class="flex items-start gap-3">
                 <span class="mt-1 h-2 w-2 rounded-full bg-emerald-400"></span>
-                Pobjede vrijede 2 boda, porazi 1 bod.
+                Pobjeda = 3 boda, remi = 2 boda, poraz = 1 bod.
             </li>
             <li class="flex items-start gap-3">
                 <span class="mt-1 h-2 w-2 rounded-full bg-sky-400"></span>
-                Nema serija. Svaka igra je svoja priča.
+                Bodovi se nakon svakog meča odmah upisuju u poredak.
             </li>
         </ul>
     </div>

@@ -2,7 +2,7 @@
     <div class="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
         <a class="flex items-center gap-3" href="{{ route('home') }}">
             <span
-                class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 via-lime-500 to-amber-400 text-xs font-semibold text-black shadow-sm">
+                class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-linear-to-br from-emerald-500 via-lime-500 to-amber-400 text-xs font-semibold text-black shadow-sm">
                 SM
             </span>
             <div>
@@ -13,7 +13,7 @@
         <div class="hidden items-center gap-6 text-sm md:flex">
             <a class="text-muted-foreground transition hover:text-foreground" href="{{ route('home') }}">O eventu</a>
             <a class="text-muted-foreground transition hover:text-foreground"
-                href="{{ route('matches.index') }}#scoring">Mečevi</a>
+                href="{{ route('matches.index') }}">Mečevi</a>
             <a class="text-muted-foreground transition hover:text-foreground"
                 href="{{ route('home') }}#participants">Ekipa</a>
             <a class="text-muted-foreground transition hover:text-foreground"

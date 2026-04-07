@@ -133,7 +133,7 @@ new class extends Component {
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
                 <thead
-                    class="bg-gradient-to-r from-emerald-400/15 via-amber-400/10 to-sky-400/15 text-xs uppercase tracking-widest text-muted-foreground">
+                    class="bg-linear-to-r from-emerald-400/15 via-amber-400/10 to-sky-400/15 text-xs uppercase tracking-widest text-muted-foreground">
                     <tr>
                         <th class="px-4 py-3">Igrač</th>
                         <th class="px-4 py-3">Pobjede</th>
