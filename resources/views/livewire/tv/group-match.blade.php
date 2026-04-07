@@ -33,25 +33,13 @@ new class extends Component {
             return null;
         }
 
-        $liveGame = $games->filter(fn(Game $game): bool => $this->isLiveGame($game))->sortByDesc(fn(Game $game): int => $game->started_at?->timestamp ?? ($game->created_at?->timestamp ?? 0))->first();
+        $liveGame = $games->filter(fn(Game $game): bool => $this->isLiveGame($game))->sortByDesc('id')->first();
 
         if ($liveGame) {
             return $this->mapGame($liveGame);
         }
 
-        $waitingGame = $games->filter(fn(Game $game): bool => $this->isWaitingGame($game))->sortByDesc(fn(Game $game): int => $game->created_at?->timestamp ?? 0)->first();
-
-        if ($waitingGame) {
-            return $this->mapGame($waitingGame);
-        }
-
-        $finishedGame = $games->filter(fn(Game $game): bool => $this->isFinishedGame($game))->sortByDesc(fn(Game $game): int => $game->finished_at?->timestamp ?? ($game->created_at?->timestamp ?? 0))->first();
-
-        if ($finishedGame) {
-            return $this->mapGame($finishedGame);
-        }
-
-        $latestGame = $games->sortByDesc(fn(Game $game): int => $game->created_at?->timestamp ?? 0)->first();
+        $latestGame = $games->sortByDesc('id')->first();
 
         if (!$latestGame) {
             return null;
@@ -87,6 +75,7 @@ new class extends Component {
 
         return [
             'id' => $game->id,
+            'score_url' => route('matches.score', $game),
             'group_name' => $game->group?->name ?? "Group {$this->groupNumber}",
             'player_one' => $this->formatPlayerDisplayName($game->playerOne?->full_name),
             'player_two' => $this->formatPlayerDisplayName($game->playerTwo?->full_name),
@@ -200,7 +189,8 @@ new class extends Component {
 
 <div class="tv-group-match flex h-full min-h-0 flex-col" wire:poll.3s>
     @if ($match)
-        <div class="tv-group-grid grid h-full min-h-0 flex-1 items-stretch overflow-hidden bg-background/35">
+        <a href="{{ $match['score_url'] }}" aria-label="Open match score"
+            class="tv-group-grid grid h-full min-h-0 flex-1 items-stretch overflow-hidden bg-background/35 transition-colors hover:bg-background/50 focus-visible:bg-background/50 focus-visible:outline-none">
             <div class="tv-group-player-column flex h-full min-h-0 flex-col items-center justify-center text-center">
                 <p title="{{ $match['player_one_full'] }}"
                     class="tv-group-player-name truncate whitespace-nowrap font-semibold leading-tight {{ $match['player_one_class'] }}">
@@ -243,7 +233,7 @@ new class extends Component {
                     class="tv-group-point self-center text-center font-display font-normal leading-none text-foreground/80">
                     {{ $match['sets_two'] }}</p>
             </div>
-        </div>
+        </a>
     @else
         <div
             class="tv-group-empty flex min-h-0 flex-1 items-center justify-center bg-background/35 px-6 text-center text-muted-foreground">

@@ -69,6 +69,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Local Simulated Time
+    |--------------------------------------------------------------------------
+    |
+    | Freeze "now" in local environment to simplify event timeline previews.
+    | This is ignored outside local env. Override in .env if needed.
+    |
+    */
+
+    'local_simulated_now' => env('APP_LOCAL_SIMULATED_NOW', '2026-04-24 23:15:00'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------
     |

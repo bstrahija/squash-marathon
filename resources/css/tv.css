@@ -6,6 +6,21 @@
     grid-template-rows: repeat(6, minmax(0, 1fr));
 }
 
+.tv-panel-live {
+    grid-column: 1;
+    grid-row: 1 / -1;
+}
+
+.tv-panel-recent {
+    grid-column: 2;
+    grid-row: 1 / -1;
+}
+
+.tv-panel-right {
+    grid-column: 3;
+    grid-row: 1 / -1;
+}
+
 @media (orientation: landscape) {
     .tv-container {
         height: 100svh;
@@ -17,7 +32,7 @@
     }
 }
 
-@media (orientation: portrait) {
+@media (max-width: 1023px) {
     .tv-body {
         overflow-x: hidden;
         overflow-y: auto;
@@ -31,14 +46,52 @@
     .tv-grid {
         height: auto;
         min-height: 100svh;
+    }
+
+    .tv-panel-live,
+    .tv-panel-recent,
+    .tv-panel-right {
+        grid-row: auto;
+    }
+
+    .tv-panel-live {
+        min-height: clamp(26rem, 58svh, 56rem);
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+    .tv-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    .tv-panel-live {
+        grid-column: 1 / -1 !important;
+        grid-row: 1;
+    }
+
+    .tv-panel-recent {
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    .tv-panel-right {
+        grid-column: 2;
+        grid-row: 2;
+    }
+}
+
+@media (max-width: 767px) {
+    .tv-grid {
         grid-template-columns: minmax(0, 1fr);
-        grid-template-rows: repeat(3, minmax(0, 1fr));
+        grid-template-rows: auto auto auto;
     }
 
     .tv-panel-live,
     .tv-panel-recent,
     .tv-panel-right {
         grid-column: 1 / -1 !important;
+        min-height: 0;
     }
 
     .tv-panel-live {

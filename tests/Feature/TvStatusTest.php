@@ -152,9 +152,9 @@ test('tv leaderboard livewire component shows all event players', function () {
     ]);
 
     Livewire::test('tv.leaderboard')
-        ->assertSee($playerOne->full_name)
-        ->assertSee($playerTwo->full_name)
-        ->assertSee($playerThree->full_name);
+        ->assertSee(tvShortName($playerOne))
+        ->assertSee(tvShortName($playerTwo))
+        ->assertSee(tvShortName($playerThree));
 });
 
 test('tv latest games component shows last 30 games with result and duration', function () {
@@ -207,8 +207,8 @@ test('tv latest games component shows last 30 games with result and duration', f
     }
 
     Livewire::test('tv.latest-games')
-        ->assertSee($playerOne->full_name)
-        ->assertSee($playerTwo->full_name)
+        ->assertSee(tvShortName($playerOne))
+        ->assertSee(tvShortName($playerTwo))
         ->assertSee('Rezultat 11-5, 11-7')
         ->assertSee('Trajanje 1:31')
         ->assertDontSee('Trajanje 1:01');
@@ -291,6 +291,7 @@ test('tv group match component prefers live game over finished game in same grou
         ->assertSee(tvShortName($livePlayerOne))
         ->assertSee(tvShortName($livePlayerTwo))
         ->assertSee('UŽIVO')
+        ->assertSee(route('matches.score', $liveGame), false)
         ->assertDontSee(tvShortName($finishedPlayerOne))
         ->assertDontSee(tvShortName($finishedPlayerTwo));
 });

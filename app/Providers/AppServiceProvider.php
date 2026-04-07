@@ -33,6 +33,12 @@ class AppServiceProvider extends ServiceProvider
     {
         Date::use(CarbonImmutable::class);
 
+        if (app()->environment('local') && filled(config('app.local_simulated_now'))) {
+            Date::setTestNow(
+                CarbonImmutable::parse((string) config('app.local_simulated_now'), config('app.timezone')),
+            );
+        }
+
         DB::prohibitDestructiveCommands(
             app()->isProduction(),
         );
