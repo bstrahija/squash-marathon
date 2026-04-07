@@ -20,7 +20,7 @@
                     ->join('');
                 $summary =
                     $participant['games'] > 0
-                        ? "{$participant['wins']} pobjede · {$participant['draws']} remija · {$participant['losses']} porazi"
+                        ? "{$participant['wins']} pobjede · {$participant['draws']} remija · {$participant['losses']} poraza"
                         : 'Još bez odigranih';
             @endphp
             <div class="rounded-2xl border border-border/70 bg-background/70 p-4">

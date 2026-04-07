@@ -111,14 +111,6 @@ class GameForm
                     ->required()
                     ->preload()
                     ->searchable(),
-                Select::make('court_number')
-                    ->label('Court')
-                    ->options([
-                        1 => 'Court 1',
-                        2 => 'Court 2',
-                    ])
-                    ->default(1)
-                    ->required(),
                 Repeater::make('sets')
                     ->relationship()
                     ->columns([

@@ -30,7 +30,6 @@ class GameFactory extends Factory
                 'round_id' => $attributes['round_id'],
             ])->id,
             'best_of' => 2,
-            'court_number' => $this->faker->numberBetween(1, 2),
             'player_one_id' => User::factory(),
             'player_two_id' => User::factory(),
         ];

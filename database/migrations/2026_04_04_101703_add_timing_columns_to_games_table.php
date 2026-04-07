@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('games', function (Blueprint $table) {
-            $table->timestamp('started_at')->nullable()->after('court_number');
+            $table->timestamp('started_at')->nullable()->after('group_id');
             $table->timestamp('finished_at')->nullable()->after('started_at');
             $table->unsignedInteger('duration_seconds')->nullable()->after('finished_at');
         });

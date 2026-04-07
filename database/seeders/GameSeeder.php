@@ -92,7 +92,6 @@ class GameSeeder extends Seeder
                     'round_id' => $round->id,
                     'group_id' => $group->id,
                     'best_of' => 2,
-                    'court_number' => ($index % 2) + 1,
                     'started_at' => $gameStartedAt,
                     'finished_at' => $gameFinishedAt,
                     'player_one_id' => $playerOne->id,
@@ -141,6 +140,112 @@ class GameSeeder extends Seeder
                     $remainingSeconds = max(0, $remainingSeconds - $setDurationSeconds);
                 }
             }
+        }
+
+        $this->seedLiveAndWaitingMatches($event, $endTimestamp);
+    }
+
+    private function seedLiveAndWaitingMatches(Event $event, int $endTimestamp): void
+    {
+        $round = Round::query()
+            ->where('event_id', $event->id)
+            ->with(['groups.users'])
+            ->orderByDesc('number')
+            ->first();
+
+        if (! $round) {
+            return;
+        }
+
+        $groups = $round->groups
+            ->filter(fn ($group): bool => $group->users->count() >= 2)
+            ->sortBy('number')
+            ->values()
+            ->take(2);
+
+        if ($groups->isEmpty()) {
+            return;
+        }
+
+        $baseCreatedAt = Carbon::createFromTimestamp($endTimestamp)->subMinutes(25);
+
+        foreach ($groups as $index => $group) {
+            $players = $group->users->shuffle()->values();
+            $playerOne = $players->get(0);
+            $playerTwo = $players->get(1);
+
+            if (! $playerOne || ! $playerTwo) {
+                continue;
+            }
+
+            $createdAt = $baseCreatedAt->copy()->addMinutes($index * 6);
+
+            if ($index !== 0) {
+                Game::factory()->create([
+                    'event_id' => $event->id,
+                    'round_id' => $round->id,
+                    'group_id' => $group->id,
+                    'best_of' => 2,
+                    'started_at' => null,
+                    'finished_at' => null,
+                    'duration_seconds' => null,
+                    'player_one_id' => $playerOne->id,
+                    'player_two_id' => $playerTwo->id,
+                    'created_at' => $createdAt,
+                    'updated_at' => $createdAt,
+                ]);
+
+                continue;
+            }
+
+            $startedAt = $createdAt->copy()->addMinutes(1);
+
+            $game = Game::factory()->create([
+                'event_id' => $event->id,
+                'round_id' => $round->id,
+                'group_id' => $group->id,
+                'best_of' => 2,
+                'started_at' => $startedAt,
+                'finished_at' => null,
+                'duration_seconds' => null,
+                'player_one_id' => $playerOne->id,
+                'player_two_id' => $playerTwo->id,
+                'created_at' => $createdAt,
+                'updated_at' => $createdAt,
+            ]);
+
+            $firstSetDurationSeconds = random_int(360, 900);
+            $firstSetStartedAt = $startedAt->copy();
+            $firstSetFinishedAt = $firstSetStartedAt->copy()->addSeconds($firstSetDurationSeconds);
+            $firstSetScores = $this->generateSetScores((bool) random_int(0, 1));
+
+            Set::factory()->create([
+                'game_id' => $game->id,
+                'round_id' => $round->id,
+                'group_id' => $group->id,
+                'started_at' => $firstSetStartedAt,
+                'finished_at' => $firstSetFinishedAt,
+                'player_one_id' => $playerOne->id,
+                'player_two_id' => $playerTwo->id,
+                'player_one_score' => $firstSetScores['player_one_score'],
+                'player_two_score' => $firstSetScores['player_two_score'],
+                'created_at' => $createdAt,
+                'updated_at' => $createdAt,
+            ]);
+
+            Set::factory()->create([
+                'game_id' => $game->id,
+                'round_id' => $round->id,
+                'group_id' => $group->id,
+                'started_at' => $firstSetFinishedAt,
+                'finished_at' => null,
+                'player_one_id' => $playerOne->id,
+                'player_two_id' => $playerTwo->id,
+                'player_one_score' => null,
+                'player_two_score' => null,
+                'created_at' => $createdAt,
+                'updated_at' => $createdAt,
+            ]);
         }
     }
 

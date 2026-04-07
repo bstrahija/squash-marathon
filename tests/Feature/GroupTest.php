@@ -30,7 +30,6 @@ test('group connects events, users, games, and sets', function () {
         'round_id' => $round->id,
         'group_id' => $group->id,
         'best_of' => 2,
-        'court_number' => 1,
         'player_one_id' => $playerOne->id,
         'player_two_id' => $playerTwo->id,
     ]);

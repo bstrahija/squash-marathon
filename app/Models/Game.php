@@ -23,7 +23,6 @@ class Game extends Model
         'round_id',
         'group_id',
         'best_of',
-        'court_number',
         'started_at',
         'finished_at',
         'duration_seconds',
@@ -47,10 +46,6 @@ class Game extends Model
                 throw new InvalidArgumentException('Game best_of must be 2.');
             }
 
-            if ($game->court_number !== null && ! in_array($game->court_number, [1, 2], true)) {
-                throw new InvalidArgumentException('Game court_number must be 1 or 2.');
-            }
-
             if ($game->player_one_id && $game->player_two_id && $game->player_one_id === $game->player_two_id) {
                 throw new InvalidArgumentException('Game players must be different.');
             }
@@ -66,7 +61,6 @@ class Game extends Model
     {
         return [
             'best_of' => 'integer',
-            'court_number' => 'integer',
             'round_id' => 'integer',
             'started_at' => 'datetime',
             'finished_at' => 'datetime',

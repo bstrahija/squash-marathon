@@ -1,0 +1,196 @@
+.tv-container {
+    min-height: 100svh;
+}
+
+.tv-grid {
+    grid-template-rows: repeat(6, minmax(0, 1fr));
+}
+
+@media (orientation: landscape) {
+    .tv-container {
+        height: 100svh;
+        overflow: hidden;
+    }
+
+    .tv-grid {
+        height: 100%;
+    }
+}
+
+@media (orientation: portrait) {
+    .tv-body {
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+
+    .tv-container {
+        height: auto;
+        overflow: visible;
+    }
+
+    .tv-grid {
+        height: auto;
+        min-height: 100svh;
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: repeat(4, minmax(0, 1fr));
+    }
+
+    .tv-panel-group-1,
+    .tv-panel-group-2,
+    .tv-panel-leaderboard,
+    .tv-panel-latest {
+        grid-column: 1 / -1 !important;
+    }
+
+    .tv-panel-group-1 {
+        grid-row: 1;
+    }
+
+    .tv-panel-group-2 {
+        grid-row: 2;
+    }
+
+    .tv-panel-leaderboard {
+        grid-row: 3;
+    }
+
+    .tv-panel-latest {
+        grid-row: 4;
+    }
+}
+
+.tv-group-match {
+    padding: clamp(1rem, 2.2vmin, 2.4rem);
+}
+
+.tv-group-status {
+    font-size: clamp(0.82rem, 1.3vmin, 1.2rem);
+}
+
+@keyframes tv-group-status-blink {
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.35;
+    }
+}
+
+.tv-group-status-live {
+    animation: tv-group-status-blink 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tv-group-status-live {
+        animation: none;
+    }
+}
+
+.tv-group-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(12rem, 33%) minmax(0, 1fr);
+    gap: clamp(1rem, 2.3vmin, 2.6rem);
+    padding: clamp(1rem, 2.1vmin, 2.4rem);
+}
+
+.tv-group-player-column {
+    gap: clamp(0.65rem, 1.8vmin, 1.9rem);
+}
+
+.tv-group-player-name {
+    font-size: clamp(1.35rem, 3.05vmin, 2.85rem);
+}
+
+.tv-group-point {
+    font-size: clamp(2.1rem, 5.7vmin, 5.8rem);
+}
+
+.tv-group-center {
+    gap: clamp(0.9rem, 2.1vmin, 2rem);
+}
+
+.tv-group-name {
+    font-size: clamp(0.72rem, 1vmin, 0.96rem);
+}
+
+.tv-group-set-score {
+    font-size: clamp(3rem, 8.4vmin, 8.2rem);
+}
+
+.tv-group-timeline {
+    gap: clamp(0.34rem, 0.9vmin, 0.72rem);
+    font-size: clamp(0.74rem, 1.06vmin, 1rem);
+}
+
+.tv-group-chip {
+    padding: clamp(0.24rem, 0.5vmin, 0.5rem) clamp(0.46rem, 0.86vmin, 0.98rem);
+}
+
+.tv-group-empty {
+    font-size: clamp(0.9rem, 1.4vmin, 1.2rem);
+}
+
+.tv-leaderboard {
+    --tv-lb-table: clamp(0.96rem, 1.25vw, 1.22rem);
+    --tv-lb-head: clamp(0.64rem, 0.82vw, 0.84rem);
+    --tv-lb-cell-padding: 0.75rem 1rem;
+
+    padding: clamp(0.85rem, 1.1vw, 1.3rem);
+}
+
+.tv-leaderboard.tv-density-comfortable {
+    --tv-lb-table: clamp(1.15rem, 1.7vw, 1.7rem);
+    --tv-lb-head: clamp(0.72rem, 1vw, 1rem);
+    --tv-lb-cell-padding: 1rem 1.25rem;
+}
+
+.tv-leaderboard.tv-density-compact {
+    --tv-lb-table: clamp(0.78rem, 0.95vw, 0.98rem);
+    --tv-lb-head: clamp(0.55rem, 0.64vw, 0.72rem);
+    --tv-lb-cell-padding: 0.625rem 0.75rem;
+}
+
+.tv-leaderboard-table {
+    font-size: var(--tv-lb-table);
+}
+
+.tv-leaderboard-head {
+    font-size: var(--tv-lb-head);
+}
+
+.tv-leaderboard-cell {
+    padding: var(--tv-lb-cell-padding);
+}
+
+.tv-latest-games {
+    --tv-latest-text: clamp(0.82rem, 1.06vw, 1.06rem);
+    --tv-latest-subtext: clamp(0.64rem, 0.74vw, 0.78rem);
+    --tv-latest-card-padding: 0.625rem 0.875rem;
+
+    padding: clamp(0.75rem, 1vw, 1.1rem);
+}
+
+.tv-latest-games.tv-density-comfortable {
+    --tv-latest-text: clamp(0.95rem, 1.3vw, 1.3rem);
+    --tv-latest-subtext: clamp(0.72rem, 0.95vw, 0.92rem);
+    --tv-latest-card-padding: 0.75rem 1rem;
+}
+
+.tv-latest-games.tv-density-compact {
+    --tv-latest-text: clamp(0.72rem, 0.86vw, 0.9rem);
+    --tv-latest-subtext: clamp(0.56rem, 0.64vw, 0.68rem);
+    --tv-latest-card-padding: 0.5rem 0.75rem;
+}
+
+.tv-latest-text {
+    font-size: var(--tv-latest-text);
+}
+
+.tv-latest-subtext {
+    font-size: var(--tv-latest-subtext);
+}
+
+.tv-latest-game-card {
+    padding: var(--tv-latest-card-padding);
+}
