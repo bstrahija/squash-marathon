@@ -187,6 +187,26 @@ test('serving controls follow expected visibility and side transitions', functio
         ->assertSet('servingPending', true);
 });
 
+test('clicking score before selecting serve assumes right serving side', function () {
+    $game = Game::factory()->create([
+        'started_at' => now(),
+    ]);
+
+    Livewire::test('matches-score', ['gameId' => $game->id])
+        ->assertSet('servingPlayer', null)
+        ->assertSet('servingSide', 'right')
+        ->assertSet('servingPending', true)
+        ->call('awardLeftPoint')
+        ->assertSet('playerOneScore', 1)
+        ->assertSet('playerTwoScore', 0)
+        ->assertSet('servingPlayer', 'left')
+        ->assertSet('servingSide', 'left')
+        ->assertSet('servingPending', false)
+        ->assertSet('historyScores', ['1 - 0']);
+
+    expect(GameLog::query()->where('game_id', $game->id)->count())->toBe(1);
+});
+
 test('matches score component can restart game after confirmation', function () {
     $originalStartedAt = now()->subMinutes(10);
 
@@ -368,9 +388,9 @@ test('undoing to zero points in next set shows next set dialog and allows going 
         ->assertSet('showNextSetOverlay', false)
         ->assertSet('playerOneSets', 0)
         ->assertSet('playerTwoSets', 0)
-        ->assertSet('playerOneScore', 0)
+        ->assertSet('playerOneScore', 10)
         ->assertSet('playerTwoScore', 0)
-        ->assertSet('historyScores', []);
+        ->assertSet('historyScores', ['10 - 0']);
 
     $game->refresh();
 
@@ -378,7 +398,81 @@ test('undoing to zero points in next set shows next set dialog and allows going 
     expect(Set::query()->where('game_id', $game->id)->whereNull('finished_at')->count())->toBe(1);
     expect($game->player_one_sets)->toBe(0);
     expect($game->player_two_sets)->toBe(0);
-    expect(GameLog::query()->where('game_id', $game->id)->count())->toBe(0);
+    expect(GameLog::query()->where('game_id', $game->id)->count())->toBe(1);
+});
+
+test('undo immediately after starting next set returns to previous set boundary state', function () {
+    $game = Game::factory()->create([
+        'started_at' => now(),
+        'best_of' => 2,
+    ]);
+
+    $component = Livewire::test('matches-score', ['gameId' => $game->id])
+        ->call('selectServe', 'left');
+
+    for ($i = 0; $i < 11; $i++) {
+        $component->call('awardLeftPoint');
+    }
+
+    $component
+        ->assertSet('showNextSetOverlay', true)
+        ->call('startNextSet')
+        ->assertSet('showNextSetOverlay', false)
+        ->call('undoLastLog')
+        ->assertSet('showNextSetOverlay', false)
+        ->assertSet('playerOneSets', 0)
+        ->assertSet('playerTwoSets', 0)
+        ->assertSet('playerOneScore', 10)
+        ->assertSet('playerTwoScore', 0)
+        ->assertSet('historyScores', ['10 - 0']);
+
+    $game->refresh();
+
+    expect(Set::query()->where('game_id', $game->id)->whereNotNull('finished_at')->count())->toBe(0);
+    expect(Set::query()->where('game_id', $game->id)->whereNull('finished_at')->count())->toBe(1);
+    expect($game->player_one_sets)->toBe(0);
+    expect($game->player_two_sets)->toBe(0);
+    expect(GameLog::query()->where('game_id', $game->id)->count())->toBe(1);
+});
+
+test('undo backs out empty current set before removing historical logs', function () {
+    $game = Game::factory()->create([
+        'started_at' => now(),
+        'best_of' => 2,
+    ]);
+
+    $component = Livewire::test('matches-score', ['gameId' => $game->id])
+        ->call('selectServe', 'left');
+
+    for ($i = 0; $i < 11; $i++) {
+        $component->call('awardLeftPoint');
+    }
+
+    $component
+        ->assertSet('showNextSetOverlay', true)
+        ->call('startNextSet')
+        ->assertSet('showNextSetOverlay', false);
+
+    GameLog::factory()->create([
+        'game_id' => $game->id,
+        'player_one_id' => $game->player_one_id,
+        'player_two_id' => $game->player_two_id,
+        'sequence' => 1,
+        'type' => GameLogType::Score,
+        'side' => GameLogSide::Left,
+        'serving_player_id' => $game->player_one_id,
+        'serving_side' => GameLogSide::Right,
+        'player_one_score' => 11,
+        'player_two_score' => 0,
+        'player_one_sets' => 0,
+        'player_two_sets' => 0,
+    ]);
+
+    $component->call('undoLastLog');
+
+    expect(Set::query()->where('game_id', $game->id)->whereNotNull('finished_at')->count())->toBe(0);
+    expect(Set::query()->where('game_id', $game->id)->whereNull('finished_at')->count())->toBe(1);
+    expect(GameLog::query()->where('game_id', $game->id)->count())->toBe(2);
 });
 
 test('match done dialog undo removes last point and reopens set', function () {

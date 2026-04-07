@@ -137,7 +137,7 @@ new class extends Component {
 };
 ?>
 
-<div class="tv-leaderboard tv-density-{{ $this->density }} flex h-full min-h-0 flex-col">
+<div class="tv-leaderboard tv-density-{{ $this->density }} flex h-full min-h-0 flex-col" wire:poll.20s>
     <div class="min-h-0 flex-1 overflow-hidden bg-background/40">
         <div class="h-full overflow-auto">
             <table class="tv-leaderboard-table w-full text-left leading-tight">

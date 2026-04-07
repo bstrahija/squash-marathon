@@ -198,15 +198,16 @@ new class extends Component {
     $match = $this->match;
 @endphp
 
-<div class="tv-group-match flex h-full min-h-0 flex-col">
+<div class="tv-group-match flex h-full min-h-0 flex-col" wire:poll.3s>
     @if ($match)
         <div class="tv-group-grid grid h-full min-h-0 flex-1 items-stretch overflow-hidden bg-background/35">
-            <div class="tv-group-player-column flex h-full min-h-0 flex-col justify-center text-right">
+            <div class="tv-group-player-column flex h-full min-h-0 flex-col items-center justify-center text-center">
                 <p title="{{ $match['player_one_full'] }}"
                     class="tv-group-player-name truncate whitespace-nowrap font-semibold leading-tight {{ $match['player_one_class'] }}">
                     {{ $match['player_one'] }}</p>
-                <p class="tv-group-point font-display font-semibold leading-none text-foreground">
-                    {{ $match['player_one_current'] }}</p>
+                <p
+                    class="tv-group-point self-center text-center font-display font-normal leading-none text-foreground/80">
+                    {{ $match['sets_one'] }}</p>
             </div>
 
             <div class="tv-group-center flex h-full min-w-40 flex-col items-center justify-center">
@@ -218,7 +219,7 @@ new class extends Component {
                     {{ $match['status'] }}
                 </span>
                 <div class="tv-group-set-score font-display font-semibold leading-none tracking-tight text-foreground">
-                    {{ $match['sets_one'] }} : {{ $match['sets_two'] }}
+                    {{ $match['player_one_current'] }} : {{ $match['player_two_current'] }}
                 </div>
 
                 <div class="tv-group-timeline flex w-full flex-wrap items-center justify-center overflow-hidden">
@@ -234,12 +235,13 @@ new class extends Component {
                 </div>
             </div>
 
-            <div class="tv-group-player-column flex h-full min-h-0 flex-col justify-center text-left">
+            <div class="tv-group-player-column flex h-full min-h-0 flex-col items-center justify-center text-center">
                 <p title="{{ $match['player_two_full'] }}"
                     class="tv-group-player-name truncate whitespace-nowrap font-semibold leading-tight {{ $match['player_two_class'] }}">
                     {{ $match['player_two'] }}</p>
-                <p class="tv-group-point font-display font-semibold leading-none text-foreground">
-                    {{ $match['player_two_current'] }}</p>
+                <p
+                    class="tv-group-point self-center text-center font-display font-normal leading-none text-foreground/80">
+                    {{ $match['sets_two'] }}</p>
             </div>
         </div>
     @else

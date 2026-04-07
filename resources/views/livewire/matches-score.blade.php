@@ -130,10 +130,20 @@ new class extends Component {
             return;
         }
 
+        if ($this->canNavigateBackToPreviousSet($game)) {
+            $this->navigateBackToPreviousSet($game);
+
+            $this->showMatchDoneOverlay = false;
+            $this->showNextSetOverlay = false;
+            $this->syncGameState();
+
+            return;
+        }
+
         $lastLog = GameLog::query()->where('game_id', $this->gameId)->orderByDesc('sequence')->first();
 
         if (!$lastLog) {
-            if ($this->showNextSetOverlay && $this->canNavigateBackToPreviousSet($game)) {
+            if ($this->canNavigateBackToPreviousSet($game)) {
                 $this->navigateBackToPreviousSet($game);
 
                 $this->showMatchDoneOverlay = false;
@@ -141,10 +151,6 @@ new class extends Component {
                 $this->syncGameState();
 
                 return;
-            }
-
-            if ($this->canNavigateBackToPreviousSet($game)) {
-                $this->showNextSetOverlay = true;
             }
 
             return;
@@ -277,7 +283,9 @@ new class extends Component {
         }
 
         if ($this->servingPlayer === null) {
-            return;
+            $this->servingPlayer = $side->value;
+            $this->servingSide = 'right';
+            $this->servingPending = true;
         }
 
         $lastLog = GameLog::query()->where('game_id', $game->id)->orderByDesc('sequence')->first();
@@ -576,7 +584,7 @@ new class extends Component {
 
         $hasCompletedSet = Set::query()->where('game_id', $game->id)->whereNotNull('finished_at')->exists();
 
-        $hasCurrentSetLogs = GameLog::query()->where('game_id', $game->id)->exists();
+        $hasCurrentSetLogs = GameLog::query()->where('game_id', $game->id)->where('player_one_sets', (int) $game->player_one_sets)->where('player_two_sets', (int) $game->player_two_sets)->exists();
 
         return $hasCurrentSet && $hasCompletedSet && !$hasCurrentSetLogs;
     }
@@ -592,7 +600,17 @@ new class extends Component {
                 return;
             }
 
+            $playerOneScore = (int) ($latestCompletedSet->player_one_score ?? 0);
+            $playerTwoScore = (int) ($latestCompletedSet->player_two_score ?? 0);
             $setStartedAt = $latestCompletedSet->started_at ?? now();
+
+            if ($playerOneScore >= $playerTwoScore) {
+                $playerOneScore = max(0, $playerOneScore - 1);
+                $scoringSide = GameLogSide::Left;
+            } else {
+                $playerTwoScore = max(0, $playerTwoScore - 1);
+                $scoringSide = GameLogSide::Right;
+            }
 
             $activeSet->delete();
             $latestCompletedSet->delete();
@@ -603,8 +621,36 @@ new class extends Component {
                 return;
             }
 
-            $this->ensureActiveSet($freshGame, $setStartedAt);
-            $this->persistGameStateFromSets($freshGame);
+            Set::query()->create([
+                'game_id' => $freshGame->id,
+                'round_id' => $freshGame->round_id,
+                'group_id' => $freshGame->group_id,
+                'player_one_id' => $freshGame->player_one_id,
+                'player_two_id' => $freshGame->player_two_id,
+                'started_at' => $setStartedAt,
+                'finished_at' => null,
+                'player_one_score' => null,
+                'player_two_score' => null,
+            ]);
+
+            $result = $this->persistGameStateFromSets($freshGame);
+
+            $nextSequence = ((int) (GameLog::query()->where('game_id', $freshGame->id)->max('sequence') ?? 0)) + 1;
+
+            GameLog::query()->create([
+                'game_id' => $freshGame->id,
+                'player_one_id' => $freshGame->player_one_id,
+                'player_two_id' => $freshGame->player_two_id,
+                'sequence' => $nextSequence,
+                'type' => GameLogType::Score,
+                'side' => $scoringSide,
+                'serving_player_id' => null,
+                'serving_side' => null,
+                'player_one_score' => $playerOneScore,
+                'player_two_score' => $playerTwoScore,
+                'player_one_sets' => $result['player_one_wins'],
+                'player_two_sets' => $result['player_two_wins'],
+            ]);
         });
     }
 

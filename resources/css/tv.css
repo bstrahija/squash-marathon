@@ -98,7 +98,7 @@
 }
 
 .tv-group-point {
-    font-size: clamp(2.1rem, 5.7vmin, 5.8rem);
+    font-size: clamp(1.35rem, 3.2vmin, 3.2rem);
 }
 
 .tv-group-center {

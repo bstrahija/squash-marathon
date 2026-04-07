@@ -44,7 +44,7 @@ new class extends Component {
 };
 ?>
 
-<div class="tv-event-end-countdown flex h-full min-h-0 flex-col p-4">
+<div class="tv-event-end-countdown flex h-full min-h-0 flex-col p-4" wire:poll.5s>
     <p class="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
         Event End Countdown
     </p>

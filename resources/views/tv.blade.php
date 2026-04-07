@@ -16,10 +16,10 @@
                 class="tv-panel-live col-start-1 row-span-6 min-h-0 rounded-3xl border border-border bg-card shadow-sm">
                 <div class="grid h-full min-h-0 grid-rows-2 gap-4 p-4">
                     <div class="min-h-0 rounded-3xl border border-border bg-card/70 shadow-sm">
-                        <livewire:tv.group-match :group-number="1" wire:poll.3s />
+                        <livewire:tv.group-match :group-number="1" :key="'tv-group-match-1'" />
                     </div>
                     <div class="min-h-0 rounded-3xl border border-border bg-card/70 shadow-sm">
-                        <livewire:tv.group-match :group-number="2" wire:poll.3s />
+                        <livewire:tv.group-match :group-number="2" :key="'tv-group-match-2'" />
                     </div>
                 </div>
             </section>
@@ -32,7 +32,7 @@
                         Recent Matches
                     </div>
                     <div class="min-h-0 flex-1">
-                        <livewire:tv.latest-games wire:poll.3s />
+                        <livewire:tv.latest-games />
                     </div>
                 </div>
             </section>
@@ -40,10 +40,10 @@
             <section class="tv-panel-right col-start-3 row-span-6 min-h-0">
                 <div class="flex h-full min-h-0 flex-col gap-4">
                     <div class="min-h-0 rounded-3xl border border-border bg-card shadow-sm">
-                        <livewire:tv.event-end-countdown wire:poll.5s />
+                        <livewire:tv.event-end-countdown />
                     </div>
                     <div class="min-h-0 flex-1 rounded-3xl border border-border bg-card shadow-sm">
-                        <livewire:tv.leaderboard wire:poll.20s />
+                        <livewire:tv.leaderboard />
                     </div>
                 </div>
             </section>
