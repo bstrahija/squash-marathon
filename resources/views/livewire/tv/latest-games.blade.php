@@ -65,15 +65,15 @@ new class extends Component {
                 return [
                     'id' => $game->id,
                     'time' => $game->created_at,
-                    'player_one' => $this->formatPlayerDisplayName($game->playerOne->full_name),
-                    'player_two' => $this->formatPlayerDisplayName($game->playerTwo->full_name),
+                    'player_one' => $game->playerOne->full_name,
+                    'player_two' => $game->playerTwo->full_name,
                     'player_one_class' => $this->playerClass($game->player_one_id, $winnerId, $isDraw),
                     'player_two_class' => $this->playerClass($game->player_two_id, $winnerId, $isDraw),
                     'score' => $scores !== '' ? $scores : '—',
                     'duration' => $this->formatDuration($durationSeconds),
                 ];
             })
-            ->sortByDesc('id')
+            ->sortByDesc('time')
             ->take(30)
             ->values()
             ->all();
@@ -123,35 +123,10 @@ new class extends Component {
 
         return 'text-foreground/70';
     }
-
-    private function formatPlayerDisplayName(?string $fullName): string
-    {
-        $fullName = trim((string) $fullName);
-
-        if ($fullName === '') {
-            return 'Igrac';
-        }
-
-        $parts = preg_split('/\s+/u', $fullName) ?: [];
-        $firstName = $parts[0] ?? '';
-
-        if ($firstName === '') {
-            return $fullName;
-        }
-
-        $firstInitial = mb_substr($firstName, 0, 1);
-        $lastName = trim(implode(' ', array_slice($parts, 1)));
-
-        if ($lastName === '') {
-            return sprintf('%s.', $firstInitial);
-        }
-
-        return sprintf('%s. %s', $firstInitial, $lastName);
-    }
 };
 ?>
 
-<div class="tv-latest-games tv-density-{{ $this->density }} flex h-full min-h-0 flex-col" wire:poll.keep-alive.3s>
+<div class="tv-latest-games tv-density-{{ $this->density }} flex h-full min-h-0 flex-col">
     <div class="min-h-0 flex-1 overflow-hidden bg-background/40">
         <div class="flex h-full min-h-0 flex-col divide-y divide-border/60 overflow-hidden">
             @forelse ($this->games as $game)

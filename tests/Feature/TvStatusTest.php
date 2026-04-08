@@ -154,7 +154,10 @@ test('tv leaderboard livewire component shows all event players', function () {
     Livewire::test('tv.leaderboard')
         ->assertSee(tvShortName($playerOne))
         ->assertSee(tvShortName($playerTwo))
-        ->assertSee(tvShortName($playerThree));
+        ->assertSee(tvShortName($playerThree))
+        ->assertSee(route('players.show', $playerOne), false)
+        ->assertSee(route('players.show', $playerTwo), false)
+        ->assertSee(route('players.show', $playerThree), false);
 });
 
 test('tv latest games component shows last 30 games with result and duration', function () {

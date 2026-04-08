@@ -94,6 +94,7 @@ new class extends Component {
                 fn(array $row): array => [
                     'id' => $row['player']->id,
                     'name' => $this->formatPlayerDisplayName($row['player']->full_name),
+                    'profile_url' => route('players.show', ['user' => $row['player']->id]),
                     'wins' => $row['wins'],
                     'draws' => $row['draws'],
                     'losses' => $row['losses'],
@@ -180,7 +181,11 @@ new class extends Component {
                     @forelse ($this->leaderboard as $row)
                         <tr class="odd:bg-background/35 even:bg-transparent"
                             wire:key="tv-leaderboard-{{ $row['id'] }}">
-                            <td class="tv-leaderboard-cell font-medium text-foreground">{{ $row['name'] }}</td>
+                            <td class="tv-leaderboard-cell font-medium text-foreground">
+                                <a href="{{ $row['profile_url'] }}" class="rounded-sm transition hover:underline">
+                                    {{ $row['name'] }}
+                                </a>
+                            </td>
                             <td class="tv-leaderboard-cell text-muted-foreground">{{ $row['wins'] }}</td>
                             <td class="tv-leaderboard-cell text-muted-foreground">{{ $row['draws'] }}</td>
                             <td class="tv-leaderboard-cell text-muted-foreground">{{ $row['losses'] }}</td>
