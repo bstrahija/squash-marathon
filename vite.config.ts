@@ -9,6 +9,7 @@ export default defineConfig({
         laravel({
             input: [
                 'resources/css/app.css',
+                'resources/css/tv.css',
                 'resources/js/app.ts',
                 'resources/js/blade-theme.ts',
             ],
