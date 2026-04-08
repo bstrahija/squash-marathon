@@ -16,8 +16,8 @@ class UserForm
             ->components([
                 SpatieMediaLibraryFileUpload::make('avatar')
                     ->collection('avatar')
-                    ->image()
-                    ->imageEditor()
+                    ->disk('public')
+                    ->visibility('public')
                     ->columnSpanFull(),
                 TextInput::make('first_name')
                     ->required(),

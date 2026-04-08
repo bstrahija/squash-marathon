@@ -18,7 +18,6 @@ class UsersTable
             ->columns([
                 SpatieMediaLibraryImageColumn::make('avatar')
                     ->collection('avatar')
-                    ->conversion('thumb')
                     ->circular(),
                 TextColumn::make('first_name')
                     ->label('First name')

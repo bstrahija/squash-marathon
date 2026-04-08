@@ -73,20 +73,32 @@ class User extends Authenticatable implements HasMedia, HasName
 
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('avatar')->singleFile();
+        $this->addMediaCollection('avatar')
+            ->useDisk('public')
+            ->singleFile();
     }
 
     public function registerMediaConversions(?Media $media = null): void
     {
         $this->addMediaConversion('thumb')
-            ->fit(Fit::Crop, 200, 200)
-            ->nonQueued();
+            ->fit(Fit::Crop, 200, 200);
     }
 
     public function avatarUrl(string $conversion = ''): string
     {
-        return $this->getFirstMediaUrl('avatar', $conversion)
-            ?: asset('images/placeholder-avatar.svg');
+        $conversionUrl = $this->getFirstMediaUrl('avatar', $conversion);
+
+        if (filled($conversionUrl)) {
+            return $conversionUrl;
+        }
+
+        $originalUrl = $this->getFirstMediaUrl('avatar');
+
+        if (filled($originalUrl)) {
+            return $originalUrl;
+        }
+
+        return asset('images/placeholder-avatar.svg');
     }
 
     public function getFallbackMediaUrl(string $collectionName = 'default', string $conversionName = ''): string
