@@ -61,6 +61,16 @@ function createMatchForList(): Game
     return $game;
 }
 
+function createAdminUser(): User
+{
+    Role::firstOrCreate(['name' => RoleName::Admin->value]);
+
+    $admin = User::factory()->create();
+    $admin->assignRole(RoleName::Admin->value);
+
+    return $admin;
+}
+
 test('matches page loads', function () {
     $this->withoutVite();
 
@@ -68,6 +78,18 @@ test('matches page loads', function () {
 
     $response->assertSuccessful();
     $response->assertSee('Lista svih mečeva');
+    $response->assertDontSee('Dodaj meč');
+});
+
+test('matches page shows add match button for admins', function () {
+    $this->withoutVite();
+
+    $admin = createAdminUser();
+
+    $response = $this->actingAs($admin)->get('/matches');
+
+    $response->assertSuccessful();
+    $response->assertSee('Dodaj meč');
 });
 
 test('matches page includes links to score page for each match', function () {
@@ -81,31 +103,59 @@ test('matches page includes links to score page for each match', function () {
     $response->assertSee(route('matches.score', ['game' => $game->id]), false);
 });
 
-test('matches create page loads', function () {
+test('admin can access matches create page', function () {
     $this->withoutVite();
 
-    $response = $this->get('/matches/create');
+    $admin = createAdminUser();
+
+    $response = $this->actingAs($admin)->get('/matches/create');
 
     $response->assertSuccessful();
 });
 
-test('matches score page loads', function () {
+test('non-admin cannot access matches create page', function () {
+    $this->withoutVite();
+
+    $response = $this->actingAs(User::factory()->create())->get('/matches/create');
+
+    $response->assertForbidden();
+});
+
+test('admin can access matches score page', function () {
+    $this->withoutVite();
+
+    $game = createMatchForList();
+    $admin = createAdminUser();
+
+    $response = $this->actingAs($admin)->get("/matches/{$game->id}/score");
+
+    $response->assertSuccessful();
+});
+
+test('non-admin cannot access matches score page', function () {
     $this->withoutVite();
 
     $game = createMatchForList();
 
-    $response = $this->get("/matches/{$game->id}/score");
+    $response = $this->actingAs(User::factory()->create())->get("/matches/{$game->id}/score");
 
-    $response->assertSuccessful();
+    $response->assertForbidden();
 });
 
 test('matches score livewire starts match and closes overlay', function () {
     $game = createMatchForList();
+    $playerOneName = $game->playerOne->full_name;
+    $playerTwoName = $game->playerTwo->full_name;
 
     expect($game->started_at)->toBeNull();
 
     Livewire::test('matches-score', ['gameId' => $game->id])
         ->assertSet('showStartOverlay', true)
+        ->assertSee('Početak meča')
+        ->assertSee($playerOneName)
+        ->assertSee($playerTwoName)
+        ->assertSee('Round 1')
+        ->assertSee('Group 1')
         ->call('startMatch')
         ->assertSet('showStartOverlay', false);
 
@@ -262,10 +312,7 @@ test('matches create livewire shows only active round groups with round names', 
 test('admin can delete match through livewire list', function () {
     $game = createMatchForList();
 
-    Role::firstOrCreate(['name' => RoleName::Admin->value]);
-
-    $admin = User::factory()->create();
-    $admin->assignRole(RoleName::Admin->value);
+    $admin = createAdminUser();
 
     $this->actingAs($admin);
 
@@ -282,10 +329,7 @@ test('admin can delete match through livewire list', function () {
 test('admin cannot delete match without confirmation first', function () {
     $game = createMatchForList();
 
-    Role::firstOrCreate(['name' => RoleName::Admin->value]);
-
-    $admin = User::factory()->create();
-    $admin->assignRole(RoleName::Admin->value);
+    $admin = createAdminUser();
 
     $this->actingAs($admin);
 

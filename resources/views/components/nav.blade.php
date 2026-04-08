@@ -15,6 +15,8 @@
             <a class="text-muted-foreground transition hover:text-foreground"
                 href="{{ route('matches.index') }}">Mečevi</a>
             <a class="text-muted-foreground transition hover:text-foreground"
+                href="{{ route('rounds.index') }}">Runde</a>
+            <a class="text-muted-foreground transition hover:text-foreground"
                 href="{{ route('home') }}#participants">Ekipa</a>
             <a class="text-muted-foreground transition hover:text-foreground"
                 href="{{ route('home') }}#leaderboard">Poredak</a>

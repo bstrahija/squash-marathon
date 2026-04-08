@@ -506,13 +506,14 @@ test('match done dialog undo removes last point and reopens set', function () {
     expect(GameLog::query()->where('game_id', $game->id)->count())->toBe(10);
 });
 
-test('match done dialog shows winner result and durations', function () {
+test('match done dialog shows Croatian labels and plain per-set point badges', function () {
     $game = Game::factory()->create([
         'started_at' => now(),
         'best_of' => 1,
     ]);
 
     $playerOneName = $game->playerOne->full_name;
+    $playerTwoName = $game->playerTwo->full_name;
 
     $component = Livewire::test('matches-score', ['gameId' => $game->id])
         ->call('selectServe', 'left');
@@ -523,13 +524,81 @@ test('match done dialog shows winner result and durations', function () {
 
     $component
         ->assertSet('showMatchDoneOverlay', true)
-        ->assertSee('Winner')
+        ->assertSee('Pobjednik')
         ->assertSee($playerOneName)
-        ->assertSee('Final Result')
+        ->assertSee('Luzer')
+        ->assertSee($playerTwoName)
+        ->assertSee('Konačni rezultat')
         ->assertSee('1 - 0')
-        ->assertSee('Match Duration')
-        ->assertSee('Set Durations')
-        ->assertSee('Set 1 (11-0)');
+        ->assertDontSee('Rezultat setova')
+        ->assertSee('11:0')
+        ->assertDontSee('Set Durations')
+        ->assertDontSee('Match Duration');
+});
+
+test('match done dialog for draw shows remi, both players, and scores', function () {
+    $game = Game::factory()->create([
+        'started_at' => now()->subMinutes(20),
+        'finished_at' => now(),
+        'best_of' => 2,
+        'player_one_sets' => 1,
+        'player_two_sets' => 1,
+        'winner_id' => null,
+        'is_draw' => true,
+    ]);
+
+    $playerOneName = $game->playerOne->full_name;
+    $playerTwoName = $game->playerTwo->full_name;
+
+    Set::factory()->create([
+        'game_id' => $game->id,
+        'round_id' => $game->round_id,
+        'group_id' => $game->group_id,
+        'player_one_id' => $game->player_one_id,
+        'player_two_id' => $game->player_two_id,
+        'started_at' => now()->subMinutes(19),
+        'finished_at' => now()->subMinutes(15),
+        'player_one_score' => 11,
+        'player_two_score' => 8,
+    ]);
+
+    Set::factory()->create([
+        'game_id' => $game->id,
+        'round_id' => $game->round_id,
+        'group_id' => $game->group_id,
+        'player_one_id' => $game->player_one_id,
+        'player_two_id' => $game->player_two_id,
+        'started_at' => now()->subMinutes(14),
+        'finished_at' => now()->subMinutes(10),
+        'player_one_score' => 8,
+        'player_two_score' => 11,
+    ]);
+
+    GameLog::factory()->create([
+        'game_id' => $game->id,
+        'player_one_id' => $game->player_one_id,
+        'player_two_id' => $game->player_two_id,
+        'sequence' => 1,
+        'type' => GameLogType::Score,
+        'side' => GameLogSide::Left,
+        'player_one_score' => 1,
+        'player_two_score' => 0,
+        'player_one_sets' => 0,
+        'player_two_sets' => 0,
+    ]);
+
+    Livewire::test('matches-score', ['gameId' => $game->id])
+        ->assertSet('showMatchDoneOverlay', true)
+        ->assertSee('Remi')
+        ->assertSee($playerOneName)
+        ->assertSee('VS')
+        ->assertSee($playerTwoName)
+        ->assertSee('Konačni rezultat')
+        ->assertSee('1 - 1')
+        ->assertSee('11:8')
+        ->assertSee('8:11')
+        ->assertDontSee('Pobjednik')
+        ->assertDontSee('Luzer');
 });
 
 test('match done finish action redirects to matches list', function () {

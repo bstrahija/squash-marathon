@@ -33,7 +33,7 @@
             </div>
             <div class="flex items-center justify-between">
                 <span class="text-muted-foreground">Početak</span>
-                <span class="font-semibold">17. travnja, 19:00</span>
+                <span class="font-semibold">24. travnja, 17:00</span>
             </div>
             <div class="flex items-center justify-between">
                 <span class="text-muted-foreground">Terena</span>

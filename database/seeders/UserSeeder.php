@@ -23,6 +23,7 @@ class UserSeeder extends Seeder
         $players = [
             ['first_name' => 'Igor', 'last_name' => 'Levak', 'email' => 'igor.levak@example.com'],
             ['first_name' => 'Andrija', 'last_name' => 'Munđar', 'email' => 'andrija.mundar@example.com'],
+            ['first_name' => 'Tomislav', 'last_name' => 'Pavlic', 'email' => 'tomislav.pavlic@example.com'],
             ['first_name' => 'Damjan', 'last_name' => 'Petričević', 'email' => 'damjan.petricevic@example.com'],
             ['first_name' => 'Predrag', 'last_name' => 'Rojko', 'email' => 'predrag.rojko@example.com'],
             ['first_name' => 'Dalibor', 'last_name' => 'Strišković', 'email' => 'dalibor.striskovic@example.com'],

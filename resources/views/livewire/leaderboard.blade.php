@@ -141,7 +141,6 @@ new class extends Component {
                         <th class="px-4 py-3">Remiji</th>
                         <th class="px-4 py-3">Porazi</th>
                         <th class="px-4 py-3">Bodovi</th>
-                        <th class="px-4 py-3">Zadnja partija</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-border/70">
@@ -158,13 +157,10 @@ new class extends Component {
                             <td class="px-4 py-3 text-muted-foreground">{{ $row['draws'] }}</td>
                             <td class="px-4 py-3 text-muted-foreground">{{ $row['losses'] }}</td>
                             <td class="px-4 py-3 font-semibold text-foreground">{{ $row['points'] }}</td>
-                            <td class="px-4 py-3 text-muted-foreground">
-                                {{ $row['last_game_at']?->format('H:i') ?? '—' }}
-                            </td>
                         </tr>
                     @empty
                         <tr class="bg-card">
-                            <td class="px-4 py-6 text-center text-sm text-muted-foreground" colspan="6">
+                            <td class="px-4 py-6 text-center text-sm text-muted-foreground" colspan="5">
                                 Još nema upisanih partija.
                             </td>
                         </tr>

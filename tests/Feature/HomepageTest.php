@@ -15,7 +15,7 @@ test('homepage loads', function () {
     $response = $this->get('/');
 
     $response->assertSuccessful();
-    $response->assertSee('Squash maraton - praćenje');
+    $response->assertSee('Squash Marathon 24h');
     $response->assertSee('Poredak');
     $response->assertSee('Ekipa');
 });

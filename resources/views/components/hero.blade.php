@@ -43,18 +43,18 @@
         <div class="mt-6 grid gap-4">
             <div class="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 p-4">
                 <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Format</p>
-                <p class="mt-2 text-sm font-semibold">Jedna igra do 11 bodova</p>
-                <p class="mt-1 text-xs text-muted-foreground">Bez serija, samo jedna runda.</p>
+                <p class="mt-2 text-sm font-semibold">Svaki meč igra se na 2 seta (do 11 bodova).</p>
+                <p class="mt-1 text-xs text-muted-foreground">Igra se po pravilima iz bloka Pravila igre.</p>
             </div>
             <div class="rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4">
                 <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Bodovanje</p>
-                <p class="mt-2 text-sm font-semibold">Pobjeda = 2 boda, poraz = 1 bod</p>
-                <p class="mt-1 text-xs text-muted-foreground">Poredak ide dalje nakon svake igre.</p>
+                <p class="mt-2 text-sm font-semibold">Pobjeda = 3 boda, remi = 2 boda, poraz = 1 bod.</p>
+                <p class="mt-1 text-xs text-muted-foreground">Svaki odigrani meč donosi bodove.</p>
             </div>
             <div class="rounded-2xl border border-sky-400/30 bg-sky-400/10 p-4">
-                <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Terena</p>
-                <p class="mt-2 text-sm font-semibold">2 terena rade paralelno</p>
-                <p class="mt-1 text-xs text-muted-foreground">Više igara, više dobre energije.</p>
+                <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Poredak</p>
+                <p class="mt-2 text-sm font-semibold">Bodovi se nakon svakog meča odmah upisuju.</p>
+                <p class="mt-1 text-xs text-muted-foreground">Tablica se osvježava tijekom cijelog događaja.</p>
             </div>
         </div>
     </div>
