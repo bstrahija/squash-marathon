@@ -15,6 +15,10 @@ new class extends Component {
 
     public string $playerTwoName = 'Player 2';
 
+    public string $playerOneShortName = 'Player 1';
+
+    public string $playerTwoShortName = 'Player 2';
+
     public int $playerOneScore = 0;
 
     public int $playerTwoScore = 0;
@@ -372,6 +376,8 @@ new class extends Component {
 
         $this->playerOneName = $game->playerOne?->full_name ?? $this->playerOneName;
         $this->playerTwoName = $game->playerTwo?->full_name ?? $this->playerTwoName;
+        $this->playerOneShortName = $game->playerOne?->short_name ?? $this->playerOneShortName;
+        $this->playerTwoShortName = $game->playerTwo?->short_name ?? $this->playerTwoShortName;
         $this->roundName = $game->round?->name ?? $this->roundName;
         $this->groupName = $game->group?->name ?? $this->groupName;
         $this->bestOf = (int) ($game->best_of ?? $this->bestOf);
@@ -751,38 +757,38 @@ new class extends Component {
 };
 ?>
 
-<div class="relative h-svh w-svw bg-background px-4 py-6 sm:px-6">
+<div class="relative bg-background px-4 sm:px-6 py-6 w-svw h-svh">
     @if ($showStartOverlay)
-        <div class="absolute inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-sm">
-            <div class="w-full max-w-2xl rounded-3xl border border-border bg-card p-6 shadow-xl sm:p-8">
-                <p class="text-center text-sm uppercase tracking-[0.16em] text-muted-foreground">
+        <div class="z-50 absolute inset-0 flex justify-center items-center bg-background/90 backdrop-blur-sm">
+            <div class="bg-card shadow-xl p-6 sm:p-8 border border-border rounded-3xl w-full max-w-2xl">
+                <p class="text-muted-foreground text-sm text-center uppercase tracking-[0.16em]">
                     Početak meča
                 </p>
 
-                <p class="mt-2 text-center text-4xl font-display font-semibold text-foreground sm:text-5xl">
+                <p class="mt-2 font-display font-semibold text-foreground text-4xl sm:text-5xl text-center">
                     {{ $playerOneName }}
                 </p>
-                <p class="mt-1 text-center text-lg font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                <p class="mt-1 font-semibold text-muted-foreground text-lg text-center uppercase tracking-[0.12em]">
                     protiv
                 </p>
-                <p class="mt-1 text-center text-4xl font-display font-semibold text-foreground sm:text-5xl">
+                <p class="mt-1 font-display font-semibold text-foreground text-4xl sm:text-5xl text-center">
                     {{ $playerTwoName }}
                 </p>
 
-                <div class="mt-6 flex flex-wrap items-center justify-center gap-2">
+                <div class="flex flex-wrap justify-center items-center gap-2 mt-6">
                     <span
-                        class="rounded-full border border-border/70 bg-background/80 px-4 py-2 text-sm font-semibold text-foreground">
+                        class="bg-background/80 px-4 py-2 border border-border/70 rounded-full font-semibold text-foreground text-sm">
                         {{ $roundName }}
                     </span>
                     <span
-                        class="rounded-full border border-border/70 bg-background/80 px-4 py-2 text-sm font-semibold text-foreground">
+                        class="bg-background/80 px-4 py-2 border border-border/70 rounded-full font-semibold text-foreground text-sm">
                         {{ $groupName }}
                     </span>
                 </div>
 
-                <div class="mt-6 flex justify-center">
+                <div class="flex justify-center mt-6">
                     <button type="button" wire:click="startMatch"
-                        class="cursor-pointer rounded-3xl border border-primary/30 bg-primary px-10 py-6 text-4xl font-display font-semibold text-primary-foreground shadow-lg transition hover:-translate-y-0.5">
+                        class="bg-primary shadow-lg px-10 py-6 border border-primary/30 rounded-3xl font-display font-semibold text-primary-foreground text-4xl transition hover:-translate-y-0.5 cursor-pointer">
                         Start
                     </button>
                 </div>
@@ -791,22 +797,22 @@ new class extends Component {
     @endif
 
     @if ($showRestartConfirmation)
-        <div class="absolute inset-0 z-[60] flex items-center justify-center bg-background/90 backdrop-blur-sm">
-            <div class="w-full max-w-sm rounded-3xl border border-border bg-card p-6 shadow-xl">
-                <p class="text-center text-base font-semibold text-foreground">
+        <div class="z-[60] absolute inset-0 flex justify-center items-center bg-background/90 backdrop-blur-sm">
+            <div class="bg-card shadow-xl p-6 border border-border rounded-3xl w-full max-w-sm">
+                <p class="font-semibold text-foreground text-base text-center">
                     Restart this game?
                 </p>
-                <p class="mt-2 text-center text-sm text-muted-foreground">
+                <p class="mt-2 text-muted-foreground text-sm text-center">
                     This will clear all score history and start a fresh game clock.
                 </p>
 
-                <div class="mt-5 flex items-center justify-center gap-3">
+                <div class="flex justify-center items-center gap-3 mt-5">
                     <button type="button" wire:click="confirmRestartGame"
-                        class="cursor-pointer rounded-xl border border-red-500/50 bg-red-500/10 px-4 py-2 text-sm font-semibold uppercase tracking-[0.08em] text-red-600 transition hover:bg-red-500/15">
+                        class="bg-red-500/10 hover:bg-red-500/15 px-4 py-2 border border-red-500/50 rounded-xl font-semibold text-red-600 text-sm uppercase tracking-[0.08em] transition cursor-pointer">
                         Restart
                     </button>
                     <button type="button" wire:click="cancelRestartGame"
-                        class="cursor-pointer rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold uppercase tracking-[0.08em] text-foreground transition hover:border-foreground/40">
+                        class="bg-background px-4 py-2 border border-border hover:border-foreground/40 rounded-xl font-semibold text-foreground text-sm uppercase tracking-[0.08em] transition cursor-pointer">
                         Cancel
                     </button>
                 </div>
@@ -815,19 +821,19 @@ new class extends Component {
     @endif
 
     @if ($showNextSetOverlay)
-        <div class="absolute inset-0 z-55 flex items-center justify-center bg-background/90 backdrop-blur-sm">
-            <div class="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-xl">
-                <p class="text-center text-base font-semibold text-foreground">
+        <div class="z-55 absolute inset-0 flex justify-center items-center bg-background/90 backdrop-blur-sm">
+            <div class="bg-card shadow-xl p-6 border border-border rounded-3xl w-full max-w-md">
+                <p class="font-semibold text-foreground text-base text-center">
                     Set završen
                 </p>
 
-                <div class="mt-5 flex items-center justify-center gap-3">
+                <div class="flex justify-center items-center gap-3 mt-5">
                     <button type="button" wire:click="startNextSet"
-                        class="cursor-pointer rounded-2xl border border-primary/30 bg-primary px-5 py-3 text-base font-display font-semibold uppercase tracking-[0.08em] text-primary-foreground shadow-lg transition hover:-translate-y-0.5">
+                        class="bg-primary shadow-lg px-5 py-3 border border-primary/30 rounded-2xl font-display font-semibold text-primary-foreground text-base uppercase tracking-[0.08em] transition hover:-translate-y-0.5 cursor-pointer">
                         Sljedeći set
                     </button>
                     <button type="button" wire:click="undoLastLog"
-                        class="cursor-pointer rounded-2xl border border-border bg-background px-5 py-3 text-base font-semibold uppercase tracking-[0.08em] text-foreground transition hover:border-foreground/40">
+                        class="bg-background px-5 py-3 border border-border hover:border-foreground/40 rounded-2xl font-semibold text-foreground text-base uppercase tracking-[0.08em] transition cursor-pointer">
                         Poništi
                     </button>
                 </div>
@@ -836,68 +842,68 @@ new class extends Component {
     @endif
 
     @if ($showMatchDoneOverlay)
-        <div class="absolute inset-0 z-55 flex items-center justify-center bg-background/90 backdrop-blur-sm"
+        <div class="z-55 absolute inset-0 flex justify-center items-center bg-background/90 backdrop-blur-sm"
             data-match-done-overlay="true" x-data="{ burst: {{ $matchDoneBurst }} }" x-init="$nextTick(() => { if (window.launchMatchDoneConfetti) { window.launchMatchDoneConfetti(); } })">
 
-            <div class="relative w-full max-w-2xl rounded-3xl border border-border bg-card p-6 shadow-xl sm:p-8">
+            <div class="relative bg-card shadow-xl p-6 sm:p-8 border border-border rounded-3xl w-full max-w-2xl">
                 @if ($matchIsDraw)
-                    <p class="text-center font-display text-4xl font-semibold text-foreground sm:text-5xl">
+                    <p class="font-display font-semibold text-foreground text-4xl sm:text-5xl text-center">
                         Remi
                     </p>
-                    <div class="mx-auto mt-3 h-px w-full max-w-md bg-border/70"></div>
-                    <p class="mt-4 text-center text-lg font-display font-semibold text-foreground sm:text-xl">
+                    <div class="mx-auto mt-3 bg-border/70 w-full max-w-md h-px"></div>
+                    <p class="mt-4 font-display font-semibold text-foreground text-lg sm:text-xl text-center">
                         {{ $playerOneName }}
                     </p>
-                    <p class="mt-1 text-center text-lg font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                    <p class="mt-1 font-semibold text-muted-foreground text-lg text-center uppercase tracking-[0.12em]">
                         VS
                     </p>
-                    <p class="mt-1 text-center text-lg font-display font-semibold text-foreground sm:text-xl">
+                    <p class="mt-1 font-display font-semibold text-foreground text-lg sm:text-xl text-center">
                         {{ $playerTwoName }}
                     </p>
                 @else
-                    <p class="text-center text-sm uppercase tracking-[0.16em] text-muted-foreground">
+                    <p class="text-muted-foreground text-sm text-center uppercase tracking-[0.16em]">
                         Pobjednik
                     </p>
-                    <p class="mt-1 text-center text-4xl font-display font-semibold text-foreground sm:text-5xl">
+                    <p class="mt-1 font-display font-semibold text-foreground text-4xl sm:text-5xl text-center">
                         {{ $matchWinnerName }}
                     </p>
 
-                    <p class="mt-5 text-center text-sm uppercase tracking-[0.16em] text-muted-foreground">
+                    <p class="mt-5 text-muted-foreground text-sm text-center uppercase tracking-[0.16em]">
                         Luzer
                     </p>
-                    <p class="mt-1 text-center text-2xl font-display font-semibold text-foreground sm:text-3xl">
+                    <p class="mt-1 font-display font-semibold text-foreground text-2xl sm:text-3xl text-center">
                         {{ $matchLoserName }}
                     </p>
                 @endif
 
                 <div class="mt-6">
-                    <p class="text-center text-sm uppercase tracking-[0.16em] text-muted-foreground">
+                    <p class="text-muted-foreground text-sm text-center uppercase tracking-[0.16em]">
                         Konačni rezultat
                     </p>
-                    <p class="mt-1 text-center text-3xl font-display font-semibold text-foreground sm:text-4xl">
+                    <p class="mt-1 font-display font-semibold text-foreground text-3xl sm:text-4xl text-center">
                         {{ $matchFinalResult }}
                     </p>
                 </div>
 
                 <div class="mt-6">
-                    <div class="mt-3 flex flex-wrap items-center justify-center gap-2">
+                    <div class="flex flex-wrap justify-center items-center gap-2 mt-3">
                         @foreach ($setPointBadges as $badge)
                             <span
-                                class="rounded-full border border-border/70 bg-background/80 px-4 py-2 text-sm font-semibold text-foreground">
+                                class="bg-background/80 px-4 py-2 border border-border/70 rounded-full font-semibold text-foreground text-sm">
                                 {{ $badge }}
                             </span>
                         @endforeach
                     </div>
                 </div>
 
-                <div class="mt-6 flex flex-col items-center gap-3">
+                <div class="flex flex-col items-center gap-3 mt-6">
                     <button type="button" wire:click="finishMatch"
-                        class="w-full max-w-xs cursor-pointer rounded-2xl border border-primary/30 bg-primary px-8 py-4 text-2xl font-display font-semibold uppercase tracking-[0.08em] text-primary-foreground shadow-lg transition hover:-translate-y-0.5">
+                        class="bg-primary shadow-lg px-8 py-4 border border-primary/30 rounded-2xl w-full max-w-xs font-display font-semibold text-primary-foreground text-2xl uppercase tracking-[0.08em] transition hover:-translate-y-0.5 cursor-pointer">
                         Završi
                     </button>
 
                     <button type="button" wire:click="undoLastLog"
-                        class="cursor-pointer rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold uppercase tracking-[0.08em] text-foreground transition hover:border-foreground/40">
+                        class="bg-background px-4 py-2 border border-border hover:border-foreground/40 rounded-xl font-semibold text-foreground text-sm uppercase tracking-[0.08em] transition cursor-pointer">
                         Poništi
                     </button>
                 </div>
@@ -905,16 +911,18 @@ new class extends Component {
         </div>
     @endif
 
-    <div class="grid h-full w-full grid-cols-[40%_20%_40%]">
-        <section class="flex h-full min-h-0 flex-col gap-3 pr-2 sm:gap-4 sm:pr-3">
+    <div class="grid grid-cols-[40%_20%_40%] w-full h-full">
+        <section class="flex flex-col gap-3 sm:gap-4 pr-2 sm:pr-3 h-full min-h-0">
             <div
-                class="w-full rounded-2xl border border-primary/35 bg-primary px-4 py-6 text-center text-primary-foreground shadow-sm">
-                <p class="font-display truncate whitespace-nowrap text-3xl sm:text-4xl">{{ $playerOneName }}</p>
+                class="bg-primary shadow-sm px-4 py-6 border border-primary/35 rounded-2xl w-full text-primary-foreground text-center">
+                <p
+                    class="font-display text-xl landscape:text-xl sm:text-3xl landscape:lg:text-4xl lg:text-4xl truncate whitespace-nowrap">
+                    {{ $playerOneShortName }}</p>
             </div>
 
             <div wire:click="awardLeftPoint"
-                class="relative flex min-h-0 flex-1 cursor-pointer items-center justify-center overflow-hidden rounded-3xl border border-emerald-950/70 bg-slate-900 px-4 py-5 text-emerald-50 shadow-lg">
-                <p class="font-display text-[clamp(5.25rem,16vw,10.5rem)] font-bold leading-none">
+                class="relative flex flex-1 justify-center items-center bg-slate-900 shadow-lg px-4 py-5 border border-emerald-950/70 rounded-3xl min-h-0 overflow-hidden text-emerald-50 cursor-pointer">
+                <p class="font-display font-bold text-[clamp(5.25rem,16vw,10.5rem)] leading-none">
                     <span class="select-none">
                         {{ $playerOneScore }}
                     </span>
@@ -922,65 +930,73 @@ new class extends Component {
 
                 @if ($servingPlayer === null || $servingPlayer === 'left')
                     <button type="button" wire:click.stop="selectServe('left')"
-                        class="absolute bottom-3 left-3 cursor-pointer text-6xl rounded-xl border border-slate-500/40 bg-slate-950 px-8 py-5 font-bold uppercase tracking-[0.08em] text-slate-100 transition hover:bg-slate-900">
+                        class="bottom-3 left-3 absolute bg-slate-950 hover:bg-slate-900 px-5 sm:px-4 py-3 sm:py-3 border border-slate-500/40 rounded-xl sm:max-h-none font-bold text-slate-100 text-3xl sm:text-3xl uppercase leading-none tracking-[0.08em] transition cursor-pointer">
                         {{ $this->serveButtonLabel('left') }}
                     </button>
                 @endif
             </div>
         </section>
 
-        <section class="flex h-full min-h-0 flex-col gap-3 px-1 sm:gap-4 sm:px-2">
-            <div class="rounded-2xl border border-border/70 bg-card px-3 py-4 text-center shadow-sm">
-                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+        <section class="flex flex-col gap-3 sm:gap-4 px-1 sm:px-2 h-full min-h-0">
+            <div class="bg-card shadow-sm px-3 py-4 border border-border/70 rounded-2xl text-center">
+                <p class="font-semibold text-muted-foreground text-xs uppercase tracking-[0.18em]">
                     {{ $roundName }}
                 </p>
-                <p class="mt-1 text-sm font-semibold text-foreground">
+                <p class="mt-1 font-semibold text-foreground text-sm">
                     {{ $groupName }}
                     | Best of {{ $bestOf }}
                 </p>
-                <p class="font-display mt-1 text-3xl text-foreground sm:text-4xl">
+                <p class="mt-1 font-display text-foreground text-2xl sm:text-2xl text-nowrap">
                     {{ $playerOneSets }} - {{ $playerTwoSets }}
                 </p>
             </div>
 
-            <div class="min-h-0 flex-1 overflow-auto rounded-2xl border border-border/70 bg-card p-2 shadow-sm">
+            <div class="flex-1 bg-card shadow-sm p-2 border border-border/70 rounded-2xl min-h-0 overflow-auto">
                 <ul class="space-y-1.5">
                     @forelse ($historyScores as $index => $historyScore)
                         <li wire:key="history-score-{{ $index }}"
-                            class="rounded-lg border border-border/60 bg-background px-2 py-1.5 text-center text-sm font-semibold text-foreground sm:text-base">
+                            class="bg-background px-2 py-1.5 border border-border/60 rounded-lg font-semibold text-foreground text-sm sm:text-base text-center">
                             {{ $historyScore }}
                         </li>
                     @empty
                         <li
-                            class="rounded-lg border border-border/60 bg-background px-2 py-1.5 text-center text-sm font-semibold text-muted-foreground sm:text-base">
+                            class="bg-background px-2 py-1.5 border border-border/60 rounded-lg font-semibold text-muted-foreground text-sm sm:text-base text-center">
                             Nema povijesti bodova.
                         </li>
                     @endforelse
                 </ul>
             </div>
 
-            <div class="grid grid-cols-2 gap-2">
+            <div class="gap-2 grid grid-cols-2">
                 <button type="button" wire:click="undoLastLog"
-                    class="rounded-2xl border border-border bg-card px-3 py-3 text-sm font-semibold uppercase tracking-[0.08em] text-foreground shadow-sm transition hover:-translate-y-0.5 hover:border-foreground/40">
-                    Undo
+                    class="flex justify-center items-center bg-card shadow-sm px-3 py-3 border border-border hover:border-foreground/40 rounded-2xl font-semibold text-foreground text-sm uppercase tracking-[0.08em] transition hover:-translate-y-0.5"
+                    aria-label="Undo">
+                    <x-heroicon-o-arrow-uturn-left class="landscape:lg:hidden sm:hidden landscape:inline w-5 h-5"
+                        aria-hidden="true" />
+                    <span class="hidden landscape:hidden landscape:lg:inline sm:inline">Undo</span>
                 </button>
 
                 <button type="button" wire:click="requestRestartGame"
-                    class="rounded-2xl border border-red-500/50 bg-red-500/10 px-3 py-3 text-sm font-semibold uppercase tracking-[0.08em] text-red-600 shadow-sm transition hover:-translate-y-0.5 hover:bg-red-500/15">
-                    Restart
+                    class="flex justify-center items-center bg-red-500/10 hover:bg-red-500/15 shadow-sm px-3 py-3 border border-red-500/50 rounded-2xl font-semibold text-red-600 text-sm uppercase tracking-[0.08em] transition hover:-translate-y-0.5"
+                    aria-label="Restart">
+                    <x-heroicon-o-arrow-path class="landscape:lg:hidden sm:hidden landscape:inline w-5 h-5"
+                        aria-hidden="true" />
+                    <span class="hidden landscape:hidden landscape:lg:inline sm:inline">Restart</span>
                 </button>
             </div>
         </section>
 
-        <section class="flex h-full min-h-0 flex-col gap-3 pl-2 sm:gap-4 sm:pl-3">
+        <section class="flex flex-col gap-3 sm:gap-4 pl-2 sm:pl-3 h-full min-h-0">
             <div
-                class="w-full rounded-2xl border border-primary/35 bg-primary px-4 py-6 text-center text-primary-foreground shadow-sm">
-                <p class="font-display truncate whitespace-nowrap text-2xl sm:text-3xl">{{ $playerTwoName }}</p>
+                class="bg-primary shadow-sm px-4 py-6 border border-primary/35 rounded-2xl w-full text-primary-foreground text-center">
+                <p
+                    class="font-display text-xl landscape:text-xl sm:text-3xl landscape:lg:text-4xl lg:text-4xl truncate whitespace-nowrap">
+                    {{ $playerTwoShortName }}</p>
             </div>
 
             <div wire:click="awardRightPoint"
-                class="relative flex min-h-0 flex-1 cursor-pointer items-center justify-center overflow-hidden rounded-3xl border border-emerald-950/70 bg-slate-900 px-4 py-5 text-emerald-50 shadow-lg">
-                <p class="font-display text-[clamp(5.25rem,16vw,10.5rem)] font-bold leading-none">
+                class="relative flex flex-1 justify-center items-center bg-slate-900 shadow-lg px-4 py-5 border border-emerald-950/70 rounded-3xl min-h-0 overflow-hidden text-emerald-50 cursor-pointer">
+                <p class="font-display font-bold text-[clamp(5.25rem,16vw,10.5rem)] leading-none">
                     <span class="select-none">
                         {{ $playerTwoScore }}
                     </span>
@@ -988,7 +1004,7 @@ new class extends Component {
 
                 @if ($servingPlayer === null || $servingPlayer === 'right')
                     <button type="button" wire:click.stop="selectServe('right')"
-                        class="absolute bottom-3 right-3 cursor-pointer text-6xl rounded-xl border border-slate-500/40 bg-slate-950 px-8 py-5 font-bold uppercase tracking-[0.08em] text-slate-100 transition hover:bg-slate-900">
+                        class="right-3 bottom-3 absolute bg-slate-950 hover:bg-slate-900 px-5 sm:px-4 py-3 sm:py-3 border border-slate-500/40 rounded-xl font-bold text-slate-100 text-3xl sm:text-3xl uppercase leading-none tracking-[0.08em] transition cursor-pointer">
                         {{ $this->serveButtonLabel('right') }}
                     </button>
                 @endif
