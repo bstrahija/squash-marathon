@@ -166,7 +166,8 @@ new class extends Component {
     @if ($match)
         <a href="{{ $match['score_url'] }}" aria-label="Open match score"
             class="tv-group-grid grid h-full min-h-0 flex-1 items-stretch overflow-hidden bg-background/35 transition-colors hover:bg-background/50 focus-visible:bg-background/50 focus-visible:outline-none">
-            <div class="tv-group-player-column flex h-full min-h-0 flex-col items-center justify-center text-center">
+            <div
+                class="tv-group-player-column tv-group-player-one flex h-full min-h-0 flex-col items-center justify-center text-center">
                 <p title="{{ $match['player_one_full'] }}"
                     class="tv-group-player-name truncate whitespace-nowrap font-semibold leading-tight {{ $match['player_one_class'] }}">
                     {{ $match['player_one'] }}</p>
@@ -188,19 +189,18 @@ new class extends Component {
                 </div>
 
                 <div class="tv-group-timeline flex w-full flex-wrap items-center justify-center overflow-hidden">
-                    @forelse ($match['timeline'] as $timeline)
+                    @foreach ($match['timeline'] as $timeline)
                         <span
                             class="tv-group-chip shrink-0 rounded-full bg-background/80 font-semibold text-muted-foreground"
                             wire:key="tv-group-{{ $match['id'] }}-set-{{ $timeline['id'] }}">
                             {{ $timeline['score'] }}
                         </span>
-                    @empty
-                        <span class="font-semibold text-muted-foreground">Nema upisanih poena</span>
-                    @endforelse
+                    @endforeach
                 </div>
             </div>
 
-            <div class="tv-group-player-column flex h-full min-h-0 flex-col items-center justify-center text-center">
+            <div
+                class="tv-group-player-column tv-group-player-two flex h-full min-h-0 flex-col items-center justify-center text-center">
                 <p title="{{ $match['player_two_full'] }}"
                     class="tv-group-player-name truncate whitespace-nowrap font-semibold leading-tight {{ $match['player_two_class'] }}">
                     {{ $match['player_two'] }}</p>
