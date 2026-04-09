@@ -912,16 +912,16 @@ new class extends Component {
                 <p class="font-display truncate whitespace-nowrap text-3xl sm:text-4xl">{{ $playerOneName }}</p>
             </div>
 
-            <div
-                class="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden rounded-3xl border border-emerald-950/70 bg-slate-900 px-4 py-5 text-emerald-50 shadow-lg">
+            <div wire:click="awardLeftPoint"
+                class="relative flex min-h-0 flex-1 cursor-pointer items-center justify-center overflow-hidden rounded-3xl border border-emerald-950/70 bg-slate-900 px-4 py-5 text-emerald-50 shadow-lg">
                 <p class="font-display text-[clamp(5.25rem,16vw,10.5rem)] font-bold leading-none">
-                    <span wire:click="awardLeftPoint" class="cursor-pointer select-none">
+                    <span class="select-none">
                         {{ $playerOneScore }}
                     </span>
                 </p>
 
                 @if ($servingPlayer === null || $servingPlayer === 'left')
-                    <button type="button" wire:click="selectServe('left')"
+                    <button type="button" wire:click.stop="selectServe('left')"
                         class="absolute bottom-3 left-3 cursor-pointer text-6xl rounded-xl border border-slate-500/40 bg-slate-950 px-8 py-5 font-bold uppercase tracking-[0.08em] text-slate-100 transition hover:bg-slate-900">
                         {{ $this->serveButtonLabel('left') }}
                     </button>
@@ -978,16 +978,16 @@ new class extends Component {
                 <p class="font-display truncate whitespace-nowrap text-2xl sm:text-3xl">{{ $playerTwoName }}</p>
             </div>
 
-            <div
-                class="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden rounded-3xl border border-emerald-950/70 bg-slate-900 px-4 py-5 text-emerald-50 shadow-lg">
+            <div wire:click="awardRightPoint"
+                class="relative flex min-h-0 flex-1 cursor-pointer items-center justify-center overflow-hidden rounded-3xl border border-emerald-950/70 bg-slate-900 px-4 py-5 text-emerald-50 shadow-lg">
                 <p class="font-display text-[clamp(5.25rem,16vw,10.5rem)] font-bold leading-none">
-                    <span wire:click="awardRightPoint" class="cursor-pointer select-none">
+                    <span class="select-none">
                         {{ $playerTwoScore }}
                     </span>
                 </p>
 
                 @if ($servingPlayer === null || $servingPlayer === 'right')
-                    <button type="button" wire:click="selectServe('right')"
+                    <button type="button" wire:click.stop="selectServe('right')"
                         class="absolute bottom-3 right-3 cursor-pointer text-6xl rounded-xl border border-slate-500/40 bg-slate-950 px-8 py-5 font-bold uppercase tracking-[0.08em] text-slate-100 transition hover:bg-slate-900">
                         {{ $this->serveButtonLabel('right') }}
                     </button>

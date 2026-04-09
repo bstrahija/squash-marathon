@@ -184,18 +184,21 @@ new class extends Component {
                     class="tv-group-status rounded-full px-3 py-1 font-semibold tracking-wide {{ $match['status_class'] }} {{ $match['status_effect_class'] }}">
                     {{ $match['status'] }}
                 </span>
-                <div class="tv-group-set-score font-display font-semibold leading-none tracking-tight text-foreground">
+                <div
+                    class="tv-group-set-score font-display font-semibold leading-none tracking-tight text-foreground text-nowrap">
                     {{ $match['player_one_current'] }} : {{ $match['player_two_current'] }}
                 </div>
 
                 <div class="tv-group-timeline flex w-full flex-wrap items-center justify-center overflow-hidden">
-                    @foreach ($match['timeline'] as $timeline)
+                    @forelse ($match['timeline'] as $timeline)
                         <span
                             class="tv-group-chip shrink-0 rounded-full bg-background/80 font-semibold text-muted-foreground"
                             wire:key="tv-group-{{ $match['id'] }}-set-{{ $timeline['id'] }}">
                             {{ $timeline['score'] }}
                         </span>
-                    @endforeach
+                    @empty
+                        <span class="font-semibold text-muted-foreground">Nema upisanih poena</span>
+                    @endforelse
                 </div>
             </div>
 

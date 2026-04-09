@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Enums\RoleName;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
@@ -19,6 +20,24 @@ class UserSeeder extends Seeder
 
         $playerRole = Role::firstOrCreate(['name' => RoleName::Player->value]);
         $adminRole = Role::firstOrCreate(['name' => RoleName::Admin->value]);
+
+        $adminEmail = env('ADMIN_EMAIL');
+        $adminPassword = env('ADMIN_PASSWORD');
+        $adminFirstName = env('ADMIN_FIRST_NAME');
+        $adminLastName = env('ADMIN_LAST_NAME');
+
+        if (filled($adminEmail) && filled($adminPassword) && filled($adminFirstName) && filled($adminLastName)) {
+            $adminUser = User::query()->updateOrCreate(
+                ['email' => (string) $adminEmail],
+                [
+                    'first_name' => (string) $adminFirstName,
+                    'last_name' => (string) $adminLastName,
+                    'password' => Hash::make((string) $adminPassword),
+                ],
+            );
+
+            $adminUser->assignRole([$playerRole, $adminRole]);
+        }
 
         $seedUserPassword = (string) config('app.seed_user_password', 'password');
 
