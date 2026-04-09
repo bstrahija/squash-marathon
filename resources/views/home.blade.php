@@ -15,6 +15,15 @@
         </div>
     </x-slot:background>
 
+    @if (session('status'))
+        <div class="pointer-events-none fixed inset-x-0 top-24 z-50 flex justify-center px-4">
+            <div
+                class="pointer-events-auto rounded-2xl border border-emerald-400/40 bg-emerald-400/10 px-4 py-3 text-sm font-semibold text-emerald-700 shadow-sm dark:text-emerald-300">
+                {{ session('status') }}
+            </div>
+        </div>
+    @endif
+
     <x-hero />
 
     <section id="about" class="scroll-mt-24">

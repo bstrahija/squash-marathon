@@ -21,6 +21,15 @@ test('homepage loads', function () {
     $response->assertSee('images/arena.jpg', false);
 });
 
+test('homepage shows login success toast when status is flashed', function () {
+    $this->withoutVite();
+
+    $response = $this->withSession(['status' => 'Prijavljeni ste'])->get('/');
+
+    $response->assertSuccessful();
+    $response->assertSee('Prijavljeni ste');
+});
+
 test('homepage renders real data sections', function () {
     $this->withoutVite();
 

@@ -81,6 +81,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Seed User Password
+    |--------------------------------------------------------------------------
+    |
+    | Password used by database seeders for non-admin users. Configure this
+    | in your .env via SEED_USER_PASSWORD.
+    |
+    */
+
+    'seed_user_password' => env('SEED_USER_PASSWORD', 'password'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------
     |

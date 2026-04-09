@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Filament\Auth\LoginResponse as FilamentLoginResponse;
 use Carbon\CarbonImmutable;
+use Filament\Auth\Http\Responses\Contracts\LoginResponse as FilamentLoginResponseContract;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
@@ -15,7 +17,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(FilamentLoginResponseContract::class, FilamentLoginResponse::class);
     }
 
     /**
