@@ -11,6 +11,10 @@ Route::view('/rounds', 'rounds')->name('rounds.index');
 Route::view('/rounds/create', 'rounds-create')
     ->middleware(['auth', 'verified', EnsureUserIsAdmin::class])
     ->name('rounds.create');
+Route::view('/rounds/{round}/edit', 'rounds-edit')
+    ->whereNumber('round')
+    ->middleware(['auth', 'verified', EnsureUserIsAdmin::class])
+    ->name('rounds.edit');
 Route::view('/matches/create', 'matches-create')
     ->middleware(['auth', 'verified', EnsureUserIsAdmin::class])
     ->name('matches.create');

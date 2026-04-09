@@ -46,6 +46,47 @@ test('non-admin cannot access rounds create page', function () {
     $response->assertForbidden();
 });
 
+test('admin can access rounds edit page', function () {
+    $this->withoutVite();
+
+    $admin = actingAsRoundsAdmin();
+
+    $event = Event::factory()->create([
+        'start_at' => now()->subHour(),
+        'end_at' => now()->addHour(),
+    ]);
+
+    $round = Round::factory()->create([
+        'event_id' => $event->id,
+        'number' => 1,
+        'name' => 'Grupa 1',
+    ]);
+
+    $response = $this->actingAs($admin)->get("/rounds/{$round->id}/edit");
+
+    $response->assertSuccessful();
+    $response->assertSee('Uređivanje runde');
+});
+
+test('non-admin cannot access rounds edit page', function () {
+    $this->withoutVite();
+
+    $event = Event::factory()->create([
+        'start_at' => now()->subHour(),
+        'end_at' => now()->addHour(),
+    ]);
+
+    $round = Round::factory()->create([
+        'event_id' => $event->id,
+        'number' => 1,
+        'name' => 'Grupa 1',
+    ]);
+
+    $response = $this->actingAs(User::factory()->create())->get("/rounds/{$round->id}/edit");
+
+    $response->assertForbidden();
+});
+
 test('rounds page shows create round button when current event has no rounds', function () {
     $admin = actingAsRoundsAdmin();
     $this->actingAs($admin);
@@ -98,7 +139,7 @@ test('admin can see round edit action and delete a round', function () {
     ]);
 
     Livewire::test('rounds-list')
-        ->assertSee(route('filament.admin.resources.rounds.edit', ['record' => $round->id]), false)
+        ->assertSee(route('rounds.edit', ['round' => $round->id]), false)
         ->call('confirmDelete', $round->id)
         ->assertSet('confirmingDeletionId', $round->id)
         ->call('deleteRound', $round->id);
@@ -184,6 +225,82 @@ test('rounds create livewire picker adds and removes players while keeping group
 
     expect($availablePlayerIds)->toContain($players[0]->id);
     expect($availablePlayerIds)->not->toContain($players[1]->id);
+});
+
+test('rounds create livewire redirects back to matches create when requested', function () {
+    $admin = actingAsRoundsAdmin();
+    $this->actingAs($admin);
+
+    $event = Event::factory()->create([
+        'start_at' => now()->subHour(),
+        'end_at' => now()->addHour(),
+    ]);
+
+    $players = User::factory()->count(4)->create();
+    $event->users()->attach($players->pluck('id')->all());
+
+    Livewire::withQueryParams(['redirect' => 'matches.create'])
+        ->test('rounds-create')
+        ->set('groupOnePlayerIds', [$players[0]->id, $players[1]->id])
+        ->set('groupTwoPlayerIds', [$players[2]->id, $players[3]->id])
+        ->call('saveRound')
+        ->assertRedirect(route('matches.create'));
+});
+
+test('rounds edit livewire updates round title and players by groups', function () {
+    $admin = actingAsRoundsAdmin();
+    $this->actingAs($admin);
+
+    $event = Event::factory()->create([
+        'start_at' => now()->subHour(),
+        'end_at' => now()->addHour(),
+    ]);
+
+    $round = Round::factory()->create([
+        'event_id' => $event->id,
+        'number' => 1,
+        'name' => 'Grupa 1',
+    ]);
+
+    $groupOne = Group::factory()->create([
+        'event_id' => $event->id,
+        'round_id' => $round->id,
+        'number' => 1,
+        'name' => 'Grupa 1',
+    ]);
+
+    $groupTwo = Group::factory()->create([
+        'event_id' => $event->id,
+        'round_id' => $round->id,
+        'number' => 2,
+        'name' => 'Grupa 2',
+    ]);
+
+    $players = User::factory()->count(4)->create();
+    $event->users()->attach($players->pluck('id')->all());
+
+    $groupOne->users()->sync([$players[0]->id, $players[1]->id]);
+    $groupTwo->users()->sync([$players[2]->id, $players[3]->id]);
+    $round->users()->sync($players->pluck('id')->all());
+
+    Livewire::test('rounds-edit', ['roundId' => $round->id])
+        ->set('roundName', 'Grupa Finale')
+        ->set('groupOnePlayerIds', [$players[1]->id, $players[2]->id])
+        ->set('groupTwoPlayerIds', [$players[0]->id, $players[3]->id])
+        ->call('saveRound')
+        ->assertRedirect(route('rounds.index'));
+
+    expect($round->fresh()->name)->toBe('Grupa Finale');
+
+    $groupOnePlayerIds = $groupOne->fresh()->users()->pluck('users.id')->sort()->values()->all();
+    $groupTwoPlayerIds = $groupTwo->fresh()->users()->pluck('users.id')->sort()->values()->all();
+
+    expect($groupOnePlayerIds)->toBe([$players[1]->id, $players[2]->id]);
+    expect($groupTwoPlayerIds)->toBe([$players[0]->id, $players[3]->id]);
+
+    $roundUserIds = $round->fresh()->users()->pluck('users.id')->sort()->values()->all();
+
+    expect($roundUserIds)->toBe($players->pluck('id')->sort()->values()->all());
 });
 
 test('non-admin cannot delete round through livewire list', function () {

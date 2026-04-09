@@ -140,7 +140,7 @@ new class extends Component {
                             @if ($this->canManageRounds)
                                 <td class="px-3 py-3">
                                     <div class="flex items-center justify-end gap-2">
-                                        <a href="{{ route('filament.admin.resources.rounds.edit', ['record' => $round->id]) }}"
+                                        <a href="{{ route('rounds.edit', $round->id) }}"
                                             class="rounded-full border border-border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-foreground transition hover:border-foreground/40">
                                             Uredi
                                         </a>

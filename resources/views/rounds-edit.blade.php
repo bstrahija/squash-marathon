@@ -1,4 +1,4 @@
-<x-layouts.public-page title="Squash Marathon - Kreiranje meča"
+<x-layouts.public-page title="Squash Marathon - Uređivanje runde"
     main-class="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 pb-12 pt-32">
     <x-slot:background>
         <div
@@ -13,6 +13,6 @@
     </x-slot:background>
 
     <section class="scroll-mt-24">
-        <livewire:matches-create />
+        <livewire:rounds-edit :round-id="(int) request()->route('round')" />
     </section>
 </x-layouts.public-page>

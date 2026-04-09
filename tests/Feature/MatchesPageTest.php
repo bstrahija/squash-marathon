@@ -106,11 +106,36 @@ test('matches page includes links to score page for each match', function () {
 test('admin can access matches create page', function () {
     $this->withoutVite();
 
+    $event = Event::factory()->create([
+        'start_at' => now()->subHour(),
+        'end_at' => now()->addHour(),
+    ]);
+
+    Round::factory()->create([
+        'event_id' => $event->id,
+        'is_active' => true,
+    ]);
+
     $admin = createAdminUser();
 
     $response = $this->actingAs($admin)->get('/matches/create');
 
     $response->assertSuccessful();
+});
+
+test('admin is redirected to create round when creating match without active round', function () {
+    $this->withoutVite();
+
+    Event::factory()->create([
+        'start_at' => now()->subHour(),
+        'end_at' => now()->addHour(),
+    ]);
+
+    $admin = createAdminUser();
+
+    $response = $this->actingAs($admin)->get('/matches/create');
+
+    $response->assertRedirect(route('rounds.create', ['redirect' => 'matches.create']));
 });
 
 test('non-admin cannot access matches create page', function () {

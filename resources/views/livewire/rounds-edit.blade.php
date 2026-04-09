@@ -1,7 +1,6 @@
 <?php
 
 use App\Enums\RoleName;
-use App\Models\Event;
 use App\Models\Group;
 use App\Models\Round;
 use App\Models\User;
@@ -12,15 +11,15 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 
 new class extends Component {
+    public ?int $roundId = null;
+
     public ?int $eventId = null;
+
+    public int $roundNumber = 0;
 
     public string $eventName = '—';
 
-    public string $redirectAfterCreate = 'rounds.index';
-
-    public int $nextRoundNumber = 1;
-
-    public string $roundName = 'Grupa 1';
+    public string $roundName = '';
 
     /**
      * @var array<int, int|string>
@@ -36,23 +35,30 @@ new class extends Component {
 
     public ?int $groupTwoPlayerToAdd = null;
 
-    public function mount(): void
+    public function mount(int $roundId): void
     {
         if (!$this->canManageRounds) {
             abort(403);
         }
 
-        $this->resolveRedirectAfterCreate();
+        $this->roundId = $roundId;
 
-        $event = $this->resolveCurrentEvent();
+        $round = Round::query()
+            ->with(['event', 'groups.users'])
+            ->whereKey($roundId)
+            ->firstOrFail();
 
-        if (!$event) {
-            return;
-        }
+        $this->eventId = $round->event_id;
+        $this->roundNumber = $round->number;
+        $this->eventName = $round->event?->name ?? '—';
+        $this->roundName = $round->name;
 
-        $this->eventId = $event->id;
-        $this->eventName = $event->name;
-        $this->hydrateRoundDraft();
+        $groupOne = $round->groups->firstWhere('number', 1);
+        $groupTwo = $round->groups->firstWhere('number', 2);
+
+        $this->groupOnePlayerIds = $groupOne ? $groupOne->users->pluck('id')->map(fn(int $id): int => (int) $id)->values()->all() : [];
+
+        $this->groupTwoPlayerIds = $groupTwo ? $groupTwo->users->pluck('id')->map(fn(int $id): int => (int) $id)->values()->all() : [];
     }
 
     #[Computed]
@@ -205,10 +211,8 @@ new class extends Component {
             abort(403);
         }
 
-        if (!$this->eventId) {
-            $this->addError('eventId', 'Nema aktivnog eventa za kreiranje runde.');
-
-            return;
+        if (!$this->roundId || !$this->eventId) {
+            abort(404);
         }
 
         $this->groupOnePlayerIds = $this->normalizePlayerIds($this->groupOnePlayerIds);
@@ -216,12 +220,15 @@ new class extends Component {
 
         $validated = $this->validate(
             [
+                'roundName' => ['required', 'string', 'max:255'],
                 'groupOnePlayerIds' => ['required', 'array', 'min:1'],
                 'groupOnePlayerIds.*' => ['integer', Rule::exists('event_user', 'user_id')->where(fn($query) => $query->where('event_id', $this->eventId))],
                 'groupTwoPlayerIds' => ['required', 'array', 'min:1'],
                 'groupTwoPlayerIds.*' => ['integer', Rule::exists('event_user', 'user_id')->where(fn($query) => $query->where('event_id', $this->eventId))],
             ],
             [
+                'roundName.required' => 'Naziv runde je obavezan.',
+                'roundName.max' => 'Naziv runde smije imati najviše 255 znakova.',
                 'groupOnePlayerIds.required' => 'Odaberite igrače za grupu 1.',
                 'groupOnePlayerIds.min' => 'Grupa 1 mora imati barem jednog igrača.',
                 'groupOnePlayerIds.*.exists' => 'Igrači u grupi 1 moraju biti prijavljeni na event.',
@@ -241,35 +248,32 @@ new class extends Component {
             return;
         }
 
-        DB::transaction(function () use ($groupOneIds, $groupTwoIds): void {
-            $latestRoundNumber = (int) Round::query()->where('event_id', $this->eventId)->lockForUpdate()->max('number');
+        DB::transaction(function () use ($validated, $groupOneIds, $groupTwoIds): void {
+            $round = Round::query()->whereKey($this->roundId)->where('event_id', $this->eventId)->lockForUpdate()->firstOrFail();
 
-            $roundNumber = $latestRoundNumber + 1;
+            $round->update(['name' => trim($validated['roundName'])]);
 
-            Round::query()
-                ->where('event_id', $this->eventId)
-                ->update(['is_active' => false]);
+            $groupOne = Group::query()->firstOrCreate(
+                [
+                    'event_id' => $this->eventId,
+                    'round_id' => $round->id,
+                    'number' => 1,
+                ],
+                [
+                    'name' => 'Grupa 1',
+                ],
+            );
 
-            $round = Round::query()->create([
-                'event_id' => $this->eventId,
-                'number' => $roundNumber,
-                'name' => "Grupa {$roundNumber}",
-                'is_active' => true,
-            ]);
-
-            $groupOne = Group::query()->create([
-                'event_id' => $this->eventId,
-                'round_id' => $round->id,
-                'number' => 1,
-                'name' => 'Grupa 1',
-            ]);
-
-            $groupTwo = Group::query()->create([
-                'event_id' => $this->eventId,
-                'round_id' => $round->id,
-                'number' => 2,
-                'name' => 'Grupa 2',
-            ]);
+            $groupTwo = Group::query()->firstOrCreate(
+                [
+                    'event_id' => $this->eventId,
+                    'round_id' => $round->id,
+                    'number' => 2,
+                ],
+                [
+                    'name' => 'Grupa 2',
+                ],
+            );
 
             $groupOne->users()->sync($groupOneIds->all());
             $groupTwo->users()->sync($groupTwoIds->all());
@@ -277,46 +281,9 @@ new class extends Component {
             $round->users()->sync($groupOneIds->merge($groupTwoIds)->unique()->values()->all());
         });
 
-        session()->flash('status', 'Nova runda je uspješno kreirana.');
+        session()->flash('status', 'Runda je uspješno ažurirana.');
 
-        $this->redirectRoute($this->redirectAfterCreate);
-    }
-
-    protected function resolveCurrentEvent(): ?Event
-    {
-        $now = now();
-
-        return Event::query()->where('start_at', '<=', $now)->where('end_at', '>=', $now)->latest('start_at')->first() ?? Event::query()->latest('start_at')->first();
-    }
-
-    protected function hydrateRoundDraft(): void
-    {
-        if (!$this->eventId) {
-            $this->nextRoundNumber = 1;
-            $this->roundName = 'Grupa 1';
-
-            return;
-        }
-
-        $latestRoundNumber = (int) Round::query()->where('event_id', $this->eventId)->max('number');
-
-        $this->nextRoundNumber = $latestRoundNumber + 1;
-        $this->roundName = "Grupa {$this->nextRoundNumber}";
-    }
-
-    protected function resolveRedirectAfterCreate(): void
-    {
-        $requestedRoute = request()->query('redirect');
-
-        if (!is_string($requestedRoute)) {
-            return;
-        }
-
-        if (!in_array($requestedRoute, ['matches.create'], true)) {
-            return;
-        }
-
-        $this->redirectAfterCreate = $requestedRoute;
+        $this->redirectRoute('rounds.index');
     }
 
     protected function normalizePlayerIds(array $playerIds): array
@@ -347,14 +314,12 @@ new class extends Component {
 <div class="rounded-3xl border border-border bg-card/80 p-6 shadow-sm">
     <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Nova runda</p>
-            <h1 class="font-display mt-2 text-3xl font-semibold text-foreground">Kreiranje runde</h1>
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Uredi rundu</p>
+            <h1 class="font-display mt-2 text-3xl font-semibold text-foreground">
+                Uređivanje runde #{{ $roundNumber }}
+            </h1>
             <p class="mt-2 text-sm text-muted-foreground">
                 Event: <span class="font-semibold text-foreground">{{ $eventName }}</span>
-            </p>
-            <p class="text-sm text-muted-foreground">
-                Naziv runde se generira automatski: <span
-                    class="font-semibold text-foreground">{{ $roundName }}</span>
             </p>
         </div>
 
@@ -371,39 +336,44 @@ new class extends Component {
         </div>
     @endif
 
-    @if ($errors->has('eventId'))
-        <div
-            class="mb-4 rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:text-red-300">
-            {{ $errors->first('eventId') }}
+    <form class="space-y-6" wire:submit="saveRound">
+        <div>
+            <label for="round_name"
+                class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Naziv runde
+            </label>
+            <input id="round_name" type="text" wire:model="roundName"
+                class="w-full rounded-2xl border border-border/70 bg-background/70 px-4 py-3 text-sm text-foreground focus:border-foreground/40 focus:outline-none" />
+            @error('roundName')
+                <p class="mt-2 text-xs text-red-600 dark:text-red-300">{{ $message }}</p>
+            @enderror
         </div>
-    @endif
 
-    @if ($this->eventPlayers->isEmpty())
-        <div class="rounded-2xl border border-border/70 bg-background/70 px-4 py-5 text-sm text-muted-foreground">
-            Nema prijavljenih igrača za ovaj event.
-        </div>
-    @else
-        @php($availablePlayers = $this->availablePlayers)
+        @if ($this->eventPlayers->isEmpty())
+            <div class="rounded-2xl border border-border/70 bg-background/70 px-4 py-5 text-sm text-muted-foreground">
+                Nema prijavljenih igrača za ovaj event.
+            </div>
+        @else
+            @php($availablePlayers = $this->availablePlayers)
 
-        <form class="space-y-6" wire:submit="saveRound">
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <x-rounds.group-player-picker title="Grupa 1" :group-number="1" :players="$this->groupOnePlayers"
-                    :available-players="$availablePlayers" add-model="groupOnePlayerToAdd"
-                    update-method="updatedGroupOnePlayerToAdd" error-key="groupOnePlayerIds"
-                    error-item-key="groupOnePlayerIds.*" wire-key-prefix="round-create-group-one" />
+                <x-rounds.group-player-picker title="Grupa 1" :group-number="1" :players="$this->groupOnePlayers" :available-players="$availablePlayers"
+                    add-model="groupOnePlayerToAdd" update-method="updatedGroupOnePlayerToAdd"
+                    error-key="groupOnePlayerIds" error-item-key="groupOnePlayerIds.*"
+                    wire-key-prefix="round-edit-group-one" />
 
-                <x-rounds.group-player-picker title="Grupa 2" :group-number="2" :players="$this->groupTwoPlayers"
-                    :available-players="$availablePlayers" add-model="groupTwoPlayerToAdd"
-                    update-method="updatedGroupTwoPlayerToAdd" error-key="groupTwoPlayerIds"
-                    error-item-key="groupTwoPlayerIds.*" wire-key-prefix="round-create-group-two" />
+                <x-rounds.group-player-picker title="Grupa 2" :group-number="2" :players="$this->groupTwoPlayers" :available-players="$availablePlayers"
+                    add-model="groupTwoPlayerToAdd" update-method="updatedGroupTwoPlayerToAdd"
+                    error-key="groupTwoPlayerIds" error-item-key="groupTwoPlayerIds.*"
+                    wire-key-prefix="round-edit-group-two" />
             </div>
+        @endif
 
-            <div class="flex flex-wrap items-center justify-end gap-3">
-                <button type="submit"
-                    class="rounded-full bg-primary px-5 py-2.5 text-xs font-semibold uppercase tracking-wide text-primary-foreground shadow-sm transition hover:-translate-y-0.5">
-                    Započni rundu
-                </button>
-            </div>
-        </form>
-    @endif
+        <div class="flex flex-wrap items-center justify-end gap-3">
+            <button type="submit"
+                class="rounded-full bg-primary px-5 py-2.5 text-xs font-semibold uppercase tracking-wide text-primary-foreground shadow-sm transition hover:-translate-y-0.5">
+                Spremi izmjene
+            </button>
+        </div>
+    </form>
 </div>
