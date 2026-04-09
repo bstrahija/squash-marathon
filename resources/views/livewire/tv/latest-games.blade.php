@@ -126,7 +126,7 @@ new class extends Component {
 };
 ?>
 
-<div class="tv-latest-games tv-density-{{ $this->density }} flex h-full min-h-0 flex-col">
+<div class="tv-latest-games tv-density-{{ $this->density }} flex h-full min-h-0 flex-col" wire:poll.3s>
     <div class="min-h-0 flex-1 overflow-hidden bg-background/40">
         <div class="flex h-full min-h-0 flex-col divide-y divide-border/60 overflow-hidden">
             @forelse ($this->games as $game)

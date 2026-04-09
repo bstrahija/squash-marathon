@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\RoleName;
 use App\Models\Event;
 use App\Models\Game;
 use App\Models\Group;
@@ -7,9 +8,12 @@ use App\Models\Round;
 use App\Models\Set;
 use App\Models\User;
 use Illuminate\Support\Carbon;
+use Spatie\Permission\Models\Role;
 
 test('player page renders sidebar profile and leaderboard', function () {
     $this->withoutVite();
+
+    Role::findOrCreate(RoleName::Player->value, 'web');
 
     Carbon::setTestNow(Carbon::create(2026, 4, 24, 23, 15, 0));
 
@@ -76,6 +80,8 @@ test('player page renders sidebar profile and leaderboard', function () {
 
 test('player page lists only current event matches for selected player', function () {
     $this->withoutVite();
+
+    Role::findOrCreate(RoleName::Player->value, 'web');
 
     Carbon::setTestNow(Carbon::create(2026, 4, 24, 23, 15, 0));
 
