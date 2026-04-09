@@ -1,11 +1,9 @@
 <?php
 
 use App\Enums\RoleName;
-use App\Models\Group;
 use App\Models\Round;
 use App\Models\User;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -113,6 +111,22 @@ new class extends Component {
             ->values();
     }
 
+    #[Computed]
+    public function previousRound(): ?Round
+    {
+        if (!$this->eventId || $this->roundNumber < 2) {
+            return null;
+        }
+
+        return Round::previousForEvent($this->eventId, $this->roundNumber);
+    }
+
+    #[Computed]
+    public function hasPreviousRound(): bool
+    {
+        return $this->previousRound !== null;
+    }
+
     public function updatedGroupOnePlayerToAdd(?int $playerId): void
     {
         if (!$playerId) {
@@ -205,6 +219,44 @@ new class extends Component {
         $this->{$groupProperty} = $currentIds;
     }
 
+    public function seedRandomGroups(): void
+    {
+        if (!$this->canManageRounds) {
+            abort(403);
+        }
+
+        [$groupOnePlayerIds, $groupTwoPlayerIds] = Round::splitRandomPlayers($this->eventPlayers);
+
+        $this->groupOnePlayerIds = $groupOnePlayerIds;
+        $this->groupTwoPlayerIds = $groupTwoPlayerIds;
+        $this->groupOnePlayerToAdd = null;
+        $this->groupTwoPlayerToAdd = null;
+
+        $this->resetValidation(['groupOnePlayerIds', 'groupOnePlayerIds.*', 'groupTwoPlayerIds', 'groupTwoPlayerIds.*']);
+    }
+
+    public function seedGroupsFromPreviousRoundPoints(): void
+    {
+        if (!$this->canManageRounds) {
+            abort(403);
+        }
+
+        $previousRound = $this->previousRound;
+
+        if (!$previousRound) {
+            return;
+        }
+
+        [$groupOnePlayerIds, $groupTwoPlayerIds] = Round::splitPlayersFromPreviousRoundByPoints($previousRound, $this->eventPlayersById);
+
+        $this->groupOnePlayerIds = $groupOnePlayerIds;
+        $this->groupTwoPlayerIds = $groupTwoPlayerIds;
+        $this->groupOnePlayerToAdd = null;
+        $this->groupTwoPlayerToAdd = null;
+
+        $this->resetValidation(['groupOnePlayerIds', 'groupOnePlayerIds.*', 'groupTwoPlayerIds', 'groupTwoPlayerIds.*']);
+    }
+
     public function saveRound(): void
     {
         if (!$this->canManageRounds) {
@@ -248,38 +300,7 @@ new class extends Component {
             return;
         }
 
-        DB::transaction(function () use ($validated, $groupOneIds, $groupTwoIds): void {
-            $round = Round::query()->whereKey($this->roundId)->where('event_id', $this->eventId)->lockForUpdate()->firstOrFail();
-
-            $round->update(['name' => trim($validated['roundName'])]);
-
-            $groupOne = Group::query()->firstOrCreate(
-                [
-                    'event_id' => $this->eventId,
-                    'round_id' => $round->id,
-                    'number' => 1,
-                ],
-                [
-                    'name' => 'Grupa 1',
-                ],
-            );
-
-            $groupTwo = Group::query()->firstOrCreate(
-                [
-                    'event_id' => $this->eventId,
-                    'round_id' => $round->id,
-                    'number' => 2,
-                ],
-                [
-                    'name' => 'Grupa 2',
-                ],
-            );
-
-            $groupOne->users()->sync($groupOneIds->all());
-            $groupTwo->users()->sync($groupTwoIds->all());
-
-            $round->users()->sync($groupOneIds->merge($groupTwoIds)->unique()->values()->all());
-        });
+        Round::updateForEventWithGroups((int) $this->roundId, (int) $this->eventId, trim($validated['roundName']), $groupOneIds->all(), $groupTwoIds->all());
 
         session()->flash('status', 'Runda je uspješno ažurirana.');
 
@@ -370,6 +391,23 @@ new class extends Component {
         @endif
 
         <div class="flex flex-wrap items-center justify-end gap-3">
+            @if ($this->hasPreviousRound)
+                <button type="button" wire:click="seedGroupsFromPreviousRoundPoints" wire:loading.attr="disabled"
+                    wire:target="seedGroupsFromPreviousRoundPoints,seedRandomGroups,saveRound"
+                    class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-foreground transition hover:border-foreground/40 disabled:cursor-not-allowed disabled:opacity-50"
+                    title="Podijeli prema bodovima prethodne runde"
+                    aria-label="Podijeli prema bodovima prethodne runde">
+                    <x-heroicon-o-trophy class="h-4 w-4" />
+                </button>
+            @endif
+
+            <button type="button" wire:click="seedRandomGroups" wire:loading.attr="disabled"
+                wire:target="seedRandomGroups,saveRound"
+                class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-foreground transition hover:border-foreground/40 disabled:cursor-not-allowed disabled:opacity-50"
+                title="Nasumično podijeli igrače" aria-label="Nasumično podijeli igrače">
+                <x-heroicon-o-arrow-path class="h-4 w-4" />
+            </button>
+
             <button type="submit"
                 class="rounded-full bg-primary px-5 py-2.5 text-xs font-semibold uppercase tracking-wide text-primary-foreground shadow-sm transition hover:-translate-y-0.5">
                 Spremi izmjene

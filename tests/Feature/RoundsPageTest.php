@@ -2,8 +2,10 @@
 
 use App\Enums\RoleName;
 use App\Models\Event;
+use App\Models\Game;
 use App\Models\Group;
 use App\Models\Round;
+use App\Models\Set;
 use App\Models\User;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Role;
@@ -16,6 +18,45 @@ function actingAsRoundsAdmin(): User
     $user->assignRole(RoleName::Admin->value);
 
     return $user;
+}
+
+function createCompletedGroupGame(
+    Event $event,
+    Round $round,
+    Group $group,
+    User $playerOne,
+    User $playerTwo,
+    int $playerOneScore,
+    int $playerTwoScore,
+): Game {
+    $winnerId = $playerOneScore > $playerTwoScore ? $playerOne->id : $playerTwo->id;
+
+    $game = Game::factory()->create([
+        'event_id' => $event->id,
+        'round_id' => $round->id,
+        'group_id' => $group->id,
+        'best_of' => 1,
+        'player_one_id' => $playerOne->id,
+        'player_two_id' => $playerTwo->id,
+        'winner_id' => $winnerId,
+        'is_draw' => false,
+        'started_at' => now()->subMinute(),
+        'finished_at' => now(),
+    ]);
+
+    Set::factory()->create([
+        'game_id' => $game->id,
+        'round_id' => $round->id,
+        'group_id' => $group->id,
+        'player_one_id' => $playerOne->id,
+        'player_two_id' => $playerTwo->id,
+        'player_one_score' => $playerOneScore,
+        'player_two_score' => $playerTwoScore,
+        'started_at' => now()->subMinute(),
+        'finished_at' => now(),
+    ]);
+
+    return $game;
 }
 
 test('rounds page loads', function () {
@@ -55,6 +96,9 @@ test('admin can access rounds edit page', function () {
         'start_at' => now()->subHour(),
         'end_at' => now()->addHour(),
     ]);
+
+    $player = User::factory()->create();
+    $event->users()->attach($player->id);
 
     $round = Round::factory()->create([
         'event_id' => $event->id,
@@ -136,6 +180,30 @@ test('rounds create page shows finish headline when mode is finish', function ()
     $response->assertSee('Završi rundu i kreiraj novu');
 });
 
+test('rounds create livewire exposes previous-round points seeding only when previous round exists', function () {
+    $admin = actingAsRoundsAdmin();
+    $this->actingAs($admin);
+
+    $event = Event::factory()->create([
+        'start_at' => now()->subHour(),
+        'end_at' => now()->addHour(),
+    ]);
+
+    $withoutPreviousRound = Livewire::test('rounds-create');
+
+    expect($withoutPreviousRound->instance()->hasPreviousRound)->toBeFalse();
+
+    Round::factory()->create([
+        'event_id' => $event->id,
+        'number' => 1,
+        'name' => 'Runda 1',
+    ]);
+
+    $withPreviousRound = Livewire::test('rounds-create');
+
+    expect($withPreviousRound->instance()->hasPreviousRound)->toBeTrue();
+});
+
 test('admin can see round edit action and delete a round', function () {
     $admin = actingAsRoundsAdmin();
     $this->actingAs($admin);
@@ -191,7 +259,7 @@ test('rounds create livewire creates a new active round and assigns players to t
         ->first();
 
     expect($newRound)->not->toBeNull();
-    expect($newRound?->name)->toBe('Grupa 2');
+    expect($newRound?->name)->toBe('Runda 2');
     expect($newRound?->is_active)->toBeTrue();
     expect($existingRound->fresh()->is_active)->toBeFalse();
 
@@ -270,6 +338,52 @@ test('rounds create livewire can randomly seed players into two balanced groups'
     expect(abs($groupOneIds->count() - $groupTwoIds->count()))->toBeLessThanOrEqual(1);
 });
 
+test('rounds create livewire can seed players by previous round points', function () {
+    $admin = actingAsRoundsAdmin();
+    $this->actingAs($admin);
+
+    $event = Event::factory()->create([
+        'start_at' => now()->subHour(),
+        'end_at' => now()->addHour(),
+    ]);
+
+    $players = User::factory()->count(4)->create();
+    $event->users()->attach($players->pluck('id')->all());
+
+    $previousRound = Round::factory()->create([
+        'event_id' => $event->id,
+        'number' => 1,
+        'name' => 'Runda 1',
+    ]);
+
+    $groupOne = Group::factory()->create([
+        'event_id' => $event->id,
+        'round_id' => $previousRound->id,
+        'number' => 1,
+        'name' => 'Grupa 1',
+    ]);
+
+    $groupTwo = Group::factory()->create([
+        'event_id' => $event->id,
+        'round_id' => $previousRound->id,
+        'number' => 2,
+        'name' => 'Grupa 2',
+    ]);
+
+    $groupOne->users()->sync([$players[0]->id, $players[1]->id]);
+    $groupTwo->users()->sync([$players[2]->id, $players[3]->id]);
+    $previousRound->users()->sync($players->pluck('id')->all());
+
+    createCompletedGroupGame($event, $previousRound, $groupOne, $players[0], $players[1], 11, 6);
+    createCompletedGroupGame($event, $previousRound, $groupTwo, $players[2], $players[3], 11, 8);
+
+    $component = Livewire::test('rounds-create')
+        ->call('seedGroupsFromPreviousRoundPoints');
+
+    expect($component->instance()->groupOnePlayerIds)->toBe([$players[0]->id, $players[2]->id]);
+    expect($component->instance()->groupTwoPlayerIds)->toBe([$players[1]->id, $players[3]->id]);
+});
+
 test('rounds create livewire redirects back to matches create when requested', function () {
     $admin = actingAsRoundsAdmin();
     $this->actingAs($admin);
@@ -344,6 +458,102 @@ test('rounds edit livewire updates round title and players by groups', function 
     $roundUserIds = $round->fresh()->users()->pluck('users.id')->sort()->values()->all();
 
     expect($roundUserIds)->toBe($players->pluck('id')->sort()->values()->all());
+});
+
+test('rounds edit livewire exposes previous-round points seeding only when previous round exists', function () {
+    $admin = actingAsRoundsAdmin();
+    $this->actingAs($admin);
+
+    $event = Event::factory()->create([
+        'start_at' => now()->subHour(),
+        'end_at' => now()->addHour(),
+    ]);
+
+    $roundOne = Round::factory()->create([
+        'event_id' => $event->id,
+        'number' => 1,
+        'name' => 'Runda 1',
+    ]);
+
+    $withoutPreviousRound = Livewire::test('rounds-edit', ['roundId' => $roundOne->id]);
+
+    expect($withoutPreviousRound->instance()->hasPreviousRound)->toBeFalse();
+
+    $roundTwo = Round::factory()->create([
+        'event_id' => $event->id,
+        'number' => 2,
+        'name' => 'Runda 2',
+    ]);
+
+    $withPreviousRound = Livewire::test('rounds-edit', ['roundId' => $roundTwo->id]);
+
+    expect($withPreviousRound->instance()->hasPreviousRound)->toBeTrue();
+});
+
+test('rounds edit livewire can seed players by previous round points', function () {
+    $admin = actingAsRoundsAdmin();
+    $this->actingAs($admin);
+
+    $event = Event::factory()->create([
+        'start_at' => now()->subHour(),
+        'end_at' => now()->addHour(),
+    ]);
+
+    $players = User::factory()->count(4)->create();
+    $event->users()->attach($players->pluck('id')->all());
+
+    $previousRound = Round::factory()->create([
+        'event_id' => $event->id,
+        'number' => 1,
+        'name' => 'Runda 1',
+    ]);
+
+    $currentRound = Round::factory()->create([
+        'event_id' => $event->id,
+        'number' => 2,
+        'name' => 'Runda 2',
+    ]);
+
+    $previousGroupOne = Group::factory()->create([
+        'event_id' => $event->id,
+        'round_id' => $previousRound->id,
+        'number' => 1,
+        'name' => 'Grupa 1',
+    ]);
+
+    $previousGroupTwo = Group::factory()->create([
+        'event_id' => $event->id,
+        'round_id' => $previousRound->id,
+        'number' => 2,
+        'name' => 'Grupa 2',
+    ]);
+
+    Group::factory()->create([
+        'event_id' => $event->id,
+        'round_id' => $currentRound->id,
+        'number' => 1,
+        'name' => 'Grupa 1',
+    ]);
+
+    Group::factory()->create([
+        'event_id' => $event->id,
+        'round_id' => $currentRound->id,
+        'number' => 2,
+        'name' => 'Grupa 2',
+    ]);
+
+    $previousGroupOne->users()->sync([$players[0]->id, $players[1]->id]);
+    $previousGroupTwo->users()->sync([$players[2]->id, $players[3]->id]);
+    $previousRound->users()->sync($players->pluck('id')->all());
+
+    createCompletedGroupGame($event, $previousRound, $previousGroupOne, $players[0], $players[1], 11, 7);
+    createCompletedGroupGame($event, $previousRound, $previousGroupTwo, $players[2], $players[3], 11, 9);
+
+    $component = Livewire::test('rounds-edit', ['roundId' => $currentRound->id])
+        ->call('seedGroupsFromPreviousRoundPoints');
+
+    expect($component->instance()->groupOnePlayerIds)->toBe([$players[0]->id, $players[2]->id]);
+    expect($component->instance()->groupTwoPlayerIds)->toBe([$players[1]->id, $players[3]->id]);
 });
 
 test('non-admin cannot delete round through livewire list', function () {

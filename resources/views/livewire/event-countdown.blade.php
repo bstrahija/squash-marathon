@@ -79,20 +79,12 @@ new class extends Component {
             <button aria-label="Toggle theme" aria-pressed="false"
                 class="relative flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background/70 text-foreground transition hover:-translate-y-0.5 hover:border-foreground/40"
                 data-theme-toggle title="Toggle theme" type="button">
-                <svg aria-hidden="true"
+                <x-heroicon-o-sun aria-hidden="true"
                     class="absolute inset-0 m-auto h-3.5 w-3.5 scale-100 opacity-100 transition duration-300"
-                    data-theme-icon="sun" fill="none" viewBox="0 0 24 24">
-                    <path
-                        d="M12 4.5v-2M12 21.5v-2M4.5 12h-2M21.5 12h-2M6.2 6.2l-1.4-1.4M19.2 19.2l-1.4-1.4M6.2 17.8l-1.4 1.4M19.2 4.8l-1.4 1.4"
-                        stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" />
-                    <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.5" />
-                </svg>
-                <svg aria-hidden="true"
+                    data-theme-icon="sun" />
+                <x-heroicon-o-moon aria-hidden="true"
                     class="absolute inset-0 m-auto h-3.5 w-3.5 scale-75 opacity-0 transition duration-300"
-                    data-theme-icon="moon" fill="none" viewBox="0 0 24 24">
-                    <path d="M20 14.5A7.5 7.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z" stroke="currentColor"
-                        stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" />
-                </svg>
+                    data-theme-icon="moon" />
             </button>
             <span
                 class="rounded-full border border-border/70 bg-background/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-foreground">

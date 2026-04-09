@@ -178,7 +178,7 @@ new class extends Component {
                         class="font-display text-center text-4xl leading-none font-semibold {{ $entry['player_one_sets_class'] }}">
                         {{ $entry['player_one_sets'] }}
                     </p>
-                    <p class="font-display text-xl leading-none text-muted-foreground">:</p>
+                    <p class="font-display text-xl leading-none text-muted-foreground"></p>
                     <p
                         class="font-display text-center text-4xl leading-none font-semibold {{ $entry['player_two_sets_class'] }}">
                         {{ $entry['player_two_sets'] }}
@@ -193,7 +193,7 @@ new class extends Component {
                     Trajanje {{ $entry['duration'] }} • {{ $entry['time']?->format('H:i') ?? '—' }}
                 </p> --}}
                 <p class="mt-3 text-xs text-muted-foreground text-center">
-                    Trajanje {{ $entry['duration'] }} | {{ $entry['time']?->format('H:i') ?? '-' }}
+                    Trajanje {{ $entry['duration'] }}
                 </p>
             </div>
         @empty

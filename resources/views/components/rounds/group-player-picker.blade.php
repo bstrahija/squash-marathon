@@ -51,10 +51,7 @@
                         wire:click="removePlayerFromGroup({{ $groupNumber }}, {{ $player->id }})"
                         wire:loading.attr="disabled" wire:target="removePlayerFromGroup,saveRound"
                         class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground transition hover:border-red-400/60 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50">
-                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" stroke-linejoin="round"
-                                stroke-width="1.8" />
-                        </svg>
+                        <x-heroicon-o-x-mark class="h-3.5 w-3.5" />
                     </button>
                 </li>
             @endforeach

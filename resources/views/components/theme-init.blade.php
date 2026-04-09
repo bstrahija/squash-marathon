@@ -1,6 +1,6 @@
 @php
     $appearanceSetting = in_array($appearance ?? 'system', ['light', 'dark', 'system'], true)
-        ? ($appearance ?? 'system')
+        ? $appearance ?? 'system'
         : 'system';
 @endphp
 
@@ -17,9 +17,9 @@
 
             const value = decodeURIComponent(match[1]);
 
-            return value === 'light' || value === 'dark' || value === 'system'
-                ? value
-                : null;
+            return value === 'light' || value === 'dark' || value === 'system' ?
+                value :
+                null;
         };
 
         const readLocalTheme = () => {

@@ -132,7 +132,7 @@ new class extends Component {
                         <th class="px-3 py-3">Runda</th>
                         <th class="px-3 py-3">Naziv</th>
                         <th class="px-3 py-3">Grupe</th>
-                        <th class="px-3 py-3">Mecevi</th>
+                        <th class="px-3 py-3">Mečevi</th>
                         <th class="px-3 py-3">Kreirano</th>
                         @if ($this->canManageRounds)
                             <th class="px-3 py-3 text-right">Akcije</th>

@@ -2,11 +2,9 @@
 
 use App\Enums\RoleName;
 use App\Models\Event;
-use App\Models\Group;
 use App\Models\Round;
 use App\Models\User;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -22,7 +20,7 @@ new class extends Component {
 
     public int $nextRoundNumber = 1;
 
-    public string $roundName = 'Grupa 1';
+    public string $roundName = 'Runda 1';
 
     /**
      * @var array<int, int|string>
@@ -120,7 +118,7 @@ new class extends Component {
         if ($this->createMode === 'finish') {
             return [
                 'heading' => 'Završi rundu i kreiraj novu',
-                'submit' => 'Završi rundu i započni novu',
+                'submit' => 'Spremi rundu',
             ];
         }
 
@@ -128,6 +126,22 @@ new class extends Component {
             'heading' => 'Kreiranje prve runde',
             'submit' => 'Započni rundu',
         ];
+    }
+
+    #[Computed]
+    public function previousRound(): ?Round
+    {
+        if (!$this->eventId) {
+            return null;
+        }
+
+        return Round::previousForEvent($this->eventId, $this->nextRoundNumber);
+    }
+
+    #[Computed]
+    public function hasPreviousRound(): bool
+    {
+        return $this->previousRound !== null;
     }
 
     public function updatedGroupOnePlayerToAdd(?int $playerId): void
@@ -228,16 +242,32 @@ new class extends Component {
             abort(403);
         }
 
-        $shuffledPlayerIds = $this->eventPlayers
-            ->pluck('id')
-            ->map(fn($id): int => (int) $id)
-            ->shuffle()
-            ->values();
+        [$groupOnePlayerIds, $groupTwoPlayerIds] = Round::splitRandomPlayers($this->eventPlayers);
 
-        $splitIndex = (int) ceil($shuffledPlayerIds->count() / 2);
+        $this->groupOnePlayerIds = $groupOnePlayerIds;
+        $this->groupTwoPlayerIds = $groupTwoPlayerIds;
+        $this->groupOnePlayerToAdd = null;
+        $this->groupTwoPlayerToAdd = null;
 
-        $this->groupOnePlayerIds = $shuffledPlayerIds->take($splitIndex)->values()->all();
-        $this->groupTwoPlayerIds = $shuffledPlayerIds->slice($splitIndex)->values()->all();
+        $this->resetValidation(['groupOnePlayerIds', 'groupOnePlayerIds.*', 'groupTwoPlayerIds', 'groupTwoPlayerIds.*']);
+    }
+
+    public function seedGroupsFromPreviousRoundPoints(): void
+    {
+        if (!$this->canManageRounds) {
+            abort(403);
+        }
+
+        $previousRound = $this->previousRound;
+
+        if (!$previousRound) {
+            return;
+        }
+
+        [$groupOnePlayerIds, $groupTwoPlayerIds] = Round::splitPlayersFromPreviousRoundByPoints($previousRound, $this->eventPlayersById);
+
+        $this->groupOnePlayerIds = $groupOnePlayerIds;
+        $this->groupTwoPlayerIds = $groupTwoPlayerIds;
         $this->groupOnePlayerToAdd = null;
         $this->groupTwoPlayerToAdd = null;
 
@@ -286,41 +316,7 @@ new class extends Component {
             return;
         }
 
-        DB::transaction(function () use ($groupOneIds, $groupTwoIds): void {
-            $latestRoundNumber = (int) Round::query()->where('event_id', $this->eventId)->lockForUpdate()->max('number');
-
-            $roundNumber = $latestRoundNumber + 1;
-
-            Round::query()
-                ->where('event_id', $this->eventId)
-                ->update(['is_active' => false]);
-
-            $round = Round::query()->create([
-                'event_id' => $this->eventId,
-                'number' => $roundNumber,
-                'name' => "Grupa {$roundNumber}",
-                'is_active' => true,
-            ]);
-
-            $groupOne = Group::query()->create([
-                'event_id' => $this->eventId,
-                'round_id' => $round->id,
-                'number' => 1,
-                'name' => 'Grupa 1',
-            ]);
-
-            $groupTwo = Group::query()->create([
-                'event_id' => $this->eventId,
-                'round_id' => $round->id,
-                'number' => 2,
-                'name' => 'Grupa 2',
-            ]);
-
-            $groupOne->users()->sync($groupOneIds->all());
-            $groupTwo->users()->sync($groupTwoIds->all());
-
-            $round->users()->sync($groupOneIds->merge($groupTwoIds)->unique()->values()->all());
-        });
+        Round::createForEventWithGroups((int) $this->eventId, $groupOneIds->all(), $groupTwoIds->all());
 
         session()->flash('status', 'Nova runda je uspješno kreirana.');
 
@@ -338,15 +334,13 @@ new class extends Component {
     {
         if (!$this->eventId) {
             $this->nextRoundNumber = 1;
-            $this->roundName = 'Grupa 1';
+            $this->roundName = 'Runda 1';
 
             return;
         }
 
-        $latestRoundNumber = (int) Round::query()->where('event_id', $this->eventId)->max('number');
-
-        $this->nextRoundNumber = $latestRoundNumber + 1;
-        $this->roundName = "Grupa {$this->nextRoundNumber}";
+        $this->nextRoundNumber = Round::nextNumberForEvent($this->eventId);
+        $this->roundName = "Runda {$this->nextRoundNumber}";
     }
 
     protected function resolveRedirectAfterCreate(): void
@@ -450,22 +444,33 @@ new class extends Component {
 
         <form class="space-y-6" wire:submit="saveRound">
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <x-rounds.group-player-picker title="Grupa 1" :group-number="1" :players="$this->groupOnePlayers"
-                    :available-players="$availablePlayers" add-model="groupOnePlayerToAdd"
-                    update-method="updatedGroupOnePlayerToAdd" error-key="groupOnePlayerIds"
-                    error-item-key="groupOnePlayerIds.*" wire-key-prefix="round-create-group-one" />
+                <x-rounds.group-player-picker title="Grupa 1" :group-number="1" :players="$this->groupOnePlayers" :available-players="$availablePlayers"
+                    add-model="groupOnePlayerToAdd" update-method="updatedGroupOnePlayerToAdd"
+                    error-key="groupOnePlayerIds" error-item-key="groupOnePlayerIds.*"
+                    wire-key-prefix="round-create-group-one" />
 
-                <x-rounds.group-player-picker title="Grupa 2" :group-number="2" :players="$this->groupTwoPlayers"
-                    :available-players="$availablePlayers" add-model="groupTwoPlayerToAdd"
-                    update-method="updatedGroupTwoPlayerToAdd" error-key="groupTwoPlayerIds"
-                    error-item-key="groupTwoPlayerIds.*" wire-key-prefix="round-create-group-two" />
+                <x-rounds.group-player-picker title="Grupa 2" :group-number="2" :players="$this->groupTwoPlayers" :available-players="$availablePlayers"
+                    add-model="groupTwoPlayerToAdd" update-method="updatedGroupTwoPlayerToAdd"
+                    error-key="groupTwoPlayerIds" error-item-key="groupTwoPlayerIds.*"
+                    wire-key-prefix="round-create-group-two" />
             </div>
 
             <div class="flex flex-wrap items-center justify-end gap-3">
+                @if ($this->hasPreviousRound)
+                    <button type="button" wire:click="seedGroupsFromPreviousRoundPoints" wire:loading.attr="disabled"
+                        wire:target="seedGroupsFromPreviousRoundPoints,seedRandomGroups,saveRound"
+                        class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-foreground transition hover:border-foreground/40 disabled:cursor-not-allowed disabled:opacity-50"
+                        title="Podijeli prema bodovima prethodne runde"
+                        aria-label="Podijeli prema bodovima prethodne runde">
+                        <x-heroicon-o-trophy class="h-4 w-4" />
+                    </button>
+                @endif
+
                 <button type="button" wire:click="seedRandomGroups" wire:loading.attr="disabled"
                     wire:target="seedRandomGroups,saveRound"
-                    class="rounded-full border border-border px-5 py-2.5 text-xs font-semibold uppercase tracking-wide text-foreground transition hover:border-foreground/40 disabled:cursor-not-allowed disabled:opacity-50">
-                    Nasumično podijeli igrače
+                    class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-foreground transition hover:border-foreground/40 disabled:cursor-not-allowed disabled:opacity-50"
+                    title="Nasumično podijeli igrače" aria-label="Nasumično podijeli igrače">
+                    <x-heroicon-o-arrow-path class="h-4 w-4" />
                 </button>
 
                 <button type="submit"

@@ -138,8 +138,11 @@ test('timeline livewire component shows recent games', function () {
     ]);
 
     Livewire::test('timeline')
+        ->assertSee('Kronologija')
+        ->assertSee('Najsvježije završene partije')
+        ->assertSee('Zadnjih 24 završenih partija.')
         ->assertSee($playerOne->full_name)
         ->assertSee($playerTwo->full_name)
         ->assertSee('11-6')
-        ->assertSee('19:45');
+        ->assertSee('Trajanje');
 });

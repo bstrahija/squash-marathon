@@ -34,7 +34,7 @@
                     </div>
                     <a href="{{ route('matches.index') }}"
                         class="rounded-full border border-border bg-background px-4 py-2 text-xs font-semibold uppercase tracking-wide text-foreground transition hover:-translate-y-0.5 hover:border-foreground/40">
-                        Svi mecevi
+                        Svi mečevi
                     </a>
                 </div>
 
