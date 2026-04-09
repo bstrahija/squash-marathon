@@ -135,7 +135,6 @@ new class extends Component {
 
         return 'compact';
     }
-
 };
 ?>
 

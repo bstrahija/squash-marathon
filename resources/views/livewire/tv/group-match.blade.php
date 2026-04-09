@@ -155,7 +155,6 @@ new class extends Component {
 
         return 'text-foreground';
     }
-
 };
 ?>
 
