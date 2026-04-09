@@ -13,7 +13,7 @@
                 "/Applications/Herd.app/Contents/Resources/herd-mcp.phar"
             ],
             "env": {
-                "SITE_PATH": "/Volumes/Superhero/Code/personal/squash-marathon"
+                "SITE_PATH": "/Users/bstrahija/Code/personal/squash-marathon"
             }
         }
     }
