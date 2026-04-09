@@ -146,10 +146,10 @@ new class extends Component {
                     class="tv-leaderboard-head sticky top-0 bg-background/90 uppercase tracking-widest text-muted-foreground backdrop-blur-sm">
                     <tr>
                         <th class="tv-leaderboard-cell">Igrač</th>
+                        <th class="tv-leaderboard-cell">Bod</th>
                         <th class="tv-leaderboard-cell">W</th>
                         <th class="tv-leaderboard-cell">D</th>
                         <th class="tv-leaderboard-cell">L</th>
-                        <th class="tv-leaderboard-cell">Bod</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-border/70">
@@ -161,11 +161,11 @@ new class extends Component {
                                     {{ $row['name'] }}
                                 </a>
                             </td>
+                            <td class="tv-leaderboard-cell font-semibold text-foreground">{{ $row['points'] }}
+                            </td>
                             <td class="tv-leaderboard-cell text-muted-foreground">{{ $row['wins'] }}</td>
                             <td class="tv-leaderboard-cell text-muted-foreground">{{ $row['draws'] }}</td>
                             <td class="tv-leaderboard-cell text-muted-foreground">{{ $row['losses'] }}</td>
-                            <td class="tv-leaderboard-cell font-semibold text-foreground">{{ $row['points'] }}
-                            </td>
                         </tr>
                     @empty
                         <tr>
