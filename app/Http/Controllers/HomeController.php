@@ -95,6 +95,8 @@ class HomeController extends Controller
             ->map(fn (array $row): array => [
                 'name' => $row['player']->full_name,
                 'initials' => $row['player']->initials,
+                'avatar_url' => $row['player']->hasMedia('avatar') ? $row['player']->avatarUrl('thumb') : null,
+                'profile_url' => route('players.show', ['user' => $row['player']->id]),
                 'wins' => $row['wins'],
                 'draws' => $row['draws'],
                 'losses' => $row['losses'],

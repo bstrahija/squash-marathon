@@ -60,6 +60,8 @@ test('homepage renders real data sections', function () {
     $response->assertSee($playerTwo->full_name);
     $response->assertSee($playerOne->initials);
     $response->assertSee($playerTwo->initials);
+    $response->assertSee(route('players.show', $playerOne), false);
+    $response->assertSee(route('players.show', $playerTwo), false);
     $response->assertSee('11-6');
 });
 
