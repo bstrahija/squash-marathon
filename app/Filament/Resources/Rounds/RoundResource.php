@@ -18,7 +18,7 @@ class RoundResource extends Resource
 {
     protected static ?string $model = Round::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedArrowPathRoundedSquare;
 
     public static function form(Schema $schema): Schema
     {
