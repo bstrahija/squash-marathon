@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Users\Schemas;
 
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Hash;
@@ -14,11 +13,6 @@ class UserForm
     {
         return $schema
             ->components([
-                SpatieMediaLibraryFileUpload::make('avatar')
-                    ->collection('avatar')
-                    ->disk('public')
-                    ->visibility('public')
-                    ->columnSpanFull(),
                 TextInput::make('first_name')
                     ->required(),
                 TextInput::make('last_name')

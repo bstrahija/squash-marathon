@@ -84,6 +84,58 @@ const initializeThemeToggle = (): void => {
     });
 };
 
+const initializeMobileNavigation = (): void => {
+    const toggle = document.querySelector<HTMLButtonElement>('[data-nav-toggle]');
+    const panel = document.querySelector<HTMLElement>('[data-nav-panel]');
+
+    if (!toggle || !panel || toggle.dataset.navToggleBound === 'true') {
+        return;
+    }
+
+    const closeNavigation = (): void => {
+        toggle.setAttribute('aria-expanded', 'false');
+        panel.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    };
+
+    const openNavigation = (): void => {
+        toggle.setAttribute('aria-expanded', 'true');
+        panel.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+    };
+
+    const toggleNavigation = (): void => {
+        if (toggle.getAttribute('aria-expanded') === 'true') {
+            closeNavigation();
+
+            return;
+        }
+
+        openNavigation();
+    };
+
+    toggle.dataset.navToggleBound = 'true';
+    closeNavigation();
+
+    toggle.addEventListener('click', toggleNavigation);
+
+    panel.querySelectorAll<HTMLElement>('[data-nav-link]').forEach((link) => {
+        link.addEventListener('click', closeNavigation);
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            closeNavigation();
+        }
+    });
+
+    window.addEventListener('resize', () => {
+        if (window.innerWidth >= 768) {
+            closeNavigation();
+        }
+    });
+};
+
 const registerMatchDoneConfetti = (): void => {
     let matchDoneConfettiInterval: number | null = null;
 
@@ -161,4 +213,5 @@ const registerMatchDoneConfetti = (): void => {
 };
 
 initializeThemeToggle();
+initializeMobileNavigation();
 registerMatchDoneConfetti();

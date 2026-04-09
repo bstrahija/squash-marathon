@@ -14,6 +14,11 @@ class EventForm
     {
         return $schema
             ->components([
+                SpatieMediaLibraryFileUpload::make('photo')
+                    ->collection('photo')
+                    ->disk('public')
+                    ->visibility('public')
+                    ->columnSpanFull(),
                 TextInput::make('name')
                     ->required()
                     ->maxLength(255),
@@ -26,11 +31,6 @@ class EventForm
                     ->seconds(false)
                     ->after('start_at')
                     ->required(),
-                SpatieMediaLibraryFileUpload::make('photo')
-                    ->collection('photo')
-                    ->image()
-                    ->imageEditor()
-                    ->columnSpanFull(),
                 Select::make('users')
                     ->label('Registered users')
                     ->multiple()
