@@ -45,24 +45,24 @@ new class extends Component {
 ?>
 
 <div class="tv-event-end-countdown flex h-full min-h-0 flex-col p-4" wire:poll.5s>
-    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+    <p class="tv-event-kicker font-semibold uppercase tracking-[0.18em] text-muted-foreground">
         Event End Countdown
     </p>
 
     @if (!$this->status['has_event'])
-        <p class="mt-3 text-sm font-semibold text-muted-foreground">
+        <p class="tv-event-name mt-3 font-semibold text-muted-foreground">
             No active event.
         </p>
     @else
-        <p class="mt-2 truncate text-base font-semibold text-foreground">
+        <p class="tv-event-name mt-2 truncate font-semibold text-foreground">
             {{ $this->status['name'] }}
         </p>
 
-        <p class="font-display mt-3 text-4xl font-semibold leading-none text-foreground">
+        <p class="tv-event-timer font-display mt-3 font-semibold leading-none text-foreground">
             {{ $this->status['is_over'] ? '00:00:00' : $this->status['remaining_label'] }}
         </p>
 
-        <p class="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+        <p class="tv-event-meta mt-2 font-semibold uppercase tracking-[0.14em] text-muted-foreground">
             Ends at {{ $this->status['ends_at']?->format('H:i') ?? '—' }}
         </p>
     @endif

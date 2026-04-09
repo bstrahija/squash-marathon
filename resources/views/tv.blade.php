@@ -26,7 +26,7 @@
             <section class="tv-panel-recent min-h-0 rounded-3xl border border-border bg-card shadow-sm">
                 <div class="flex h-full min-h-0 flex-col">
                     <div
-                        class="border-b border-border/70 px-4 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                        class="tv-recent-heading border-b border-border/70 px-4 py-3 font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                         Recent Matches
                     </div>
                     <div class="min-h-0 flex-1">

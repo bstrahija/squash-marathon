@@ -32,7 +32,7 @@
     }
 }
 
-@media (max-width: 1023px) {
+@media (orientation: portrait) {
     .tv-body {
         overflow-x: hidden;
         overflow-y: auto;
@@ -59,7 +59,7 @@
     }
 }
 
-@media (min-width: 768px) and (max-width: 1023px) {
+@media (orientation: portrait) and (min-width: 768px) and (max-width: 1023px) {
     .tv-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         grid-template-rows: auto minmax(0, 1fr);
@@ -81,7 +81,7 @@
     }
 }
 
-@media (max-width: 767px) {
+@media (orientation: portrait) and (max-width: 767px) {
     .tv-grid {
         grid-template-columns: minmax(0, 1fr);
         grid-template-rows: auto auto auto;
@@ -105,6 +105,26 @@
     .tv-panel-right {
         grid-row: 3;
     }
+}
+
+.tv-recent-heading {
+    font-size: clamp(0.64rem, 1.05vmin, 0.9rem);
+}
+
+.tv-event-kicker {
+    font-size: clamp(0.58rem, 0.86vmin, 0.78rem);
+}
+
+.tv-event-name {
+    font-size: clamp(0.9rem, 1.35vmin, 1.25rem);
+}
+
+.tv-event-timer {
+    font-size: clamp(2rem, 5.2vmin, 3rem);
+}
+
+.tv-event-meta {
+    font-size: clamp(0.6rem, 0.84vmin, 0.78rem);
 }
 
 .tv-group-match {
