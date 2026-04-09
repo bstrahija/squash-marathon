@@ -93,7 +93,7 @@ new class extends Component {
             ->map(
                 fn(array $row): array => [
                     'id' => $row['player']->id,
-                    'name' => $this->formatPlayerDisplayName($row['player']->full_name),
+                    'name' => $row['player']->short_name,
                     'profile_url' => route('players.show', ['user' => $row['player']->id]),
                     'wins' => $row['wins'],
                     'draws' => $row['draws'],
@@ -136,30 +136,6 @@ new class extends Component {
         return 'compact';
     }
 
-    private function formatPlayerDisplayName(?string $fullName): string
-    {
-        $fullName = trim((string) $fullName);
-
-        if ($fullName === '') {
-            return 'Igrac';
-        }
-
-        $parts = preg_split('/\s+/u', $fullName) ?: [];
-        $firstName = $parts[0] ?? '';
-
-        if ($firstName === '') {
-            return $fullName;
-        }
-
-        $firstInitial = mb_substr($firstName, 0, 1);
-        $lastName = trim(implode(' ', array_slice($parts, 1)));
-
-        if ($lastName === '') {
-            return sprintf('%s.', $firstInitial);
-        }
-
-        return sprintf('%s. %s', $firstInitial, $lastName);
-    }
 };
 ?>
 

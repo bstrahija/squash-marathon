@@ -77,8 +77,8 @@ new class extends Component {
             'id' => $game->id,
             'score_url' => route('matches.score', $game),
             'group_name' => $game->group?->name ?? "Group {$this->groupNumber}",
-            'player_one' => $this->formatPlayerDisplayName($game->playerOne?->full_name),
-            'player_two' => $this->formatPlayerDisplayName($game->playerTwo?->full_name),
+            'player_one' => $game->playerOne?->short_name ?? 'Igrac 1',
+            'player_two' => $game->playerTwo?->short_name ?? 'Igrac 2',
             'player_one_full' => $game->playerOne?->full_name ?? 'Igrac 1',
             'player_two_full' => $game->playerTwo?->full_name ?? 'Igrac 2',
             'player_one_current' => (int) ($latestLog?->player_one_score ?? ($latestSet?->player_one_score ?? 0)),
@@ -156,30 +156,6 @@ new class extends Component {
         return 'text-foreground';
     }
 
-    private function formatPlayerDisplayName(?string $fullName): string
-    {
-        $fullName = trim((string) $fullName);
-
-        if ($fullName === '') {
-            return 'Igrac';
-        }
-
-        $parts = preg_split('/\s+/u', $fullName) ?: [];
-        $firstName = $parts[0] ?? '';
-
-        if ($firstName === '') {
-            return $fullName;
-        }
-
-        $firstInitial = mb_substr($firstName, 0, 1);
-        $lastName = trim(implode(' ', array_slice($parts, 1)));
-
-        if ($lastName === '') {
-            return sprintf('%s.', $firstInitial);
-        }
-
-        return sprintf('%s. %s', $firstInitial, $lastName);
-    }
 };
 ?>
 

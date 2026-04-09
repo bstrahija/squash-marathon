@@ -14,17 +14,7 @@ use Livewire\Livewire;
 
 function tvShortName(User $user): string
 {
-    $parts = preg_split('/\s+/u', trim($user->full_name)) ?: [];
-    $firstName = $parts[0] ?? '';
-
-    if ($firstName === '') {
-        return $user->full_name;
-    }
-
-    $firstInitial = mb_substr($firstName, 0, 1);
-    $lastName = trim(implode(' ', array_slice($parts, 1)));
-
-    return $lastName === '' ? sprintf('%s.', $firstInitial) : sprintf('%s. %s', $firstInitial, $lastName);
+    return $user->short_name;
 }
 
 test('tv status page loads', function () {

@@ -69,6 +69,33 @@ class User extends Authenticatable implements FilamentUser, HasMedia, HasName
         });
     }
 
+    protected function shortName(): Attribute
+    {
+        return Attribute::get(function (): string {
+            $fullName = trim($this->full_name);
+
+            if ($fullName === '') {
+                return 'Igrac';
+            }
+
+            $parts = preg_split('/\s+/u', $fullName) ?: [];
+            $firstName = $parts[0] ?? '';
+
+            if ($firstName === '') {
+                return $fullName;
+            }
+
+            $firstInitial = mb_substr($firstName, 0, 1);
+            $lastName = trim(implode(' ', array_slice($parts, 1)));
+
+            if ($lastName === '') {
+                return sprintf('%s.', $firstInitial);
+            }
+
+            return sprintf('%s. %s', $firstInitial, $lastName);
+        });
+    }
+
     public function getFilamentName(): string
     {
         return $this->full_name;

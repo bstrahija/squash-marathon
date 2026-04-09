@@ -94,6 +94,8 @@ test('leaderboard livewire component shows players and points', function () {
     Livewire::test('leaderboard')
         ->assertSee($playerOne->full_name)
         ->assertSee($playerTwo->full_name)
+        ->assertSee($playerOne->short_name)
+        ->assertSee($playerTwo->short_name)
         ->assertSee(route('players.show', $playerOne), false)
         ->assertSee(route('players.show', $playerTwo), false)
         ->assertSee('3')

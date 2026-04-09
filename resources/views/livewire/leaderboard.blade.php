@@ -94,6 +94,7 @@ new class extends Component {
                 fn(array $row): array => [
                     'id' => $row['player']->id,
                     'name' => $row['player']->full_name,
+                    'short_name' => $row['player']->short_name,
                     'profile_url' => route('players.show', ['user' => $row['player']->id]),
                     'wins' => $row['wins'],
                     'draws' => $row['draws'],
@@ -162,7 +163,8 @@ new class extends Component {
                             <td class="px-4 py-3 font-semibold text-foreground">
                                 <a href="{{ $row['profile_url'] }}"
                                     class="rounded-md transition hover:text-emerald-600 hover:underline dark:hover:text-emerald-400">
-                                    {{ $row['name'] }}
+                                    <span class="sm:hidden">{{ $row['short_name'] }}</span>
+                                    <span class="hidden sm:inline">{{ $row['name'] }}</span>
                                 </a>
                             </td>
                             <td class="px-4 py-3 font-semibold text-foreground">{{ $row['points'] }}</td>
