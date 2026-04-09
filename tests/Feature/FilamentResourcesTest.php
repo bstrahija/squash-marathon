@@ -35,3 +35,16 @@ test('filament game create page loads', function () {
 
     Livewire::test(CreateGame::class)->assertOk();
 });
+
+test('filament login page shows google socialite option', function () {
+    $this->withoutVite();
+
+    config()->set('services.google.client_id', 'test-client-id');
+    config()->set('services.google.client_secret', 'test-client-secret');
+    config()->set('services.google.redirect', 'http://localhost/admin/oauth/callback/google');
+
+    $response = $this->get('/admin/login');
+
+    $response->assertSuccessful();
+    $response->assertSee('Google');
+});
