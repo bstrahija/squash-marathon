@@ -4,8 +4,50 @@ const root = document.documentElement;
 
 const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
+const readAppearanceCookie = (): string | null => {
+    const match = document.cookie.match(/(?:^|;\s*)appearance=([^;]+)/);
+
+    if (!match) {
+        return null;
+    }
+
+    const value = decodeURIComponent(match[1]);
+
+    if (value === 'light' || value === 'dark' || value === 'system') {
+        return value;
+    }
+
+    return null;
+};
+
 const getStoredTheme = (): string | null => {
-    return localStorage.getItem('theme');
+    try {
+        const value = localStorage.getItem('theme');
+
+        if (value === 'light' || value === 'dark') {
+            return value;
+        }
+    } catch {
+        // Ignore localStorage access errors (private mode / blocked storage).
+    }
+
+    const cookieAppearance = readAppearanceCookie();
+
+    if (cookieAppearance === 'light' || cookieAppearance === 'dark') {
+        return cookieAppearance;
+    }
+
+    return null;
+};
+
+const persistAppearance = (theme: 'light' | 'dark'): void => {
+    try {
+        localStorage.setItem('theme', theme);
+    } catch {
+        // Ignore localStorage access errors.
+    }
+
+    document.cookie = `appearance=${theme}; path=/; max-age=31536000; samesite=lax`;
 };
 
 const shouldUseDarkTheme = (): boolean => {
@@ -68,7 +110,7 @@ const initializeThemeToggle = (): void => {
             root.classList.toggle('dark');
 
             const theme = root.classList.contains('dark') ? 'dark' : 'light';
-            localStorage.setItem('theme', theme);
+            persistAppearance(theme);
 
             updateThemeToggleUI();
         });

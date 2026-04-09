@@ -35,7 +35,7 @@ test('admin can access rounds create page', function () {
     $response = $this->actingAs($admin)->get('/rounds/create');
 
     $response->assertSuccessful();
-    $response->assertSee('Kreiranje runde');
+    $response->assertSee('Kreiranje prve runde');
 });
 
 test('non-admin cannot access rounds create page', function () {
@@ -99,6 +99,7 @@ test('rounds page shows create round button when current event has no rounds', f
 
     Livewire::test('rounds-list')
         ->assertSee('Započni rundu')
+        ->assertSee(route('rounds.create', ['mode' => 'start']), false)
         ->assertDontSee('Završi rundu');
 });
 
@@ -120,7 +121,19 @@ test('rounds page shows finish round button when current event already has round
 
     Livewire::test('rounds-list')
         ->assertSee('Završi rundu')
+        ->assertSee(route('rounds.create', ['mode' => 'finish']), false)
         ->assertDontSee('Započni rundu');
+});
+
+test('rounds create page shows finish headline when mode is finish', function () {
+    $this->withoutVite();
+
+    $admin = actingAsRoundsAdmin();
+
+    $response = $this->actingAs($admin)->get('/rounds/create?mode=finish');
+
+    $response->assertSuccessful();
+    $response->assertSee('Završi rundu i kreiraj novu');
 });
 
 test('admin can see round edit action and delete a round', function () {
@@ -225,6 +238,36 @@ test('rounds create livewire picker adds and removes players while keeping group
 
     expect($availablePlayerIds)->toContain($players[0]->id);
     expect($availablePlayerIds)->not->toContain($players[1]->id);
+});
+
+test('rounds create livewire can randomly seed players into two balanced groups', function () {
+    $admin = actingAsRoundsAdmin();
+    $this->actingAs($admin);
+
+    $event = Event::factory()->create([
+        'start_at' => now()->subHour(),
+        'end_at' => now()->addHour(),
+    ]);
+
+    $players = User::factory()->count(5)->create();
+    $event->users()->attach($players->pluck('id')->all());
+
+    $component = Livewire::test('rounds-create')
+        ->call('seedRandomGroups');
+
+    $groupOneIds = collect($component->instance()->groupOnePlayerIds)
+        ->map(fn ($id): int => (int) $id)
+        ->values();
+
+    $groupTwoIds = collect($component->instance()->groupTwoPlayerIds)
+        ->map(fn ($id): int => (int) $id)
+        ->values();
+
+    $allAssignedIds = $groupOneIds->merge($groupTwoIds)->sort()->values()->all();
+
+    expect($groupOneIds->intersect($groupTwoIds)->all())->toBe([]);
+    expect($allAssignedIds)->toBe($players->pluck('id')->sort()->values()->all());
+    expect(abs($groupOneIds->count() - $groupTwoIds->count()))->toBeLessThanOrEqual(1);
 });
 
 test('rounds create livewire redirects back to matches create when requested', function () {

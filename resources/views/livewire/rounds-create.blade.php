@@ -18,6 +18,8 @@ new class extends Component {
 
     public string $redirectAfterCreate = 'rounds.index';
 
+    public string $createMode = 'start';
+
     public int $nextRoundNumber = 1;
 
     public string $roundName = 'Grupa 1';
@@ -43,6 +45,7 @@ new class extends Component {
         }
 
         $this->resolveRedirectAfterCreate();
+        $this->resolveCreateMode();
 
         $event = $this->resolveCurrentEvent();
 
@@ -53,6 +56,7 @@ new class extends Component {
         $this->eventId = $event->id;
         $this->eventName = $event->name;
         $this->hydrateRoundDraft();
+        $this->resolveCreateMode();
     }
 
     #[Computed]
@@ -105,6 +109,25 @@ new class extends Component {
             ->map(fn(int $playerId): ?User => $this->eventPlayersById->get($playerId))
             ->filter()
             ->values();
+    }
+
+    /**
+     * @return array{heading: string, submit: string}
+     */
+    #[Computed]
+    public function modeText(): array
+    {
+        if ($this->createMode === 'finish') {
+            return [
+                'heading' => 'Završi rundu i kreiraj novu',
+                'submit' => 'Završi rundu i započni novu',
+            ];
+        }
+
+        return [
+            'heading' => 'Kreiranje prve runde',
+            'submit' => 'Započni rundu',
+        ];
     }
 
     public function updatedGroupOnePlayerToAdd(?int $playerId): void
@@ -197,6 +220,28 @@ new class extends Component {
             ->all();
 
         $this->{$groupProperty} = $currentIds;
+    }
+
+    public function seedRandomGroups(): void
+    {
+        if (!$this->canManageRounds) {
+            abort(403);
+        }
+
+        $shuffledPlayerIds = $this->eventPlayers
+            ->pluck('id')
+            ->map(fn($id): int => (int) $id)
+            ->shuffle()
+            ->values();
+
+        $splitIndex = (int) ceil($shuffledPlayerIds->count() / 2);
+
+        $this->groupOnePlayerIds = $shuffledPlayerIds->take($splitIndex)->values()->all();
+        $this->groupTwoPlayerIds = $shuffledPlayerIds->slice($splitIndex)->values()->all();
+        $this->groupOnePlayerToAdd = null;
+        $this->groupTwoPlayerToAdd = null;
+
+        $this->resetValidation(['groupOnePlayerIds', 'groupOnePlayerIds.*', 'groupTwoPlayerIds', 'groupTwoPlayerIds.*']);
     }
 
     public function saveRound(): void
@@ -319,6 +364,25 @@ new class extends Component {
         $this->redirectAfterCreate = $requestedRoute;
     }
 
+    protected function resolveCreateMode(): void
+    {
+        $requestedMode = request()->query('mode');
+
+        if (is_string($requestedMode) && in_array($requestedMode, ['start', 'finish'], true)) {
+            $this->createMode = $requestedMode;
+
+            return;
+        }
+
+        if (!$this->eventId) {
+            $this->createMode = 'start';
+
+            return;
+        }
+
+        $this->createMode = Round::query()->where('event_id', $this->eventId)->exists() ? 'finish' : 'start';
+    }
+
     protected function normalizePlayerIds(array $playerIds): array
     {
         return collect($playerIds)->map(fn($id): int => (int) $id)->filter(fn(int $id): bool => $id > 0)->unique()->values()->all();
@@ -346,15 +410,14 @@ new class extends Component {
 
 <div class="rounded-3xl border border-border bg-card/80 p-6 shadow-sm">
     <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
+        @php($modeText = $this->modeText)
+
         <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Nova runda</p>
-            <h1 class="font-display mt-2 text-3xl font-semibold text-foreground">Kreiranje runde</h1>
+            <h1 class="font-display mt-2 text-3xl font-semibold text-foreground">
+                {{ $modeText['heading'] }}
+            </h1>
             <p class="mt-2 text-sm text-muted-foreground">
                 Event: <span class="font-semibold text-foreground">{{ $eventName }}</span>
-            </p>
-            <p class="text-sm text-muted-foreground">
-                Naziv runde se generira automatski: <span
-                    class="font-semibold text-foreground">{{ $roundName }}</span>
             </p>
         </div>
 
@@ -399,9 +462,15 @@ new class extends Component {
             </div>
 
             <div class="flex flex-wrap items-center justify-end gap-3">
+                <button type="button" wire:click="seedRandomGroups" wire:loading.attr="disabled"
+                    wire:target="seedRandomGroups,saveRound"
+                    class="rounded-full border border-border px-5 py-2.5 text-xs font-semibold uppercase tracking-wide text-foreground transition hover:border-foreground/40 disabled:cursor-not-allowed disabled:opacity-50">
+                    Nasumično podijeli igrače
+                </button>
+
                 <button type="submit"
                     class="rounded-full bg-primary px-5 py-2.5 text-xs font-semibold uppercase tracking-wide text-primary-foreground shadow-sm transition hover:-translate-y-0.5">
-                    Započni rundu
+                    {{ $modeText['submit'] }}
                 </button>
             </div>
         </form>

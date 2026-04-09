@@ -5,6 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Bodovanje meča</title>
+    <x-theme-init />
     @vite(['resources/css/app.css', 'resources/js/blade-theme.ts'])
     @livewireStyles
 </head>
