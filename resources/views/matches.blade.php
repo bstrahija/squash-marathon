@@ -14,11 +14,11 @@
 
     <section class="scroll-mt-24">
         <div class="m-6 flex items-center justify-between gap-4">
-            <h1 class="font-display text-3xl font-semibold text-foreground">Lista svih mečeva</h1>
+            <h1 class="font-display text-3xl font-semibold text-foreground">Mečevi</h1>
             @if (auth()->user()?->hasRole(\App\Enums\RoleName::Admin->value))
                 <a href="{{ route('matches.create') }}"
                     class="rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold uppercase tracking-wide text-foreground transition hover:-translate-y-0.5 hover:border-foreground/40">
-                    Dodaj meč
+                    Dodaj
                 </a>
             @endif
         </div>

@@ -77,8 +77,8 @@ test('matches page loads', function () {
     $response = $this->get('/matches');
 
     $response->assertSuccessful();
-    $response->assertSee('Lista svih mečeva');
-    $response->assertDontSee('Dodaj meč');
+    $response->assertSee('Mečevi');
+    $response->assertDontSee('Dodaj');
 });
 
 test('matches page shows add match button for admins', function () {
@@ -89,7 +89,7 @@ test('matches page shows add match button for admins', function () {
     $response = $this->actingAs($admin)->get('/matches');
 
     $response->assertSuccessful();
-    $response->assertSee('Dodaj meč');
+    $response->assertSee('Dodaj');
 });
 
 test('matches page includes links to score page for each match', function () {

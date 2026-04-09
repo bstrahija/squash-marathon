@@ -106,7 +106,7 @@ new class extends Component {
 
 <div>
     <div class="m-6 flex items-center justify-between gap-4">
-        <h1 class="font-display text-3xl font-semibold text-foreground">Lista svih rundi</h1>
+        <h1 class="font-display text-3xl font-semibold text-foreground">Runde</h1>
 
         @if ($this->canManageRounds)
             <a href="{{ route('rounds.create', $this->actionButtonRouteParams) }}"

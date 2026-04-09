@@ -137,10 +137,22 @@ new class extends Component {
                     class="bg-linear-to-r from-emerald-400/15 via-amber-400/10 to-sky-400/15 text-xs uppercase tracking-widest text-muted-foreground">
                     <tr>
                         <th class="px-4 py-3">Igrač</th>
-                        <th class="px-4 py-3">Pobjede</th>
-                        <th class="px-4 py-3">Remiji</th>
-                        <th class="px-4 py-3">Porazi</th>
-                        <th class="px-4 py-3">Bodovi</th>
+                        <th class="px-4 py-3">
+                            <span class="sm:hidden">B</span>
+                            <span class="hidden sm:inline">Bodovi</span>
+                        </th>
+                        <th class="px-4 py-3">
+                            <span class="sm:hidden">W</span>
+                            <span class="hidden sm:inline">Pobjede</span>
+                        </th>
+                        <th class="px-4 py-3">
+                            <span class="sm:hidden">D</span>
+                            <span class="hidden sm:inline">Remiji</span>
+                        </th>
+                        <th class="px-4 py-3">
+                            <span class="sm:hidden">L</span>
+                            <span class="hidden sm:inline">Porazi</span>
+                        </th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-border/70">
@@ -153,10 +165,10 @@ new class extends Component {
                                     {{ $row['name'] }}
                                 </a>
                             </td>
+                            <td class="px-4 py-3 font-semibold text-foreground">{{ $row['points'] }}</td>
                             <td class="px-4 py-3 text-muted-foreground">{{ $row['wins'] }}</td>
                             <td class="px-4 py-3 text-muted-foreground">{{ $row['draws'] }}</td>
                             <td class="px-4 py-3 text-muted-foreground">{{ $row['losses'] }}</td>
-                            <td class="px-4 py-3 font-semibold text-foreground">{{ $row['points'] }}</td>
                         </tr>
                     @empty
                         <tr class="bg-card">
