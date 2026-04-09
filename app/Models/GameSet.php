@@ -2,15 +2,23 @@
 
 namespace App\Models;
 
+use Database\Factories\GameSetFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use InvalidArgumentException;
 
-class Set extends Model
+class GameSet extends Model
 {
-    /** @use HasFactory<\Database\Factories\SetFactory> */
+    /** @use HasFactory<GameSetFactory> */
     use HasFactory;
+
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'sets';
 
     /**
      * The attributes that are mass assignable.
@@ -33,7 +41,7 @@ class Set extends Model
 
     protected static function booted(): void
     {
-        static::saving(function (Set $set): void {
+        static::saving(function (GameSet $set): void {
             if (! $set->round_id && $set->game_id) {
                 $set->round_id = $set->game?->round_id;
             }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\GroupFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Group extends Model
 {
-    /** @use HasFactory<\Database\Factories\GroupFactory> */
+    /** @use HasFactory<GroupFactory> */
     use HasFactory;
 
     /**
@@ -60,6 +61,6 @@ class Group extends Model
 
     public function sets(): HasMany
     {
-        return $this->hasMany(Set::class);
+        return $this->hasMany(GameSet::class);
     }
 }

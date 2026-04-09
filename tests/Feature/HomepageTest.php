@@ -3,7 +3,7 @@
 use App\Enums\RoleName;
 use App\Models\Event;
 use App\Models\Game;
-use App\Models\Set;
+use App\Models\GameSet;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Livewire\Livewire;
@@ -39,7 +39,7 @@ test('homepage renders real data sections', function () {
         'player_two_id' => $playerTwo->id,
     ]);
 
-    Set::factory()->create([
+    GameSet::factory()->create([
         'game_id' => $game->id,
         'player_one_id' => $playerOne->id,
         'player_two_id' => $playerTwo->id,
@@ -47,7 +47,7 @@ test('homepage renders real data sections', function () {
         'player_two_score' => 6,
     ]);
 
-    Set::factory()->create([
+    GameSet::factory()->create([
         'game_id' => $game->id,
         'player_one_id' => $playerOne->id,
         'player_two_id' => $playerTwo->id,
@@ -80,7 +80,7 @@ test('leaderboard livewire component shows players and points', function () {
         'player_two_id' => $playerTwo->id,
     ]);
 
-    Set::factory()->create([
+    GameSet::factory()->create([
         'game_id' => $game->id,
         'player_one_id' => $playerOne->id,
         'player_two_id' => $playerTwo->id,
@@ -88,7 +88,7 @@ test('leaderboard livewire component shows players and points', function () {
         'player_two_score' => 6,
     ]);
 
-    Set::factory()->create([
+    GameSet::factory()->create([
         'game_id' => $game->id,
         'player_one_id' => $playerOne->id,
         'player_two_id' => $playerTwo->id,
@@ -124,7 +124,7 @@ test('timeline livewire component shows recent games', function () {
         'updated_at' => $gameTime,
     ]);
 
-    Set::factory()->create([
+    GameSet::factory()->create([
         'game_id' => $game->id,
         'player_one_id' => $playerOne->id,
         'player_two_id' => $playerTwo->id,
@@ -134,7 +134,7 @@ test('timeline livewire component shows recent games', function () {
         'updated_at' => $gameTime,
     ]);
 
-    Set::factory()->create([
+    GameSet::factory()->create([
         'game_id' => $game->id,
         'player_one_id' => $playerOne->id,
         'player_two_id' => $playerTwo->id,

@@ -3,9 +3,9 @@
 use App\Enums\RoleName;
 use App\Models\Event;
 use App\Models\Game;
+use App\Models\GameSet;
 use App\Models\Group;
 use App\Models\Round;
-use App\Models\Set;
 use App\Models\User;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Role;
@@ -38,7 +38,7 @@ function createMatchForList(): Game
         'player_two_id' => $playerTwo->id,
     ]);
 
-    Set::factory()->create([
+    GameSet::factory()->create([
         'game_id' => $game->id,
         'round_id' => $round->id,
         'group_id' => $group->id,
@@ -48,7 +48,7 @@ function createMatchForList(): Game
         'player_two_score' => 8,
     ]);
 
-    Set::factory()->create([
+    GameSet::factory()->create([
         'game_id' => $game->id,
         'round_id' => $round->id,
         'group_id' => $group->id,
@@ -350,7 +350,7 @@ test('admin can delete match through livewire list', function () {
         ->call('deleteMatch', $game->id);
 
     expect(Game::query()->whereKey($game->id)->exists())->toBeFalse();
-    expect(Set::query()->where('game_id', $game->id)->exists())->toBeFalse();
+    expect(GameSet::query()->where('game_id', $game->id)->exists())->toBeFalse();
 });
 
 test('admin cannot delete match without confirmation first', function () {

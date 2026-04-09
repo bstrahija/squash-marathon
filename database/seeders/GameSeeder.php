@@ -4,8 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\Event;
 use App\Models\Game;
+use App\Models\GameSet;
 use App\Models\Round;
-use App\Models\Set;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 
@@ -122,7 +122,7 @@ class GameSeeder extends Seeder
 
                     $setFinishedAt = $setStartAt->copy()->addSeconds($setDurationSeconds);
 
-                    Set::factory()->create([
+                    GameSet::factory()->create([
                         'game_id' => $game->id,
                         'round_id' => $round->id,
                         'group_id' => $group->id,
@@ -219,7 +219,7 @@ class GameSeeder extends Seeder
             $firstSetFinishedAt = $firstSetStartedAt->copy()->addSeconds($firstSetDurationSeconds);
             $firstSetScores = $this->generateSetScores((bool) random_int(0, 1));
 
-            Set::factory()->create([
+            GameSet::factory()->create([
                 'game_id' => $game->id,
                 'round_id' => $round->id,
                 'group_id' => $group->id,
@@ -233,7 +233,7 @@ class GameSeeder extends Seeder
                 'updated_at' => $createdAt,
             ]);
 
-            Set::factory()->create([
+            GameSet::factory()->create([
                 'game_id' => $game->id,
                 'round_id' => $round->id,
                 'group_id' => $group->id,

@@ -4,7 +4,7 @@ use App\Enums\GameLogSide;
 use App\Enums\GameLogType;
 use App\Models\Game;
 use App\Models\GameLog;
-use App\Models\Set;
+use App\Models\GameSet;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
@@ -246,7 +246,7 @@ new class extends Component {
             return;
         }
 
-        $completedSets = Set::query()->where('game_id', $game->id)->whereNotNull('finished_at')->count();
+        $completedSets = GameSet::query()->where('game_id', $game->id)->whereNotNull('finished_at')->count();
 
         if ($completedSets >= $game->best_of) {
             $this->showNextSetOverlay = false;
@@ -505,7 +505,7 @@ new class extends Component {
      */
     private function persistGameStateFromSets(Game $game, ?\DateTimeInterface $completedAt = null): array
     {
-        $completedSets = Set::query()
+        $completedSets = GameSet::query()
             ->where('game_id', $game->id)
             ->whereNotNull('finished_at')
             ->orderBy('id')
@@ -538,15 +538,15 @@ new class extends Component {
         return $result;
     }
 
-    private function ensureActiveSet(Game $game, \DateTimeInterface $startedAt): Set
+    private function ensureActiveSet(Game $game, \DateTimeInterface $startedAt): GameSet
     {
-        $existingSet = Set::query()->where('game_id', $game->id)->whereNull('finished_at')->orderByDesc('id')->first();
+        $existingSet = GameSet::query()->where('game_id', $game->id)->whereNull('finished_at')->orderByDesc('id')->first();
 
         if ($existingSet) {
             return $existingSet;
         }
 
-        return Set::query()->create([
+        return GameSet::query()->create([
             'game_id' => $game->id,
             'round_id' => $game->round_id,
             'group_id' => $game->group_id,
@@ -562,7 +562,7 @@ new class extends Component {
     private function rollbackSetIfLastPointClosedIt(Game $game, int $lastPlayerOneScore, int $lastPlayerTwoScore): void
     {
         DB::transaction(function () use ($game, $lastPlayerOneScore, $lastPlayerTwoScore): void {
-            $latestCompletedSet = Set::query()->where('game_id', $game->id)->whereNotNull('finished_at')->orderByDesc('id')->first();
+            $latestCompletedSet = GameSet::query()->where('game_id', $game->id)->whereNotNull('finished_at')->orderByDesc('id')->first();
 
             if (!$latestCompletedSet) {
                 return;
@@ -588,9 +588,9 @@ new class extends Component {
 
     private function canNavigateBackToPreviousSet(Game $game): bool
     {
-        $hasCurrentSet = Set::query()->where('game_id', $game->id)->whereNull('finished_at')->exists();
+        $hasCurrentSet = GameSet::query()->where('game_id', $game->id)->whereNull('finished_at')->exists();
 
-        $hasCompletedSet = Set::query()->where('game_id', $game->id)->whereNotNull('finished_at')->exists();
+        $hasCompletedSet = GameSet::query()->where('game_id', $game->id)->whereNotNull('finished_at')->exists();
 
         $hasCurrentSetLogs = GameLog::query()->where('game_id', $game->id)->where('player_one_sets', (int) $game->player_one_sets)->where('player_two_sets', (int) $game->player_two_sets)->exists();
 
@@ -600,9 +600,9 @@ new class extends Component {
     private function navigateBackToPreviousSet(Game $game): void
     {
         DB::transaction(function () use ($game): void {
-            $activeSet = Set::query()->where('game_id', $game->id)->whereNull('finished_at')->orderByDesc('id')->first();
+            $activeSet = GameSet::query()->where('game_id', $game->id)->whereNull('finished_at')->orderByDesc('id')->first();
 
-            $latestCompletedSet = Set::query()->where('game_id', $game->id)->whereNotNull('finished_at')->orderByDesc('id')->first();
+            $latestCompletedSet = GameSet::query()->where('game_id', $game->id)->whereNotNull('finished_at')->orderByDesc('id')->first();
 
             if (!$activeSet || !$latestCompletedSet) {
                 return;
@@ -629,7 +629,7 @@ new class extends Component {
                 return;
             }
 
-            Set::query()->create([
+            GameSet::query()->create([
                 'game_id' => $freshGame->id,
                 'round_id' => $freshGame->round_id,
                 'group_id' => $freshGame->group_id,

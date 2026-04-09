@@ -5,9 +5,9 @@ use App\Enums\GameLogType;
 use App\Models\Event;
 use App\Models\Game;
 use App\Models\GameLog;
+use App\Models\GameSet;
 use App\Models\Group;
 use App\Models\Round;
-use App\Models\Set;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Livewire\Livewire;
@@ -83,7 +83,7 @@ test('latest games livewire component shows recent games', function () {
         'updated_at' => $gameTime,
     ]);
 
-    Set::factory()->create([
+    GameSet::factory()->create([
         'game_id' => $game->id,
         'player_one_id' => $playerOne->id,
         'player_two_id' => $playerTwo->id,
@@ -93,7 +93,7 @@ test('latest games livewire component shows recent games', function () {
         'updated_at' => $gameTime,
     ]);
 
-    Set::factory()->create([
+    GameSet::factory()->create([
         'game_id' => $game->id,
         'player_one_id' => $playerOne->id,
         'player_two_id' => $playerTwo->id,
@@ -125,7 +125,7 @@ test('tv leaderboard livewire component shows all event players', function () {
         'player_two_id' => $playerTwo->id,
     ]);
 
-    Set::factory()->create([
+    GameSet::factory()->create([
         'game_id' => $game->id,
         'player_one_id' => $playerOne->id,
         'player_two_id' => $playerTwo->id,
@@ -133,7 +133,7 @@ test('tv leaderboard livewire component shows all event players', function () {
         'player_two_score' => 9,
     ]);
 
-    Set::factory()->create([
+    GameSet::factory()->create([
         'game_id' => $game->id,
         'player_one_id' => $playerOne->id,
         'player_two_id' => $playerTwo->id,
@@ -182,7 +182,7 @@ test('tv latest games component shows last 30 games with result and duration', f
             'updated_at' => $baseTime->copy()->addMinutes($index),
         ]);
 
-        Set::factory()->create([
+        GameSet::factory()->create([
             'game_id' => $game->id,
             'player_one_id' => $playerOne->id,
             'player_two_id' => $playerTwo->id,
@@ -190,7 +190,7 @@ test('tv latest games component shows last 30 games with result and duration', f
             'player_two_score' => 5,
         ]);
 
-        Set::factory()->create([
+        GameSet::factory()->create([
             'game_id' => $game->id,
             'player_one_id' => $playerOne->id,
             'player_two_id' => $playerTwo->id,
@@ -245,14 +245,14 @@ test('tv group match component prefers live game over finished game in same grou
         'finished_at' => Carbon::create(2026, 2, 27, 19, 55, 0),
     ]);
 
-    Set::factory()->create([
+    GameSet::factory()->create([
         'game_id' => $finishedGame->id,
         'player_one_id' => $finishedPlayerOne->id,
         'player_two_id' => $finishedPlayerTwo->id,
         'player_one_score' => 11,
         'player_two_score' => 8,
     ]);
-    Set::factory()->create([
+    GameSet::factory()->create([
         'game_id' => $finishedGame->id,
         'player_one_id' => $finishedPlayerOne->id,
         'player_two_id' => $finishedPlayerTwo->id,
@@ -272,7 +272,7 @@ test('tv group match component prefers live game over finished game in same grou
         'finished_at' => null,
     ]);
 
-    Set::factory()->create([
+    GameSet::factory()->create([
         'game_id' => $liveGame->id,
         'player_one_id' => $livePlayerOne->id,
         'player_two_id' => $livePlayerTwo->id,
@@ -327,14 +327,14 @@ test('tv group match component falls back to latest finished game when no live g
         'finished_at' => Carbon::create(2026, 2, 27, 18, 58, 0),
     ]);
 
-    Set::factory()->create([
+    GameSet::factory()->create([
         'game_id' => $olderGame->id,
         'player_one_id' => $olderPlayerOne->id,
         'player_two_id' => $olderPlayerTwo->id,
         'player_one_score' => 11,
         'player_two_score' => 4,
     ]);
-    Set::factory()->create([
+    GameSet::factory()->create([
         'game_id' => $olderGame->id,
         'player_one_id' => $olderPlayerOne->id,
         'player_two_id' => $olderPlayerTwo->id,
@@ -354,14 +354,14 @@ test('tv group match component falls back to latest finished game when no live g
         'finished_at' => Carbon::create(2026, 2, 27, 19, 37, 0),
     ]);
 
-    Set::factory()->create([
+    GameSet::factory()->create([
         'game_id' => $latestGame->id,
         'player_one_id' => $latestPlayerOne->id,
         'player_two_id' => $latestPlayerTwo->id,
         'player_one_score' => 11,
         'player_two_score' => 6,
     ]);
-    Set::factory()->create([
+    GameSet::factory()->create([
         'game_id' => $latestGame->id,
         'player_one_id' => $latestPlayerOne->id,
         'player_two_id' => $latestPlayerTwo->id,
@@ -415,14 +415,14 @@ test('tv group match component prefers waiting game over finished game when no l
         'finished_at' => Carbon::create(2026, 2, 27, 18, 58, 0),
     ]);
 
-    Set::factory()->create([
+    GameSet::factory()->create([
         'game_id' => $finishedGame->id,
         'player_one_id' => $finishedPlayerOne->id,
         'player_two_id' => $finishedPlayerTwo->id,
         'player_one_score' => 11,
         'player_two_score' => 6,
     ]);
-    Set::factory()->create([
+    GameSet::factory()->create([
         'game_id' => $finishedGame->id,
         'player_one_id' => $finishedPlayerOne->id,
         'player_two_id' => $finishedPlayerTwo->id,

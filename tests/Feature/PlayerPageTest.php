@@ -3,9 +3,9 @@
 use App\Enums\RoleName;
 use App\Models\Event;
 use App\Models\Game;
+use App\Models\GameSet;
 use App\Models\Group;
 use App\Models\Round;
-use App\Models\Set;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Spatie\Permission\Models\Role;
@@ -51,14 +51,14 @@ test('player page renders sidebar profile and leaderboard', function () {
         'finished_at' => now()->copy()->subMinutes(1),
     ]);
 
-    Set::factory()->create([
+    GameSet::factory()->create([
         'game_id' => $game->id,
         'player_one_id' => $player->id,
         'player_two_id' => $opponent->id,
         'player_one_score' => 11,
         'player_two_score' => 7,
     ]);
-    Set::factory()->create([
+    GameSet::factory()->create([
         'game_id' => $game->id,
         'player_one_id' => $player->id,
         'player_two_id' => $opponent->id,

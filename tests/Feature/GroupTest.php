@@ -2,9 +2,9 @@
 
 use App\Models\Event;
 use App\Models\Game;
+use App\Models\GameSet;
 use App\Models\Group;
 use App\Models\Round;
-use App\Models\Set;
 use App\Models\User;
 
 test('group connects events, users, games, and sets', function () {
@@ -34,7 +34,7 @@ test('group connects events, users, games, and sets', function () {
         'player_two_id' => $playerTwo->id,
     ]);
 
-    Set::factory()->create([
+    GameSet::factory()->create([
         'game_id' => $game->id,
         'round_id' => $round->id,
         'group_id' => $group->id,

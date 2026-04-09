@@ -129,7 +129,7 @@ return [
     */
 
     'temporary_file_upload' => [
-        'disk' => env('LIVEWIRE_TEMPORARY_FILE_UPLOAD_DISK'), // Example: 'local', 's3'             | Default: 'default'
+        'disk' => env('LIVEWIRE_TEMPORARY_FILE_UPLOAD_DISK', 'public'), // Example: 'local', 's3'             | Default: 'default'
         'rules' => null,                                      // Example: ['file', 'mimes:png,jpg'] | Default: ['required', 'file', 'max:12288'] (12MB)
         'directory' => null,                                  // Example: 'tmp'                     | Default: 'livewire-tmp'
         'middleware' => null,                                 // Example: 'throttle:5,1'            | Default: 'throttle:60,1'
@@ -139,7 +139,7 @@ return [
             'jpg', 'jpeg', 'mpga', 'webp', 'wma',
         ],
         'max_upload_time' => 5, // Max duration (in minutes) before an upload is invalidated...
-        'cleanup' => false, // Disabled: Carbon time travel (local_simulated_now) causes immediate deletion of fresh uploads.
+        'cleanup' => true, // Should cleanup temporary uploads older than 24 hrs...
     ],
 
     /*

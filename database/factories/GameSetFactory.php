@@ -3,13 +3,14 @@
 namespace Database\Factories;
 
 use App\Models\Game;
+use App\Models\GameSet;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Set>
+ * @extends Factory<GameSet>
  */
-class SetFactory extends Factory
+class GameSetFactory extends Factory
 {
     /**
      * Define the model's default state.

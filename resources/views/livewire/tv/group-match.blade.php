@@ -2,7 +2,7 @@
 
 use App\Models\Event;
 use App\Models\Game;
-use App\Models\Set;
+use App\Models\GameSet;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -57,7 +57,7 @@ new class extends Component {
         $result = Game::determineMatchResultFromSetScores(
             $orderedSets
                 ->map(
-                    fn(Set $set): array => [
+                    fn(GameSet $set): array => [
                         'player_one_score' => $set->player_one_score,
                         'player_two_score' => $set->player_two_score,
                     ],
@@ -86,9 +86,9 @@ new class extends Component {
             'sets_one' => $result['player_one_wins'],
             'sets_two' => $result['player_two_wins'],
             'timeline' => $orderedSets
-                ->filter(fn(Set $set): bool => filled($set->player_one_score) && filled($set->player_two_score))
+                ->filter(fn(GameSet $set): bool => filled($set->player_one_score) && filled($set->player_two_score))
                 ->map(
-                    fn(Set $set): array => [
+                    fn(GameSet $set): array => [
                         'id' => $set->id,
                         'score' => "{$set->player_one_score}:{$set->player_two_score}",
                     ],
@@ -116,7 +116,7 @@ new class extends Component {
         $result = Game::determineMatchResultFromSetScores(
             $game->sets
                 ->map(
-                    fn(Set $set): array => [
+                    fn(GameSet $set): array => [
                         'player_one_score' => $set->player_one_score,
                         'player_two_score' => $set->player_two_score,
                     ],

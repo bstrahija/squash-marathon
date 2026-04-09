@@ -2,7 +2,7 @@
 
 use App\Models\Event;
 use App\Models\Game;
-use App\Models\Set;
+use App\Models\GameSet;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 
@@ -29,26 +29,26 @@ it('accepts supported best_of values and rejects unsupported ones', function () 
 });
 
 it('rejects set scores that do not reach 11', function () {
-    expect(fn () => Set::factory()->create([
+    expect(fn () => GameSet::factory()->create([
         'player_one_score' => 10,
         'player_two_score' => 9,
     ]))->toThrow(InvalidArgumentException::class);
 });
 
 it('rejects set scores without a two-point lead', function () {
-    expect(fn () => Set::factory()->create([
+    expect(fn () => GameSet::factory()->create([
         'player_one_score' => 11,
         'player_two_score' => 10,
     ]))->toThrow(InvalidArgumentException::class);
 });
 
 it('accepts standard and extended set scores', function () {
-    $standardSet = Set::factory()->create([
+    $standardSet = GameSet::factory()->create([
         'player_one_score' => 11,
         'player_two_score' => 7,
     ]);
 
-    $extendedSet = Set::factory()->create([
+    $extendedSet = GameSet::factory()->create([
         'player_one_score' => 12,
         'player_two_score' => 10,
     ]);
@@ -61,7 +61,7 @@ it('determines the winner from the set score', function () {
     $playerOne = User::factory()->create();
     $playerTwo = User::factory()->create();
 
-    $set = Set::factory()->create([
+    $set = GameSet::factory()->create([
         'player_one_id' => $playerOne->id,
         'player_two_id' => $playerTwo->id,
         'player_one_score' => 11,
@@ -108,7 +108,7 @@ it('determines completion only after all sets are played for best_of 3', functio
 });
 
 it('allows sets without scores', function () {
-    $set = Set::factory()->create([
+    $set = GameSet::factory()->create([
         'player_one_score' => null,
         'player_two_score' => null,
     ]);

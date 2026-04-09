@@ -4,7 +4,8 @@ use App\Enums\GameLogSide;
 use App\Enums\GameLogType;
 use App\Models\Game;
 use App\Models\GameLog;
-use App\Models\Set;
+use App\Models\GameSet;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Livewire\Livewire;
 
 test('game log can be created with expected structure', function () {
@@ -46,7 +47,7 @@ test('game log sequence is unique per game', function () {
         'player_one_id' => $game->player_one_id,
         'player_two_id' => $game->player_two_id,
         'sequence' => 1,
-    ]))->toThrow(\Illuminate\Database\UniqueConstraintViolationException::class);
+    ]))->toThrow(UniqueConstraintViolationException::class);
 });
 
 test('matches score component shows score snapshots from game log', function () {
@@ -288,7 +289,7 @@ test('set ends only when score is at least 11 with a two-point lead', function (
         ->assertSet('showMatchDoneOverlay', true)
         ->assertSet('showNextSetOverlay', false);
 
-    $set = Set::query()->where('game_id', $game->id)->latest('id')->first();
+    $set = GameSet::query()->where('game_id', $game->id)->latest('id')->first();
 
     expect($set)->not->toBeNull();
     expect($set?->player_one_score)->toBe(14);
@@ -320,8 +321,8 @@ test('after non-final set end next set dialog appears and next set resets live s
 
     $game->refresh();
 
-    expect(Set::query()->where('game_id', $game->id)->whereNotNull('finished_at')->count())->toBe(1);
-    expect(Set::query()->where('game_id', $game->id)->whereNull('finished_at')->count())->toBe(1);
+    expect(GameSet::query()->where('game_id', $game->id)->whereNotNull('finished_at')->count())->toBe(1);
+    expect(GameSet::query()->where('game_id', $game->id)->whereNull('finished_at')->count())->toBe(1);
     expect(GameLog::query()->where('game_id', $game->id)->count())->toBe(0);
     expect($game->player_one_sets)->toBe(1);
     expect($game->player_two_sets)->toBe(0);
@@ -350,8 +351,8 @@ test('next set dialog undo reverts mistaken final point', function () {
 
     $game->refresh();
 
-    expect(Set::query()->where('game_id', $game->id)->whereNotNull('finished_at')->count())->toBe(0);
-    expect(Set::query()->where('game_id', $game->id)->whereNull('finished_at')->count())->toBe(1);
+    expect(GameSet::query()->where('game_id', $game->id)->whereNotNull('finished_at')->count())->toBe(0);
+    expect(GameSet::query()->where('game_id', $game->id)->whereNull('finished_at')->count())->toBe(1);
     expect($game->player_one_sets)->toBe(0);
     expect($game->player_two_sets)->toBe(0);
     expect(GameLog::query()->where('game_id', $game->id)->count())->toBe(10);
@@ -394,8 +395,8 @@ test('undoing to zero points in next set shows next set dialog and allows going 
 
     $game->refresh();
 
-    expect(Set::query()->where('game_id', $game->id)->whereNotNull('finished_at')->count())->toBe(0);
-    expect(Set::query()->where('game_id', $game->id)->whereNull('finished_at')->count())->toBe(1);
+    expect(GameSet::query()->where('game_id', $game->id)->whereNotNull('finished_at')->count())->toBe(0);
+    expect(GameSet::query()->where('game_id', $game->id)->whereNull('finished_at')->count())->toBe(1);
     expect($game->player_one_sets)->toBe(0);
     expect($game->player_two_sets)->toBe(0);
     expect(GameLog::query()->where('game_id', $game->id)->count())->toBe(1);
@@ -428,8 +429,8 @@ test('undo immediately after starting next set returns to previous set boundary 
 
     $game->refresh();
 
-    expect(Set::query()->where('game_id', $game->id)->whereNotNull('finished_at')->count())->toBe(0);
-    expect(Set::query()->where('game_id', $game->id)->whereNull('finished_at')->count())->toBe(1);
+    expect(GameSet::query()->where('game_id', $game->id)->whereNotNull('finished_at')->count())->toBe(0);
+    expect(GameSet::query()->where('game_id', $game->id)->whereNull('finished_at')->count())->toBe(1);
     expect($game->player_one_sets)->toBe(0);
     expect($game->player_two_sets)->toBe(0);
     expect(GameLog::query()->where('game_id', $game->id)->count())->toBe(1);
@@ -470,8 +471,8 @@ test('undo backs out empty current set before removing historical logs', functio
 
     $component->call('undoLastLog');
 
-    expect(Set::query()->where('game_id', $game->id)->whereNotNull('finished_at')->count())->toBe(0);
-    expect(Set::query()->where('game_id', $game->id)->whereNull('finished_at')->count())->toBe(1);
+    expect(GameSet::query()->where('game_id', $game->id)->whereNotNull('finished_at')->count())->toBe(0);
+    expect(GameSet::query()->where('game_id', $game->id)->whereNull('finished_at')->count())->toBe(1);
     expect(GameLog::query()->where('game_id', $game->id)->count())->toBe(2);
 });
 
@@ -501,8 +502,8 @@ test('match done dialog undo removes last point and reopens set', function () {
     expect($game->finished_at)->toBeNull();
     expect($game->player_one_sets)->toBe(0);
     expect($game->player_two_sets)->toBe(0);
-    expect(Set::query()->where('game_id', $game->id)->whereNotNull('finished_at')->count())->toBe(0);
-    expect(Set::query()->where('game_id', $game->id)->whereNull('finished_at')->count())->toBe(1);
+    expect(GameSet::query()->where('game_id', $game->id)->whereNotNull('finished_at')->count())->toBe(0);
+    expect(GameSet::query()->where('game_id', $game->id)->whereNull('finished_at')->count())->toBe(1);
     expect(GameLog::query()->where('game_id', $game->id)->count())->toBe(10);
 });
 
@@ -550,7 +551,7 @@ test('match done dialog for draw shows remi, both players, and scores', function
     $playerOneName = $game->playerOne->full_name;
     $playerTwoName = $game->playerTwo->full_name;
 
-    Set::factory()->create([
+    GameSet::factory()->create([
         'game_id' => $game->id,
         'round_id' => $game->round_id,
         'group_id' => $game->group_id,
@@ -562,7 +563,7 @@ test('match done dialog for draw shows remi, both players, and scores', function
         'player_two_score' => 8,
     ]);
 
-    Set::factory()->create([
+    GameSet::factory()->create([
         'game_id' => $game->id,
         'round_id' => $game->round_id,
         'group_id' => $game->group_id,

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\GameFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +11,7 @@ use InvalidArgumentException;
 
 class Game extends Model
 {
-    /** @use HasFactory<\Database\Factories\GameFactory> */
+    /** @use HasFactory<GameFactory> */
     use HasFactory;
 
     public const ALLOWED_BEST_OF_VALUES = [1, 2, 3, 5];
@@ -105,7 +106,7 @@ class Game extends Model
 
     public function sets(): HasMany
     {
-        return $this->hasMany(Set::class);
+        return $this->hasMany(GameSet::class);
     }
 
     public function gameLogs(): HasMany
