@@ -24,7 +24,8 @@
                     <a href="{{ $profileUrl }}"
                         class="group block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background">
                         <x-player-avatar :player="$participant" />
-                        <p class="mt-3 text-sm font-semibold transition group-hover:text-emerald-600 group-hover:underline dark:group-hover:text-emerald-400">
+                        <p
+                            class="mt-3 text-sm font-semibold transition group-hover:text-emerald-600 group-hover:underline dark:group-hover:text-emerald-400">
                             {{ $participant['name'] }}
                         </p>
                     </a>

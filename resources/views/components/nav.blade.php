@@ -15,12 +15,11 @@
 @endphp
 
 <nav class="fixed inset-x-0 top-0 z-40 border-b border-border/70 bg-background/80 backdrop-blur">
-    <div class="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
+    <div class="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-5">
         <a class="flex items-center gap-3" href="{{ route('home') }}">
-            <span
-                class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-linear-to-br from-emerald-500 via-lime-500 to-amber-400 text-xs font-semibold text-black shadow-sm">
-                SM
-            </span>
+            <img src="{{ asset('images/arena.jpg') }}" alt="Squash Arena Čakovec"
+                class="h-12 w-12 rounded-xl border border-border/70 bg-white/90 object-cover shadow-sm dark:bg-white/10"
+                loading="lazy" decoding="async" />
             <div>
                 <p class="text-sm font-semibold text-foreground">Squash Marathon</p>
                 <p class="hidden text-xs text-muted-foreground sm:block">24 sata u pokretu</p>

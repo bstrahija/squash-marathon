@@ -18,6 +18,7 @@ test('homepage loads', function () {
     $response->assertSee('Squash Marathon 24h');
     $response->assertSee('Poredak');
     $response->assertSee('Ekipa');
+    $response->assertSee('images/arena.jpg', false);
 });
 
 test('homepage renders real data sections', function () {
