@@ -14,13 +14,13 @@
     @livewireStyles
 </head>
 
-<body class="min-h-screen bg-background text-foreground">
-    <div class="relative overflow-hidden">
+<body class="min-h-svh bg-background text-foreground">
+    <div class="relative flex min-h-svh flex-col overflow-hidden">
         {{ $background ?? '' }}
 
         <x-nav />
 
-        <main class="{{ $mainClass }}">
+        <main class="flex-1 {{ $mainClass }}">
             {{ $slot }}
         </main>
 
