@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', HomeController::class)->name('home');
 Route::view('/matches', 'matches')->name('matches.index');
 Route::view('/rounds', 'rounds')->name('rounds.index');
+Route::view('/rounds/create', 'rounds-create')
+    ->middleware(['auth', 'verified', EnsureUserIsAdmin::class])
+    ->name('rounds.create');
 Route::view('/matches/create', 'matches-create')
     ->middleware(['auth', 'verified', EnsureUserIsAdmin::class])
     ->name('matches.create');

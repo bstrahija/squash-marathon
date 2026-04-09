@@ -277,12 +277,14 @@ test('matches create livewire shows only active round groups with round names', 
         'event_id' => $event->id,
         'number' => 1,
         'name' => 'Round 1',
+        'is_active' => true,
     ]);
 
-    $activeRound = Round::factory()->create([
+    $inactiveLatestRound = Round::factory()->create([
         'event_id' => $event->id,
         'number' => 2,
         'name' => 'Round 2',
+        'is_active' => false,
     ]);
 
     $firstRoundGroup = Group::factory()->create([
@@ -294,7 +296,7 @@ test('matches create livewire shows only active round groups with round names', 
 
     $activeRoundGroup = Group::factory()->create([
         'event_id' => $event->id,
-        'round_id' => $activeRound->id,
+        'round_id' => $inactiveLatestRound->id,
         'number' => 1,
         'name' => 'Group B',
     ]);
@@ -303,10 +305,10 @@ test('matches create livewire shows only active round groups with round names', 
 
     $groupOptions = $component->instance()->groupOptions();
 
-    expect($groupOptions)->toHaveKey($activeRoundGroup->id);
-    expect($groupOptions[$activeRoundGroup->id])->toBe('Round 2 - Group B');
-    expect($groupOptions)->not->toHaveKey($firstRoundGroup->id);
-    $component->assertSet('groupId', $activeRoundGroup->id);
+    expect($groupOptions)->toHaveKey($firstRoundGroup->id);
+    expect($groupOptions[$firstRoundGroup->id])->toBe('Round 1 - Group A');
+    expect($groupOptions)->not->toHaveKey($activeRoundGroup->id);
+    $component->assertSet('groupId', $firstRoundGroup->id);
 });
 
 test('admin can delete match through livewire list', function () {

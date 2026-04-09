@@ -114,7 +114,7 @@ new class extends Component {
             return null;
         }
 
-        return Round::query()->where('event_id', $this->eventId)->orderByDesc('number')->orderByDesc('id')->value('id');
+        return Round::query()->where('event_id', $this->eventId)->where('is_active', true)->orderByDesc('number')->orderByDesc('id')->value('id');
     }
 
     /**

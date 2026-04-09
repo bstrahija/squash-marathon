@@ -3,10 +3,11 @@
 namespace Database\Factories;
 
 use App\Models\Event;
+use App\Models\Round;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Round>
+ * @extends Factory<Round>
  */
 class RoundFactory extends Factory
 {
@@ -23,6 +24,7 @@ class RoundFactory extends Factory
             'event_id' => Event::factory(),
             'number' => $number,
             'name' => "Round {$number}",
+            'is_active' => true,
         ];
     }
 }

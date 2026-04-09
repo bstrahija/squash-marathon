@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\RoundFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Round extends Model
 {
-    /** @use HasFactory<\Database\Factories\RoundFactory> */
+    /** @use HasFactory<RoundFactory> */
     use HasFactory;
 
     /**
@@ -22,6 +23,7 @@ class Round extends Model
         'event_id',
         'number',
         'name',
+        'is_active',
     ];
 
     /**
@@ -33,6 +35,7 @@ class Round extends Model
     {
         return [
             'number' => 'integer',
+            'is_active' => 'boolean',
         ];
     }
 
