@@ -3,6 +3,7 @@
 use App\Enums\RoleName;
 use App\Filament\Resources\Events\Pages\CreateEvent;
 use App\Filament\Resources\Events\Pages\EditEvent;
+use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Models\Event;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
@@ -55,4 +56,28 @@ test('filament event edit saves media to spatie media library', function () {
         ->assertHasNoFormErrors();
 
     expect($event->fresh()->getMedia('photo'))->toHaveCount(1);
+});
+
+test('filament user create saves avatar to spatie media library', function () {
+    $this->actingAs(actingAsAdminUser());
+
+    $fakeImage = UploadedFile::fake()->image('test-avatar.jpg');
+    $email = 'filament-user-avatar@example.com';
+
+    Livewire::test(CreateUser::class)
+        ->fillForm([
+            'first_name' => 'Filament',
+            'last_name' => 'Avatar',
+            'email' => $email,
+            'password' => 'password',
+            'password_confirmation' => 'password',
+            'avatar' => [$fakeImage],
+        ])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    $user = User::where('email', $email)->first();
+
+    expect($user)->not->toBeNull();
+    expect($user->getMedia('avatar'))->toHaveCount(1);
 });
