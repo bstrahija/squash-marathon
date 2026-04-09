@@ -94,6 +94,7 @@ class HomeController extends Controller
             ->sortBy(fn (array $row): string => $row['player']->last_name)
             ->map(fn (array $row): array => [
                 'name' => $row['player']->full_name,
+                'initials' => $row['player']->initials,
                 'wins' => $row['wins'],
                 'draws' => $row['draws'],
                 'losses' => $row['losses'],

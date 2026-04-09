@@ -58,6 +58,8 @@ test('homepage renders real data sections', function () {
 
     $response->assertSee($playerOne->full_name);
     $response->assertSee($playerTwo->full_name);
+    $response->assertSee($playerOne->initials);
+    $response->assertSee($playerTwo->initials);
     $response->assertSee('11-6');
 });
 

@@ -13,21 +13,13 @@
     <div class="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         @forelse ($participants as $participant)
             @php
-                $initials = collect(explode(' ', $participant['name'] ?? ''))
-                    ->filter()
-                    ->map(fn($part) => mb_strtoupper(mb_substr($part, 0, 1, 'UTF-8'), 'UTF-8'))
-                    ->take(2)
-                    ->join('');
                 $summary =
                     $participant['games'] > 0
                         ? "{$participant['wins']} pobjede · {$participant['draws']} remija · {$participant['losses']} poraza"
                         : 'Još bez odigranih';
             @endphp
             <div class="rounded-2xl border border-border/70 bg-background/70 p-4">
-                <div
-                    class="font-initials flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-xs font-semibold text-primary-foreground">
-                    {{ $initials !== '' ? $initials : '—' }}
-                </div>
+                <x-player-avatar :initials="$participant['initials'] ?? null" />
                 <p class="mt-3 text-sm font-semibold">{{ $participant['name'] }}</p>
                 <p class="text-xs text-muted-foreground">{{ $summary }}</p>
             </div>

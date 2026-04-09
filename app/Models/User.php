@@ -96,6 +96,20 @@ class User extends Authenticatable implements FilamentUser, HasMedia, HasName
         });
     }
 
+    protected function initials(): Attribute
+    {
+        return Attribute::get(function (): string {
+            $parts = preg_split('/\s+/u', trim($this->full_name)) ?: [];
+            $initials = collect($parts)
+                ->filter()
+                ->map(fn (string $part): string => mb_strtoupper(mb_substr($part, 0, 1, 'UTF-8'), 'UTF-8'))
+                ->take(2)
+                ->join('');
+
+            return $initials !== '' ? $initials : '—';
+        });
+    }
+
     public function getFilamentName(): string
     {
         return $this->full_name;
