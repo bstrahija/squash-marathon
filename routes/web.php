@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PlayerController;
+use App\Http\Middleware\EnsureUserCanManageMatches;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use Illuminate\Support\Facades\Route;
 
@@ -16,11 +17,11 @@ Route::view('/rounds/{round}/edit', 'rounds-edit')
     ->middleware(['auth', 'verified', EnsureUserIsAdmin::class])
     ->name('rounds.edit');
 Route::view('/matches/create', 'matches-create')
-    ->middleware(['auth', 'verified', EnsureUserIsAdmin::class])
+    ->middleware(['auth', 'verified', EnsureUserCanManageMatches::class])
     ->name('matches.create');
 Route::view('/matches/{game}/score', 'matches-score')
     ->whereNumber('game')
-    ->middleware(['auth', 'verified', EnsureUserIsAdmin::class])
+    ->middleware(['auth', 'verified', EnsureUserCanManageMatches::class])
     ->name('matches.score');
 Route::get('/players/{user}', [PlayerController::class, 'show'])->whereNumber('user')->name('players.show');
 Route::view('/tv', 'tv')->name('tv');

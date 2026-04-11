@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\RoleName;
 use App\Models\Event;
 use App\Models\Game;
 use App\Models\Group;
@@ -33,7 +34,7 @@ new class extends Component {
         $activeRoundId = $this->activeRoundId();
 
         if (!$activeRoundId) {
-            $this->redirectRoute('rounds.create', ['redirect' => 'matches.create']);
+            $this->redirectForMissingRound();
 
             return;
         }
@@ -52,7 +53,7 @@ new class extends Component {
         $activeRoundId = $this->activeRoundId();
 
         if (!$activeRoundId) {
-            $this->redirectRoute('rounds.create', ['redirect' => 'matches.create']);
+            $this->redirectForMissingRound();
 
             return;
         }
@@ -127,6 +128,20 @@ new class extends Component {
         return Round::query()->where('event_id', $this->eventId)->where('is_active', true)->orderByDesc('number')->orderByDesc('id')->value('id');
     }
 
+    private function redirectForMissingRound(): void
+    {
+        $user = auth()->user();
+
+        if ((bool) $user?->hasRole(RoleName::Admin->value)) {
+            $this->redirectRoute('rounds.create', ['redirect' => 'matches.create']);
+
+            return;
+        }
+
+        session()->flash('status', 'Nema aktivne runde. Obratite se administratoru.');
+        $this->redirectRoute('matches.index');
+    }
+
     /**
      * @return array<int, string>
      */
@@ -147,18 +162,18 @@ new class extends Component {
 };
 ?>
 
-<div class="rounded-3xl border border-border bg-card/80 p-6 shadow-sm">
-    <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
+<div class="bg-card/80 shadow-sm p-6 border border-border rounded-3xl">
+    <div class="flex flex-wrap justify-between items-start gap-4 mb-6">
         <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Novi meč</p>
-            <h1 class="font-display mt-2 text-3xl font-semibold text-foreground">Kreiranje meča</h1>
-            <p class="mt-2 text-sm text-muted-foreground">
+            <p class="font-semibold text-muted-foreground text-xs uppercase tracking-[0.2em]">Novi meč</p>
+            <h1 class="mt-2 font-display font-semibold text-foreground text-3xl">Kreiranje meča</h1>
+            <p class="mt-2 text-muted-foreground text-sm">
                 Event je automatski odabran prema zadnjem unesenom događaju.
             </p>
         </div>
 
         <a href="{{ route('matches.index') }}"
-            class="rounded-full border border-border px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground transition hover:border-foreground/40 hover:text-foreground">
+            class="px-4 py-2 border border-border hover:border-foreground/40 rounded-full font-semibold text-muted-foreground hover:text-foreground text-xs uppercase tracking-wide transition">
             Natrag na mečeve
         </a>
     </div>
@@ -167,74 +182,74 @@ new class extends Component {
         <input type="hidden" wire:model="eventId" />
 
         <div>
-            <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+            <label class="block mb-2 font-semibold text-muted-foreground text-xs uppercase tracking-[0.16em]">
                 Event
             </label>
             <div
-                class="rounded-2xl border border-border/70 bg-background/70 px-4 py-3 text-sm font-medium text-foreground">
+                class="bg-background/70 px-4 py-3 border border-border/70 rounded-2xl font-medium text-foreground text-sm">
                 {{ $eventName }}
             </div>
         </div>
 
         <div>
             <label for="group_id"
-                class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                class="block mb-2 font-semibold text-muted-foreground text-xs uppercase tracking-[0.16em]">
                 Grupa
             </label>
             <select id="group_id" wire:model.live="groupId"
-                class="w-full rounded-2xl border border-border/70 bg-background/70 px-4 py-3 text-sm text-foreground focus:border-foreground/40 focus:outline-none">
+                class="bg-background/70 px-4 py-3 border border-border/70 focus:border-foreground/40 rounded-2xl focus:outline-none w-full text-foreground text-sm">
                 <option value="">Odaberi grupu</option>
                 @foreach ($this->groupOptions() as $groupOptionId => $groupName)
                     <option value="{{ $groupOptionId }}">{{ $groupName }}</option>
                 @endforeach
             </select>
             @error('groupId')
-                <p class="mt-2 text-xs text-red-600 dark:text-red-300">{{ $message }}</p>
+                <p class="mt-2 text-red-600 dark:text-red-300 text-xs">{{ $message }}</p>
             @enderror
         </div>
 
         @php($playerOptions = $this->playerOptions())
 
-        <div class="grid gap-4 sm:grid-cols-2">
+        <div class="gap-4 grid sm:grid-cols-2">
             <div>
                 <label for="player_one_id"
-                    class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                    class="block mb-2 font-semibold text-muted-foreground text-xs uppercase tracking-[0.16em]">
                     Igrač 1
                 </label>
                 <select id="player_one_id" wire:key="player-one-{{ $groupId ?? 'none' }}" wire:model="playerOneId"
                     @disabled(!$groupId || empty($playerOptions))
-                    class="w-full rounded-2xl border border-border/70 bg-background/70 px-4 py-3 text-sm text-foreground focus:border-foreground/40 focus:outline-none">
+                    class="bg-background/70 px-4 py-3 border border-border/70 focus:border-foreground/40 rounded-2xl focus:outline-none w-full text-foreground text-sm">
                     <option value="">Odaberi igrača</option>
                     @foreach ($playerOptions as $playerId => $playerName)
                         <option value="{{ $playerId }}">{{ $playerName }}</option>
                     @endforeach
                 </select>
                 @error('playerOneId')
-                    <p class="mt-2 text-xs text-red-600 dark:text-red-300">{{ $message }}</p>
+                    <p class="mt-2 text-red-600 dark:text-red-300 text-xs">{{ $message }}</p>
                 @enderror
             </div>
 
             <div>
                 <label for="player_two_id"
-                    class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                    class="block mb-2 font-semibold text-muted-foreground text-xs uppercase tracking-[0.16em]">
                     Igrač 2
                 </label>
                 <select id="player_two_id" wire:key="player-two-{{ $groupId ?? 'none' }}" wire:model="playerTwoId"
                     @disabled(!$groupId || empty($playerOptions))
-                    class="w-full rounded-2xl border border-border/70 bg-background/70 px-4 py-3 text-sm text-foreground focus:border-foreground/40 focus:outline-none">
+                    class="bg-background/70 px-4 py-3 border border-border/70 focus:border-foreground/40 rounded-2xl focus:outline-none w-full text-foreground text-sm">
                     <option value="">Odaberi igrača</option>
                     @foreach ($playerOptions as $playerId => $playerName)
                         <option value="{{ $playerId }}">{{ $playerName }}</option>
                     @endforeach
                 </select>
                 @error('playerTwoId')
-                    <p class="mt-2 text-xs text-red-600 dark:text-red-300">{{ $message }}</p>
+                    <p class="mt-2 text-red-600 dark:text-red-300 text-xs">{{ $message }}</p>
                 @enderror
             </div>
         </div>
 
         <button type="submit"
-            class="rounded-full bg-primary px-5 py-2.5 text-xs font-semibold uppercase tracking-wide text-primary-foreground shadow-sm transition hover:-translate-y-0.5">
+            class="bg-primary shadow-sm px-5 py-2.5 rounded-full font-semibold text-primary-foreground text-xs uppercase tracking-wide transition hover:-translate-y-0.5">
             Kreiraj meč
         </button>
     </form>

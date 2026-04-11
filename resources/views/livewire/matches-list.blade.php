@@ -17,6 +17,14 @@ new class extends Component {
     {
         $user = auth()->user();
 
+        return (bool) $user?->hasAnyRole([RoleName::Admin->value, RoleName::Player->value]);
+    }
+
+    #[Computed]
+    public function canDeleteMatches(): bool
+    {
+        $user = auth()->user();
+
         return (bool) $user?->hasRole(RoleName::Admin->value);
     }
 
@@ -45,7 +53,7 @@ new class extends Component {
 
     public function deleteMatch(int $gameId): void
     {
-        if (!$this->canManageMatches) {
+        if (!$this->canDeleteMatches) {
             abort(403);
         }
 
@@ -158,17 +166,17 @@ new class extends Component {
 };
 ?>
 
-<div class="rounded-3xl border border-border bg-card/80 p-6 shadow-sm">
+<div class="bg-card/80 shadow-sm p-6 border border-border rounded-3xl">
     @if (session('status'))
         <div
-            class="mb-4 rounded-2xl border border-emerald-400/40 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-300">
+            class="bg-emerald-400/10 mb-4 px-4 py-3 border border-emerald-400/40 rounded-2xl text-emerald-700 dark:text-emerald-300 text-sm">
             {{ session('status') }}
         </div>
     @endif
 
     <div class="overflow-x-auto">
-        <table class="w-full min-w-4xl text-left text-sm">
-            <thead class="text-xs uppercase tracking-wider text-muted-foreground">
+        <table class="w-full min-w-4xl text-sm text-left">
+            <thead class="text-muted-foreground text-xs uppercase tracking-wider">
                 <tr>
                     <th class="px-3 py-3">Vrijeme</th>
                     <th class="px-3 py-3">Grupa</th>
@@ -186,19 +194,19 @@ new class extends Component {
                     <tr wire:key="matches-list-game-{{ $game->id }}">
                         <td class="px-3 py-3 text-muted-foreground">
                             <a href="{{ $this->scoreRoute($game) }}"
-                                class="block -mx-3 -my-3 rounded-lg px-3 py-3 transition hover:bg-muted/40 hover:text-foreground">
+                                class="block hover:bg-muted/40 -mx-3 -my-3 px-3 py-3 rounded-lg hover:text-foreground transition">
                                 {{ $game->created_at ? $game->created_at->locale('hr')->dayName . ' ' . $game->created_at->format('H:i') : '—' }}
                             </a>
                         </td>
                         <td class="px-3 py-3 font-medium">
                             <a href="{{ $this->scoreRoute($game) }}"
-                                class="block -mx-3 -my-3 rounded-lg px-3 py-3 transition hover:bg-muted/40">
+                                class="block hover:bg-muted/40 -mx-3 -my-3 px-3 py-3 rounded-lg transition">
                                 {{ $game->group?->name ?? '—' }}
                             </a>
                         </td>
                         <td class="px-3 py-3">
                             <a href="{{ $this->scoreRoute($game) }}"
-                                class="block -mx-3 -my-3 rounded-lg px-3 py-3 transition hover:bg-muted/40">
+                                class="block hover:bg-muted/40 -mx-3 -my-3 px-3 py-3 rounded-lg transition">
                                 <span class="{{ $this->playerClass($game, $game->player_one_id) }}">
                                     {{ $game->playerOne?->full_name ?? '—' }}
                                 </span>
@@ -210,7 +218,7 @@ new class extends Component {
                         </td>
                         <td class="px-3 py-3">
                             <a href="{{ $this->scoreRoute($game) }}"
-                                class="block -mx-3 -my-3 rounded-lg px-3 py-3 transition hover:bg-muted/40">
+                                class="block hover:bg-muted/40 -mx-3 -my-3 px-3 py-3 rounded-lg transition">
                                 <span
                                     class="inline-flex rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] {{ $this->statusBadgeClass($game) }}">
                                     {{ $this->statusLabel($game) }}
@@ -219,40 +227,42 @@ new class extends Component {
                         </td>
                         <td class="px-3 py-3">
                             <a href="{{ $this->scoreRoute($game) }}"
-                                class="block -mx-3 -my-3 rounded-lg px-3 py-3 transition hover:bg-muted/40">
-                                <p class="text-sm font-semibold text-foreground">{{ $this->setResultSummary($game) }}
+                                class="block hover:bg-muted/40 -mx-3 -my-3 px-3 py-3 rounded-lg transition">
+                                <p class="font-semibold text-foreground text-sm">{{ $this->setResultSummary($game) }}
                                 </p>
-                                <p class="text-xs text-muted-foreground">{{ $this->scoreSummary($game) }}</p>
+                                <p class="text-muted-foreground text-xs">{{ $this->scoreSummary($game) }}</p>
                             </a>
                         </td>
                         <td class="px-3 py-3 text-muted-foreground">
                             <a href="{{ $this->scoreRoute($game) }}"
-                                class="block -mx-3 -my-3 rounded-lg px-3 py-3 transition hover:bg-muted/40 hover:text-foreground">
+                                class="block hover:bg-muted/40 -mx-3 -my-3 px-3 py-3 rounded-lg hover:text-foreground transition">
                                 {{ $game->duration_seconds ? sprintf('%d:%02d', intdiv($game->duration_seconds, 60), $game->duration_seconds % 60) : '—' }}
                             </a>
                         </td>
                         @if ($this->canManageMatches)
                             <td class="px-3 py-3">
-                                <div class="flex items-center justify-end gap-2">
-                                    <a href="{{ route('filament.admin.resources.games.edit', ['record' => $game->id]) }}"
-                                        class="rounded-full border border-border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-foreground transition hover:border-foreground/40">
+                                <div class="flex justify-end items-center gap-2">
+                                    <a href="{{ route('matches.score', ['game' => $game->id]) }}"
+                                        class="px-3 py-1.5 border border-border hover:border-foreground/40 rounded-full font-semibold text-foreground text-xs uppercase tracking-wide transition">
                                         Uredi
                                     </a>
 
-                                    @if ($confirmingDeletionId === $game->id)
-                                        <button type="button" wire:click="deleteMatch({{ $game->id }})"
-                                            class="rounded-full border border-red-500/40 bg-red-500/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-red-600 transition hover:bg-red-500/20 dark:text-red-300">
-                                            Potvrdi brisanje
-                                        </button>
-                                        <button type="button" wire:click="cancelDelete"
-                                            class="rounded-full border border-border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground transition hover:border-foreground/40 hover:text-foreground">
-                                            Odustani
-                                        </button>
-                                    @else
-                                        <button type="button" wire:click="confirmDelete({{ $game->id }})"
-                                            class="rounded-full border border-red-500/40 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-red-600 transition hover:bg-red-500/10 dark:text-red-300">
-                                            Obriši
-                                        </button>
+                                    @if ($this->canDeleteMatches)
+                                        @if ($confirmingDeletionId === $game->id)
+                                            <button type="button" wire:click="deleteMatch({{ $game->id }})"
+                                                class="bg-red-500/10 hover:bg-red-500/20 px-3 py-1.5 border border-red-500/40 rounded-full font-semibold text-red-600 dark:text-red-300 text-xs uppercase tracking-wide transition">
+                                                Potvrdi brisanje
+                                            </button>
+                                            <button type="button" wire:click="cancelDelete"
+                                                class="px-3 py-1.5 border border-border hover:border-foreground/40 rounded-full font-semibold text-muted-foreground hover:text-foreground text-xs uppercase tracking-wide transition">
+                                                Odustani
+                                            </button>
+                                        @else
+                                            <button type="button" wire:click="confirmDelete({{ $game->id }})"
+                                                class="hover:bg-red-500/10 px-3 py-1.5 border border-red-500/40 rounded-full font-semibold text-red-600 dark:text-red-300 text-xs uppercase tracking-wide transition">
+                                                Obriši
+                                            </button>
+                                        @endif
                                     @endif
                                 </div>
                             </td>
@@ -260,7 +270,7 @@ new class extends Component {
                     </tr>
                 @empty
                     <tr>
-                        <td class="px-3 py-8 text-center text-sm text-muted-foreground" colspan="7">Nema mečeva za
+                        <td class="px-3 py-8 text-muted-foreground text-sm text-center" colspan="7">Nema mečeva za
                             prikaz.</td>
                     </tr>
                 @endforelse

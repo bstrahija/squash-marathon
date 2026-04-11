@@ -71,6 +71,16 @@ function createAdminUser(): User
     return $admin;
 }
 
+function createPlayerUser(): User
+{
+    Role::firstOrCreate(['name' => RoleName::Player->value]);
+
+    $player = User::factory()->create();
+    $player->assignRole(RoleName::Player->value);
+
+    return $player;
+}
+
 test('matches page loads', function () {
     $this->withoutVite();
 
@@ -87,6 +97,17 @@ test('matches page shows add match button for admins', function () {
     $admin = createAdminUser();
 
     $response = $this->actingAs($admin)->get('/matches');
+
+    $response->assertSuccessful();
+    $response->assertSee('Dodaj');
+});
+
+test('matches page shows add match button for players', function () {
+    $this->withoutVite();
+
+    $player = createPlayerUser();
+
+    $response = $this->actingAs($player)->get('/matches');
 
     $response->assertSuccessful();
     $response->assertSee('Dodaj');
@@ -123,6 +144,26 @@ test('admin can access matches create page', function () {
     $response->assertSuccessful();
 });
 
+test('player can access matches create page', function () {
+    $this->withoutVite();
+
+    $event = Event::factory()->create([
+        'start_at' => now()->subHour(),
+        'end_at' => now()->addHour(),
+    ]);
+
+    Round::factory()->create([
+        'event_id' => $event->id,
+        'is_active' => true,
+    ]);
+
+    $player = createPlayerUser();
+
+    $response = $this->actingAs($player)->get('/matches/create');
+
+    $response->assertSuccessful();
+});
+
 test('admin is redirected to create round when creating match without active round', function () {
     $this->withoutVite();
 
@@ -138,7 +179,7 @@ test('admin is redirected to create round when creating match without active rou
     $response->assertRedirect(route('rounds.create', ['redirect' => 'matches.create']));
 });
 
-test('non-admin cannot access matches create page', function () {
+test('user without player/admin role cannot access matches create page', function () {
     $this->withoutVite();
 
     $response = $this->actingAs(User::factory()->create())->get('/matches/create');
@@ -157,7 +198,18 @@ test('admin can access matches score page', function () {
     $response->assertSuccessful();
 });
 
-test('non-admin cannot access matches score page', function () {
+test('player can access matches score page', function () {
+    $this->withoutVite();
+
+    $game = createMatchForList();
+    $player = createPlayerUser();
+
+    $response = $this->actingAs($player)->get("/matches/{$game->id}/score");
+
+    $response->assertSuccessful();
+});
+
+test('user without player/admin role cannot access matches score page', function () {
     $this->withoutVite();
 
     $game = createMatchForList();
@@ -165,6 +217,21 @@ test('non-admin cannot access matches score page', function () {
     $response = $this->actingAs(User::factory()->create())->get("/matches/{$game->id}/score");
 
     $response->assertForbidden();
+});
+
+test('player is redirected to matches page when there is no active round', function () {
+    $this->withoutVite();
+
+    Event::factory()->create([
+        'start_at' => now()->subHour(),
+        'end_at' => now()->addHour(),
+    ]);
+
+    $player = createPlayerUser();
+
+    $response = $this->actingAs($player)->get('/matches/create');
+
+    $response->assertRedirect(route('matches.index'));
 });
 
 test('matches score livewire starts match and closes overlay', function () {
@@ -351,6 +418,22 @@ test('admin can delete match through livewire list', function () {
 
     expect(Game::query()->whereKey($game->id)->exists())->toBeFalse();
     expect(GameSet::query()->where('game_id', $game->id)->exists())->toBeFalse();
+});
+
+test('player can manage matches but cannot delete through livewire list', function () {
+    $game = createMatchForList();
+
+    $player = createPlayerUser();
+
+    $this->actingAs($player);
+
+    Livewire::test('matches-list')
+        ->assertSee('Uredi')
+        ->assertDontSee('Obriši')
+        ->call('deleteMatch', $game->id)
+        ->assertForbidden();
+
+    expect(Game::query()->whereKey($game->id)->exists())->toBeTrue();
 });
 
 test('admin cannot delete match without confirmation first', function () {

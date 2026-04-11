@@ -87,6 +87,18 @@ test('non-admin cannot access rounds create page', function () {
     $response->assertForbidden();
 });
 
+test('player cannot access rounds create page', function () {
+    $this->withoutVite();
+
+    Role::firstOrCreate(['name' => RoleName::Player->value]);
+    $player = User::factory()->create();
+    $player->assignRole(RoleName::Player->value);
+
+    $response = $this->actingAs($player)->get('/rounds/create');
+
+    $response->assertForbidden();
+});
+
 test('admin can access rounds edit page', function () {
     $this->withoutVite();
 
@@ -127,6 +139,30 @@ test('non-admin cannot access rounds edit page', function () {
     ]);
 
     $response = $this->actingAs(User::factory()->create())->get("/rounds/{$round->id}/edit");
+
+    $response->assertForbidden();
+});
+
+test('player cannot access rounds edit page', function () {
+    $this->withoutVite();
+
+    Role::firstOrCreate(['name' => RoleName::Player->value]);
+
+    $event = Event::factory()->create([
+        'start_at' => now()->subHour(),
+        'end_at' => now()->addHour(),
+    ]);
+
+    $round = Round::factory()->create([
+        'event_id' => $event->id,
+        'number' => 1,
+        'name' => 'Grupa 1',
+    ]);
+
+    $player = User::factory()->create();
+    $player->assignRole(RoleName::Player->value);
+
+    $response = $this->actingAs($player)->get("/rounds/{$round->id}/edit");
 
     $response->assertForbidden();
 });
