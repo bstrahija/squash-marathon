@@ -1,10 +1,23 @@
 <?php
 
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\SocialiteAuthenticatedSessionController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PlayerController;
 use App\Http\Middleware\EnsureUserCanManageMatches;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use Illuminate\Support\Facades\Route;
+
+Route::middleware('guest')->group(function (): void {
+    Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
+    Route::post('/login', [AuthenticatedSessionController::class, 'store'])->name('login.store');
+    Route::get('/oauth/google/redirect', [SocialiteAuthenticatedSessionController::class, 'redirectToGoogle'])->name('oauth.google.redirect');
+    Route::get('/oauth/google/callback', [SocialiteAuthenticatedSessionController::class, 'handleGoogleCallback'])->name('oauth.google.callback');
+});
+
+Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('logout');
 
 Route::get('/', HomeController::class)->name('home');
 Route::view('/matches', 'matches')->name('matches.index');
@@ -26,6 +39,5 @@ Route::view('/matches/{game}/score', 'matches-score')
 Route::get('/players/{user}', [PlayerController::class, 'show'])->whereNumber('user')->name('players.show');
 Route::view('/tv', 'tv')->name('tv');
 
-Route::redirect('/login', '/admin/login')->name('login');
 Route::redirect('/register', '/admin/login')->name('register');
 Route::redirect('/email/verify', '/admin')->name('verification.notice');
