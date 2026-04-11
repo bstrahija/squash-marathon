@@ -16,7 +16,7 @@ test('guest can view web login page', function () {
 
     $response->assertSuccessful();
     $response->assertSee('Prijavite se');
-    $response->assertSee(route('oauth.google.redirect'), false);
+    $response->assertSee(route('socialite.filament.admin.oauth.redirect', ['provider' => 'google']), false);
 });
 
 test('google redirect endpoint redirects to social provider', function () {

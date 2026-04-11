@@ -2,7 +2,10 @@
 
 namespace App\Providers\Filament;
 
+use App\Enums\RoleName;
+use App\Models\User;
 use DutchCodingCompany\FilamentSocialite\FilamentSocialitePlugin;
+use DutchCodingCompany\FilamentSocialite\Models\Contracts\FilamentSocialiteUser as FilamentSocialiteUserContract;
 use DutchCodingCompany\FilamentSocialite\Provider;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -41,7 +44,19 @@ class AdminPanelProvider extends PanelProvider
                         Provider::make('google')
                             ->label('Google'),
                     ])
-                    ->registration(fn (string $provider, SocialiteUser $oauthUser, ?Authenticatable $user): bool => (bool) $user),
+                    ->registration(fn (string $provider, SocialiteUser $oauthUser, ?Authenticatable $user): bool => $user instanceof User
+                        && $user->hasAnyRole([RoleName::Admin->value, RoleName::Player->value]))
+                    ->redirectAfterLoginUsing(
+                        function (string $provider, FilamentSocialiteUserContract $socialiteUser, FilamentSocialitePlugin $plugin) {
+                            $user = $socialiteUser->getUser();
+
+                            if ($user instanceof User && $user->hasRole(RoleName::Admin->value)) {
+                                return redirect()->intended($plugin->getPanel()->getUrl());
+                            }
+
+                            return redirect()->intended(route('matches.index'));
+                        },
+                    ),
             )
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
