@@ -2,29 +2,29 @@
     main-class="mx-auto flex w-full max-w-6xl flex-col gap-16 px-6 pb-12 pt-32">
     <x-slot:background>
         <div
-            class="pointer-events-none absolute -left-32 -top-16 h-104 w-104 rounded-full bg-emerald-400/30 blur-3xl dark:bg-emerald-500/15">
+            class="-top-16 -left-32 absolute bg-emerald-400/30 dark:bg-emerald-500/15 blur-3xl rounded-full w-104 h-104 pointer-events-none">
         </div>
         <div
-            class="pointer-events-none absolute -right-24 top-10 h-88 w-88 rounded-full bg-amber-300/35 blur-3xl dark:bg-amber-400/15">
+            class="top-10 -right-24 absolute bg-amber-300/35 dark:bg-amber-400/15 blur-3xl rounded-full w-88 h-88 pointer-events-none">
         </div>
         <div
-            class="pointer-events-none absolute left-1/2 top-88 h-72 w-[18rem] -translate-x-1/2 rounded-full bg-sky-300/25 blur-3xl dark:bg-sky-400/10">
+            class="top-88 left-1/2 absolute bg-sky-300/25 dark:bg-sky-400/10 blur-3xl rounded-full w-[18rem] h-72 -translate-x-1/2 pointer-events-none">
         </div>
         <div
-            class="pointer-events-none absolute left-8 top-72 hidden h-64 w-64 rotate-6 rounded-[2.5rem] border border-emerald-400/30 bg-emerald-400/5 dark:border-emerald-400/10 dark:bg-emerald-500/5 lg:block">
+            class="hidden lg:block top-72 left-8 absolute bg-emerald-400/5 dark:bg-emerald-500/5 border border-emerald-400/30 dark:border-emerald-400/10 rounded-[2.5rem] w-64 h-64 rotate-6 pointer-events-none">
         </div>
     </x-slot:background>
 
     @if (session('status'))
         <div x-data="{ open: true }" x-show="open" x-transition.opacity.duration.200ms
-            class="pointer-events-none fixed inset-x-0 top-24 z-50 flex justify-center px-4">
+            class="top-24 z-50 fixed inset-x-0 flex justify-center px-4 pointer-events-none">
             <div
-                class="pointer-events-auto flex items-center gap-3 rounded-2xl border border-emerald-400/40 bg-emerald-400/10 px-4 py-3 text-sm font-semibold text-emerald-700 shadow-sm dark:text-emerald-300">
+                class="flex items-center gap-3 bg-emerald-400/10 shadow-sm px-4 py-3 border border-emerald-400/40 rounded-2xl font-semibold text-emerald-700 dark:text-emerald-300 text-sm pointer-events-auto">
                 <span>{{ session('status') }}</span>
                 <button type="button" x-on:click="open = false"
-                    class="inline-flex h-7 w-7 items-center justify-center rounded-full border border-emerald-500/30 bg-transparent transition hover:bg-emerald-500/10"
+                    class="inline-flex justify-center items-center bg-transparent hover:bg-emerald-500/10 border border-emerald-500/30 rounded-full w-7 h-7 transition"
                     aria-label="Zatvori obavijest">
-                    <x-heroicon-o-x-mark class="h-4 w-4" aria-hidden="true" />
+                    <x-heroicon-o-x-mark class="w-4 h-4" aria-hidden="true" />
                 </button>
             </div>
         </div>

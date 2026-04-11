@@ -15,6 +15,8 @@ new class extends Component {
                 'has_event' => false,
                 'name' => null,
                 'ends_at' => null,
+                'ends_at_unix' => null,
+                'remaining_seconds' => null,
                 'remaining_label' => '—',
                 'is_over' => false,
             ];
@@ -28,6 +30,8 @@ new class extends Component {
             'has_event' => true,
             'name' => $event->name,
             'ends_at' => $endsAt,
+            'ends_at_unix' => $endsAt?->getTimestamp(),
+            'remaining_seconds' => $secondsRemaining,
             'remaining_label' => $secondsRemaining !== null ? $this->formatDuration($secondsRemaining) : '—',
             'is_over' => $endsAt ? $now->greaterThanOrEqualTo($endsAt) : false,
         ];
@@ -44,7 +48,74 @@ new class extends Component {
 };
 ?>
 
-<div class="tv-event-end-countdown flex h-full min-h-0 flex-col p-4" wire:poll.5s>
+<div class="tv-event-end-countdown flex h-full min-h-0 flex-col p-4" wire:poll.5s
+    data-remaining-seconds="{{ $this->status['remaining_seconds'] ?? '' }}"
+    data-ends-at-unix="{{ $this->status['ends_at_unix'] ?? '' }}"
+    data-is-over="{{ $this->status['is_over'] ? '1' : '0' }}"
+    x-data="{
+        targetEpoch: null,
+        isOver: false,
+        displayLabel: '{{ $this->status['is_over'] ? '00:00:00' : $this->status['remaining_label'] }}',
+        formatDuration(seconds) {
+            const total = Math.max(0, Number(seconds) || 0);
+            const hours = Math.floor(total / 3600);
+            const minutes = Math.floor((total % 3600) / 60);
+            const secs = total % 60;
+
+            return [hours, minutes, secs].map((value) => String(value).padStart(2, '0')).join(':');
+        },
+        syncFromServer() {
+            const rawTargetEpoch = this.$el.dataset.endsAtUnix;
+            const nextTargetEpoch = rawTargetEpoch === '' ? null : Number(rawTargetEpoch);
+
+            this.targetEpoch = Number.isNaN(nextTargetEpoch) ? null : nextTargetEpoch;
+            this.isOver = this.$el.dataset.isOver === '1';
+
+            if (this.targetEpoch === null) {
+                this.displayLabel = '—';
+
+                return;
+            }
+
+            this.tick();
+        },
+        tick() {
+            if (this.targetEpoch === null) {
+                return;
+            }
+
+            const nowEpoch = Math.floor(Date.now() / 1000);
+            const remainingSeconds = Math.max(0, this.targetEpoch - nowEpoch);
+
+            if (this.isOver || remainingSeconds === 0) {
+                this.isOver = true;
+                this.displayLabel = '00:00:00';
+
+                return;
+            }
+
+            this.displayLabel = this.formatDuration(remainingSeconds);
+        },
+        init() {
+            this.syncFromServer();
+
+            if (this.$el._tvCountdownTimer) {
+                window.clearInterval(this.$el._tvCountdownTimer);
+            }
+
+            if (this.$el._tvCountdownObserver) {
+                this.$el._tvCountdownObserver.disconnect();
+            }
+
+            this.$el._tvCountdownTimer = window.setInterval(() => this.tick(), 1000);
+            this.$el._tvCountdownObserver = new MutationObserver(() => this.syncFromServer());
+            this.$el._tvCountdownObserver.observe(this.$el, {
+                attributes: true,
+                attributeFilter: ['data-ends-at-unix', 'data-is-over', 'data-remaining-seconds'],
+            });
+        }
+    }"
+    x-init="init()">
     <p class="tv-event-kicker font-semibold uppercase tracking-[0.18em] text-muted-foreground">
         Event End Countdown
     </p>
@@ -58,7 +129,8 @@ new class extends Component {
             {{ $this->status['name'] }}
         </p>
 
-        <p class="tv-event-timer font-display mt-3 font-semibold leading-none text-foreground">
+        <p class="tv-event-timer font-display mt-3 font-semibold leading-none text-foreground"
+            x-text="displayLabel">
             {{ $this->status['is_over'] ? '00:00:00' : $this->status['remaining_label'] }}
         </p>
 
