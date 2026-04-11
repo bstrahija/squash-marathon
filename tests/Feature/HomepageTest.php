@@ -28,6 +28,7 @@ test('homepage shows login success toast when status is flashed', function () {
 
     $response->assertSuccessful();
     $response->assertSee('Prijavljeni ste');
+    $response->assertSee('Zatvori obavijest');
 });
 
 test('homepage renders real data sections', function () {

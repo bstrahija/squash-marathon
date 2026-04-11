@@ -40,7 +40,7 @@ test('google redirect endpoint redirects to social provider', function () {
     $response->assertRedirect('https://accounts.google.com/o/oauth2/auth');
 });
 
-test('player can log in through web login and access intended matches page', function () {
+test('player can log in through web login and is redirected to homepage with status toast', function () {
     $this->withoutVite();
 
     Role::firstOrCreate(['name' => RoleName::Player->value]);
@@ -67,7 +67,8 @@ test('player can log in through web login and access intended matches page', fun
         'password' => 'password',
     ]);
 
-    $response->assertRedirect('/matches/create');
+    $response->assertRedirect(route('home'));
+    $response->assertSessionHas('status', 'Prijavljeni ste');
     $this->assertAuthenticatedAs($player);
 });
 
@@ -111,7 +112,8 @@ test('google callback logs in existing player by email and stores socialite link
 
     $response = $this->get(route('oauth.google.callback'));
 
-    $response->assertRedirect(route('matches.index'));
+    $response->assertRedirect(route('home'));
+    $response->assertSessionHas('status', 'Prijavljeni ste');
     $this->assertAuthenticatedAs($player);
 
     expect(DB::table('socialite_users')
@@ -119,4 +121,16 @@ test('google callback logs in existing player by email and stores socialite link
         ->where('provider_id', 'google-user-123')
         ->where('user_id', $player->id)
         ->exists())->toBeTrue();
+});
+
+test('user with id one logs in through web login and is redirected to admin panel', function () {
+    $user = User::query()->find(1) ?? User::factory()->create(['id' => 1, 'password' => 'password']);
+
+    $response = $this->post(route('login.store'), [
+        'email' => $user->email,
+        'password' => 'password',
+    ]);
+
+    $response->assertRedirect('/admin');
+    $this->assertAuthenticatedAs($user);
 });

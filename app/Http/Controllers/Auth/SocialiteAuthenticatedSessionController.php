@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Enums\RoleName;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Filament\Facades\Filament;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -50,7 +51,7 @@ class SocialiteAuthenticatedSessionController extends Controller
         Auth::login($user, true);
         request()->session()->regenerate();
 
-        return redirect()->intended(route('matches.index'));
+        return $this->redirectAfterLogin($user);
     }
 
     private function resolveAllowedUser(OAuthUser $oauthUser): ?User
@@ -95,5 +96,14 @@ class SocialiteAuthenticatedSessionController extends Controller
         );
 
         return $user;
+    }
+
+    private function redirectAfterLogin(User $user): RedirectResponse
+    {
+        if ((int) $user->getAuthIdentifier() === 1) {
+            return redirect()->intended(Filament::getUrl());
+        }
+
+        return redirect()->route('home')->with('status', 'Prijavljeni ste');
     }
 }

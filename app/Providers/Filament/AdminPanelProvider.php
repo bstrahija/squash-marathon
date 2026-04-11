@@ -50,11 +50,11 @@ class AdminPanelProvider extends PanelProvider
                         function (string $provider, FilamentSocialiteUserContract $socialiteUser, FilamentSocialitePlugin $plugin) {
                             $user = $socialiteUser->getUser();
 
-                            if ($user instanceof User && $user->hasRole(RoleName::Admin->value)) {
+                            if ((int) $user->getAuthIdentifier() === 1) {
                                 return redirect()->intended($plugin->getPanel()->getUrl());
                             }
 
-                            return redirect()->intended(route('matches.index'));
+                            return redirect()->route('home')->with('status', 'Prijavljeni ste');
                         },
                     ),
             )

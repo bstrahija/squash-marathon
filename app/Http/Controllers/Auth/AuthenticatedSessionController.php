@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use Filament\Facades\Filament;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -31,7 +32,13 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('matches.index'));
+        $userId = (int) ($request->user()?->getAuthIdentifier() ?? 0);
+
+        if ($userId === 1) {
+            return redirect()->intended(Filament::getUrl());
+        }
+
+        return redirect()->route('home')->with('status', 'Prijavljeni ste');
     }
 
     public function destroy(Request $request): RedirectResponse

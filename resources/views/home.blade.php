@@ -16,10 +16,16 @@
     </x-slot:background>
 
     @if (session('status'))
-        <div class="pointer-events-none fixed inset-x-0 top-24 z-50 flex justify-center px-4">
+        <div x-data="{ open: true }" x-show="open" x-transition.opacity.duration.200ms
+            class="pointer-events-none fixed inset-x-0 top-24 z-50 flex justify-center px-4">
             <div
-                class="pointer-events-auto rounded-2xl border border-emerald-400/40 bg-emerald-400/10 px-4 py-3 text-sm font-semibold text-emerald-700 shadow-sm dark:text-emerald-300">
-                {{ session('status') }}
+                class="pointer-events-auto flex items-center gap-3 rounded-2xl border border-emerald-400/40 bg-emerald-400/10 px-4 py-3 text-sm font-semibold text-emerald-700 shadow-sm dark:text-emerald-300">
+                <span>{{ session('status') }}</span>
+                <button type="button" x-on:click="open = false"
+                    class="inline-flex h-7 w-7 items-center justify-center rounded-full border border-emerald-500/30 bg-transparent transition hover:bg-emerald-500/10"
+                    aria-label="Zatvori obavijest">
+                    <x-heroicon-o-x-mark class="h-4 w-4" aria-hidden="true" />
+                </button>
             </div>
         </div>
     @endif
