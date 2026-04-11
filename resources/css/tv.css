@@ -477,22 +477,22 @@
 }
 
 .tv-latest-games {
-    --tv-latest-text: clamp(0.82rem, 1.06vw, 1.06rem);
-    --tv-latest-subtext: clamp(0.64rem, 0.74vw, 0.78rem);
+    --tv-latest-text: clamp(0.64rem, 0.82vw, 0.82rem);
+    --tv-latest-subtext: clamp(0.5rem, 0.58vw, 0.62rem);
     --tv-latest-card-padding: 0.625rem 0.875rem;
 
     padding: clamp(0.75rem, 1vw, 1.1rem);
 }
 
 .tv-latest-games.tv-density-comfortable {
-    --tv-latest-text: clamp(0.95rem, 1.3vw, 1.3rem);
-    --tv-latest-subtext: clamp(0.72rem, 0.95vw, 0.92rem);
+    --tv-latest-text: clamp(0.74rem, 0.94vw, 0.94rem);
+    --tv-latest-subtext: clamp(0.56rem, 0.7vw, 0.7rem);
     --tv-latest-card-padding: 0.75rem 1rem;
 }
 
 .tv-latest-games.tv-density-compact {
-    --tv-latest-text: clamp(0.72rem, 0.86vw, 0.9rem);
-    --tv-latest-subtext: clamp(0.56rem, 0.64vw, 0.68rem);
+    --tv-latest-text: clamp(0.6rem, 0.68vw, 0.72rem);
+    --tv-latest-subtext: clamp(0.46rem, 0.5vw, 0.54rem);
     --tv-latest-card-padding: 0.5rem 0.75rem;
 }
 
