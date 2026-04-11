@@ -21,6 +21,28 @@ test('homepage loads', function () {
     $response->assertSee('images/arena.jpg', false);
 });
 
+test('header shows login action for guests', function () {
+    $this->withoutVite();
+
+    $response = $this->get('/');
+
+    $response->assertSuccessful();
+    $response->assertSee('Prijava');
+    $response->assertDontSee('Odjava');
+});
+
+test('header shows logout action for authenticated users', function () {
+    $this->withoutVite();
+
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->get('/');
+
+    $response->assertSuccessful();
+    $response->assertSee('Odjava');
+    $response->assertDontSee('Prijava');
+});
+
 test('homepage shows login success toast when status is flashed', function () {
     $this->withoutVite();
 

@@ -134,3 +134,13 @@ test('user with id one logs in through web login and is redirected to admin pane
     $response->assertRedirect('/admin');
     $this->assertAuthenticatedAs($user);
 });
+
+test('logout redirects to homepage with status toast', function () {
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->post(route('logout'));
+
+    $response->assertRedirect(route('home'));
+    $response->assertSessionHas('status', 'Odjavljeni ste');
+    $this->assertGuest();
+});

@@ -30,6 +30,19 @@
                 <a class="text-muted-foreground transition hover:text-foreground"
                     href="{{ $resolveNavigationHref($link) }}">{{ $link['label'] }}</a>
             @endforeach
+
+            @auth
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="text-muted-foreground transition hover:text-foreground">
+                        Odjava
+                    </button>
+                </form>
+            @else
+                <a class="text-muted-foreground transition hover:text-foreground" href="{{ route('login') }}">
+                    Prijava
+                </a>
+            @endauth
         </div>
         <div class="flex items-center gap-3">
             <button aria-label="Toggle theme" aria-pressed="false"
@@ -71,6 +84,22 @@
                     {{ $ctaLink['label'] }}
                 </a>
             @endif
+
+            @auth
+                <form method="POST" action="{{ route('logout') }}" class="mt-2">
+                    @csrf
+                    <button type="submit"
+                        class="w-full rounded-xl border border-border bg-card px-3 py-2 text-left text-sm font-semibold uppercase tracking-wide text-foreground"
+                        data-nav-link>
+                        Odjava
+                    </button>
+                </form>
+            @else
+                <a class="mt-2 rounded-xl border border-border bg-card px-3 py-2 text-sm font-semibold uppercase tracking-wide text-foreground"
+                    data-nav-link href="{{ route('login') }}">
+                    Prijava
+                </a>
+            @endauth
         </div>
     </div>
 </nav>

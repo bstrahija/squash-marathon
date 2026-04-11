@@ -25,11 +25,6 @@ return [
                 'route' => 'home',
                 'fragment' => 'leaderboard',
             ],
-            [
-                'label' => 'Kronologija',
-                'route' => 'home',
-                'fragment' => 'timeline',
-            ],
         ],
         'cta' => [
             'label' => 'Live',
