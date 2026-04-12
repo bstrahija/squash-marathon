@@ -32,6 +32,8 @@ new class extends Component {
         $games = Game::query()
             ->with(['sets', 'playerOne', 'playerTwo'])
             ->where('event_id', $event->id)
+            ->orderByDesc('finished_at')
+            ->orderByDesc('id')
             ->get();
 
         return $games
@@ -87,11 +89,9 @@ new class extends Component {
                 $playerTwoClass = $this->playerClass($game->player_two_id, $winnerId, $isDraw);
                 $playerOneSetsClass = $this->setScoreClass($game->player_one_id, $winnerId, $isDraw);
                 $playerTwoSetsClass = $this->setScoreClass($game->player_two_id, $winnerId, $isDraw);
-                $finishedAt = $game->finished_at ?? $game->created_at;
-
                 return [
                     'id' => $game->id,
-                    'time' => $finishedAt,
+                    'time' => $game->finished_at,
                     'player_one' => $game->playerOne->full_name,
                     'player_two' => $game->playerTwo->full_name,
                     'player_one_class' => $playerOneClass,
@@ -104,7 +104,6 @@ new class extends Component {
                     'duration' => $this->formatDuration($durationSeconds),
                 ];
             })
-            ->sortByDesc('time')
             ->take(24)
             ->values()
             ->all();

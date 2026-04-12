@@ -48,11 +48,10 @@ new class extends Component {
 };
 ?>
 
-<div class="tv-event-end-countdown flex h-full min-h-0 flex-col p-4" wire:poll.5s
+<div class="flex flex-col p-4 h-full min-h-0 tv-event-end-countdown" wire:poll.5s
     data-remaining-seconds="{{ $this->status['remaining_seconds'] ?? '' }}"
     data-ends-at-unix="{{ $this->status['ends_at_unix'] ?? '' }}"
-    data-is-over="{{ $this->status['is_over'] ? '1' : '0' }}"
-    x-data="{
+    data-is-over="{{ $this->status['is_over'] ? '1' : '0' }}" x-data="{
         targetEpoch: null,
         isOver: false,
         displayLabel: '{{ $this->status['is_over'] ? '00:00:00' : $this->status['remaining_label'] }}',
@@ -61,52 +60,52 @@ new class extends Component {
             const hours = Math.floor(total / 3600);
             const minutes = Math.floor((total % 3600) / 60);
             const secs = total % 60;
-
+    
             return [hours, minutes, secs].map((value) => String(value).padStart(2, '0')).join(':');
         },
         syncFromServer() {
             const rawTargetEpoch = this.$el.dataset.endsAtUnix;
             const nextTargetEpoch = rawTargetEpoch === '' ? null : Number(rawTargetEpoch);
-
+    
             this.targetEpoch = Number.isNaN(nextTargetEpoch) ? null : nextTargetEpoch;
             this.isOver = this.$el.dataset.isOver === '1';
-
+    
             if (this.targetEpoch === null) {
                 this.displayLabel = '—';
-
+    
                 return;
             }
-
+    
             this.tick();
         },
         tick() {
             if (this.targetEpoch === null) {
                 return;
             }
-
+    
             const nowEpoch = Math.floor(Date.now() / 1000);
             const remainingSeconds = Math.max(0, this.targetEpoch - nowEpoch);
-
+    
             if (this.isOver || remainingSeconds === 0) {
                 this.isOver = true;
                 this.displayLabel = '00:00:00';
-
+    
                 return;
             }
-
+    
             this.displayLabel = this.formatDuration(remainingSeconds);
         },
         init() {
             this.syncFromServer();
-
+    
             if (this.$el._tvCountdownTimer) {
                 window.clearInterval(this.$el._tvCountdownTimer);
             }
-
+    
             if (this.$el._tvCountdownObserver) {
                 this.$el._tvCountdownObserver.disconnect();
             }
-
+    
             this.$el._tvCountdownTimer = window.setInterval(() => this.tick(), 1000);
             this.$el._tvCountdownObserver = new MutationObserver(() => this.syncFromServer());
             this.$el._tvCountdownObserver.observe(this.$el, {
@@ -114,27 +113,25 @@ new class extends Component {
                 attributeFilter: ['data-ends-at-unix', 'data-is-over', 'data-remaining-seconds'],
             });
         }
-    }"
-    x-init="init()">
-    <p class="tv-event-kicker font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+    }" x-init="init()">
+    <p class="font-semibold text-muted-foreground uppercase tracking-[0.18em] tv-event-kicker">
         Event End Countdown
     </p>
 
     @if (!$this->status['has_event'])
-        <p class="tv-event-name mt-3 font-semibold text-muted-foreground">
+        <p class="mt-3 font-semibold text-muted-foreground tv-event-name">
             No active event.
         </p>
     @else
-        <p class="tv-event-name mt-2 truncate font-semibold text-foreground">
+        <p class="mt-2 font-semibold text-foreground truncate tv-event-name">
             {{ $this->status['name'] }}
         </p>
 
-        <p class="tv-event-timer font-display mt-3 font-semibold leading-none text-foreground"
-            x-text="displayLabel">
+        <p class="mt-3 font-display font-semibold text-foreground leading-none tv-event-timer" x-text="displayLabel">
             {{ $this->status['is_over'] ? '00:00:00' : $this->status['remaining_label'] }}
         </p>
 
-        <p class="tv-event-meta mt-2 font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+        <p class="mt-2 font-semibold text-muted-foreground uppercase tracking-[0.14em] tv-event-meta">
             Ends at {{ $this->status['ends_at']?->format('H:i') ?? '—' }}
         </p>
     @endif

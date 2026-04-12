@@ -185,3 +185,63 @@ test('timeline livewire component shows recent games', function () {
         ->assertSee('11-6')
         ->assertSee('Trajanje');
 });
+
+test('timeline livewire orders games by finished_at descending', function () {
+    $event = Event::factory()->create();
+
+    $olderPlayerOne = User::factory()->create();
+    $olderPlayerTwo = User::factory()->create();
+    $newerPlayerOne = User::factory()->create();
+    $newerPlayerTwo = User::factory()->create();
+
+    $event->users()->attach([
+        $olderPlayerOne->id,
+        $olderPlayerTwo->id,
+        $newerPlayerOne->id,
+        $newerPlayerTwo->id,
+    ]);
+
+    $olderGame = Game::factory()->create([
+        'event_id' => $event->id,
+        'best_of' => 1,
+        'player_one_id' => $olderPlayerOne->id,
+        'player_two_id' => $olderPlayerTwo->id,
+        'created_at' => now()->subMinutes(1),
+        'updated_at' => now()->subMinutes(1),
+        'started_at' => now()->subMinutes(15),
+        'finished_at' => now()->subMinutes(10),
+    ]);
+
+    $newerGame = Game::factory()->create([
+        'event_id' => $event->id,
+        'best_of' => 1,
+        'player_one_id' => $newerPlayerOne->id,
+        'player_two_id' => $newerPlayerTwo->id,
+        'created_at' => now()->subMinutes(30),
+        'updated_at' => now()->subMinutes(30),
+        'started_at' => now()->subMinutes(8),
+        'finished_at' => now()->subMinutes(3),
+    ]);
+
+    GameSet::factory()->create([
+        'game_id' => $olderGame->id,
+        'player_one_id' => $olderPlayerOne->id,
+        'player_two_id' => $olderPlayerTwo->id,
+        'player_one_score' => 11,
+        'player_two_score' => 8,
+    ]);
+
+    GameSet::factory()->create([
+        'game_id' => $newerGame->id,
+        'player_one_id' => $newerPlayerOne->id,
+        'player_two_id' => $newerPlayerTwo->id,
+        'player_one_score' => 11,
+        'player_two_score' => 9,
+    ]);
+
+    Livewire::test('timeline')
+        ->assertSeeInOrder([
+            $newerPlayerOne->full_name,
+            $olderPlayerOne->full_name,
+        ]);
+});
