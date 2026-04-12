@@ -70,6 +70,7 @@ test('player can log in through web login and is redirected to homepage with sta
     $response->assertRedirect(route('home'));
     $response->assertSessionHas('status', 'Prijavljeni ste');
     $this->assertAuthenticatedAs($player);
+    expect($player->fresh()->last_login_at)->not->toBeNull();
 });
 
 test('player cannot access admin panel after web login', function () {
@@ -115,6 +116,7 @@ test('google callback logs in existing player by email and stores socialite link
     $response->assertRedirect(route('home'));
     $response->assertSessionHas('status', 'Prijavljeni ste');
     $this->assertAuthenticatedAs($player);
+    expect($player->fresh()->last_login_at)->not->toBeNull();
 
     expect(DB::table('socialite_users')
         ->where('provider', 'google')
@@ -133,6 +135,7 @@ test('user with id one logs in through web login and is redirected to admin pane
 
     $response->assertRedirect('/admin');
     $this->assertAuthenticatedAs($user);
+    expect($user->fresh()->last_login_at)->not->toBeNull();
 });
 
 test('logout redirects to homepage with status toast', function () {
