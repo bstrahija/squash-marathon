@@ -1,7 +1,7 @@
 <?php
 
+use App\Http\Middleware\EnableDebugbarForAdmin;
 use App\Http\Middleware\HandleAppearance;
-use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -18,7 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->web(append: [
             HandleAppearance::class,
-            HandleInertiaRequests::class,
+            EnableDebugbarForAdmin::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
     })

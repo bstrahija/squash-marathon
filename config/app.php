@@ -69,6 +69,30 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Local Simulated Time
+    |--------------------------------------------------------------------------
+    |
+    | Freeze "now" in local environment to simplify event timeline previews.
+    | This is ignored outside local env. Override in .env if needed.
+    |
+    */
+
+    'local_simulated_now' => env('APP_LOCAL_SIMULATED_NOW', '2026-04-24 23:15:00'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Seed User Password
+    |--------------------------------------------------------------------------
+    |
+    | Password used by database seeders for non-admin users. Configure this
+    | in your .env via SEED_USER_PASSWORD.
+    |
+    */
+
+    'seed_user_password' => env('SEED_USER_PASSWORD', 'password'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------
     |

@@ -10,7 +10,10 @@
     "nightwatch_mcp": false,
     "sail": false,
     "skills": [
-        "wayfinder-development",
-        "pest-testing"
+        "laravel-best-practices",
+        "socialite-development",
+        "livewire-development",
+        "pest-testing",
+        "tailwindcss-development"
     ]
 }
