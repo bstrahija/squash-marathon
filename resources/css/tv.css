@@ -2,6 +2,10 @@
     min-height: 100svh;
 }
 
+.tv-home-header {
+    display: block;
+}
+
 .tv-grid {
     grid-template-rows: repeat(6, minmax(0, 1fr));
 }
@@ -22,6 +26,10 @@
 }
 
 @media (orientation: landscape) {
+    .tv-home-header {
+        display: none;
+    }
+
     .tv-container {
         height: 100svh;
         overflow: hidden;
@@ -94,7 +102,7 @@
 
     .tv-panel-leaderboard {
         height: calc(100svh - (var(--tv-mobile-landscape-padding) * 2));
-        min-height: calc(100svh - (var(--tv-mobile-landscape-padding) * 2));
+        min-height: calc(100svh  - (var(--tv-mobile-landscape-padding) * 2));
     }
 }
 
@@ -107,6 +115,7 @@
     .tv-container {
         height: auto;
         overflow: visible;
+        padding-top: clamp(6.15rem, 10vw, 6.75rem);
     }
 
     .tv-grid {

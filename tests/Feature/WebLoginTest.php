@@ -4,6 +4,7 @@ use App\Enums\RoleName;
 use App\Models\Event;
 use App\Models\Round;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Laravel\Socialite\Contracts\User as OAuthUser;
 use Laravel\Socialite\Facades\Socialite;
@@ -69,6 +70,7 @@ test('player can log in through web login and is redirected to homepage with sta
 
     $response->assertRedirect(route('home'));
     $response->assertSessionHas('status', 'Prijavljeni ste');
+    $response->assertCookie(Auth::guard('web')->getRecallerName());
     $this->assertAuthenticatedAs($player);
     expect($player->fresh()->last_login_at)->not->toBeNull();
 });

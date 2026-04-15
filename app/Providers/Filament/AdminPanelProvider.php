@@ -4,6 +4,9 @@ namespace App\Providers\Filament;
 
 use App\Enums\RoleName;
 use App\Models\User;
+use Caresome\FilamentAuthDesigner\AuthDesignerPlugin;
+use Caresome\FilamentAuthDesigner\Data\AuthPageConfig;
+use Caresome\FilamentAuthDesigner\Enums\MediaPosition;
 use DutchCodingCompany\FilamentSocialite\FilamentSocialitePlugin;
 use DutchCodingCompany\FilamentSocialite\Models\Contracts\FilamentSocialiteUser as FilamentSocialiteUserContract;
 use DutchCodingCompany\FilamentSocialite\Provider;
@@ -25,6 +28,7 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Laravel\Socialite\Contracts\User as SocialiteUser;
+use notwonderful\FilamentMoonlightTheme\MoonlightTheme;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -38,6 +42,15 @@ class AdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Amber,
             ])
+            ->plugin(MoonlightTheme::make())
+            ->plugin(
+                AuthDesignerPlugin::make()
+                ->login(fn (AuthPageConfig $config) => $config
+                    ->media(asset('assets/background.jpg'))
+                    ->mediaPosition(MediaPosition::Left)
+                    ->blur(8)
+                )
+            )
             ->plugin(
                 FilamentSocialitePlugin::make()
                     ->providers([

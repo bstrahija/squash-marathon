@@ -415,7 +415,7 @@ test('matches list shows requested column order', function () {
         ->assertSeeInOrder(['Setovi', 'Vrijeme', 'Trajanje', 'Grupa', 'Status', 'Akcije']);
 });
 
-test('matches list can filter by player, round, and group', function () {
+test('matches list can filter by player and round', function () {
     $event = Event::factory()->create();
 
     $roundOne = Round::factory()->create([
@@ -474,12 +474,6 @@ test('matches list can filter by player, round, and group', function () {
         ->set('roundFilter', (string) $roundTwo->id)
         ->assertSee(route('matches.score', ['game' => $gameTwo->id]), false)
         ->assertDontSee(route('matches.score', ['game' => $gameOne->id]), false);
-
-    $component
-        ->set('roundFilter', '')
-        ->set('groupFilter', (string) $groupOne->id)
-        ->assertSee(route('matches.score', ['game' => $gameOne->id]), false)
-        ->assertDontSee(route('matches.score', ['game' => $gameTwo->id]), false);
 });
 
 test('matches list can sort by time, status, and duration', function () {

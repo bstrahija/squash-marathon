@@ -197,7 +197,6 @@ new class extends Component {
                             {{ $timeline['score'] }}
                         </span>
                     @empty
-                        <span class="font-semibold text-muted-foreground">Nema upisanih poena</span>
                     @endforelse
                 </div>
             </div>
