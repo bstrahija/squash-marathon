@@ -43,6 +43,25 @@ test('header shows logout action for authenticated users', function () {
     $response->assertSuccessful();
     $response->assertSee('Odjava');
     $response->assertDontSee('Prijava');
+    $response->assertSee(route('profile'), false);
+});
+
+test('profile page redirects guests to login', function () {
+    $this->withoutVite();
+
+    $response = $this->get(route('profile'));
+
+    $response->assertRedirect(route('login'));
+});
+
+test('authenticated user can load profile page', function () {
+    $this->withoutVite();
+
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->get(route('profile'));
+
+    $response->assertSuccessful();
 });
 
 test('homepage shows login success toast when status is flashed', function () {

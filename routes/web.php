@@ -20,6 +20,7 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->name('logout');
 
 Route::get('/', HomeController::class)->name('home');
+Route::view('/profile', 'profile')->middleware('auth')->name('profile');
 Route::view('/matches', 'matches')->name('matches.index');
 Route::view('/rounds', 'rounds')->name('rounds.index');
 Route::view('/rounds/create', 'rounds-create')

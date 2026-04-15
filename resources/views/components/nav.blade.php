@@ -30,19 +30,6 @@
                 <a class="text-muted-foreground hover:text-foreground transition"
                     href="{{ $resolveNavigationHref($link) }}">{{ $link['label'] }}</a>
             @endforeach
-
-            @auth
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="text-muted-foreground hover:text-foreground transition">
-                        Odjava
-                    </button>
-                </form>
-            @else
-                <a class="text-muted-foreground hover:text-foreground transition" href="{{ route('login') }}">
-                    Prijava
-                </a>
-            @endauth
         </div>
         <div class="flex items-center gap-3">
             <button aria-label="Toggle theme" aria-pressed="false"
@@ -55,6 +42,37 @@
                     class="absolute inset-0 opacity-0 m-auto w-4 h-4 scale-75 transition duration-300"
                     data-theme-icon="moon" />
             </button>
+
+            @auth
+                <details class="group hidden md:block relative">
+                    <summary
+                        class="flex justify-center items-center bg-card border border-border hover:border-foreground/40 rounded-full w-10 h-10 text-foreground transition hover:-translate-y-0.5 cursor-pointer list-none">
+                        <x-heroicon-o-user aria-hidden="true" class="w-4 h-4" />
+                    </summary>
+
+                    <div
+                        class="top-full right-0 z-50 absolute bg-background/95 shadow-lg mt-2 p-2 border border-border/70 rounded-2xl w-44">
+                        <a class="block hover:bg-card px-3 py-2 rounded-xl font-semibold text-foreground text-sm transition"
+                            href="{{ route('profile') }}">
+                            Profil
+                        </a>
+
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit"
+                                class="block hover:bg-card px-3 py-2 rounded-xl w-full font-semibold text-foreground text-sm text-left transition">
+                                Odjava
+                            </button>
+                        </form>
+                    </div>
+                </details>
+            @else
+                <a href="{{ route('login') }}"
+                    class="hidden md:inline-flex justify-center items-center bg-card border border-border hover:border-foreground/40 rounded-full w-10 h-10 text-foreground transition hover:-translate-y-0.5"
+                    title="Prijava" aria-label="Prijava">
+                    <x-heroicon-o-user aria-hidden="true" class="w-4 h-4" />
+                </a>
+            @endauth
 
             @if (filled($ctaLink))
                 <a class="bg-card px-4 py-2 border border-border hover:border-foreground/40 rounded-full font-semibold text-foreground text-xs uppercase tracking-wide transition hover:-translate-y-0.5"
@@ -79,10 +97,15 @@
             @endforeach
 
             @auth
+                <a class="bg-card mt-2 px-3 py-2 border border-border rounded-xl font-semibold text-foreground text-sm uppercase tracking-wide"
+                    data-nav-link href="{{ route('profile') }}">
+                    Profil
+                </a>
+
                 <form method="POST" action="{{ route('logout') }}" class="mt-2">
                     @csrf
                     <button type="submit"
-                        class="bg-card px-3 py-2 border border-border rounded-xl w-full font-semibold text-foreground text-sm text-left uppercase tracking-wide"
+                        class="bg-card px-3 py-2 border border-border rounded-xl w-full font-semibold text-foreground text-sm text-left uppercase tracking-wide cursor-pointer"
                         data-nav-link>
                         Odjava
                     </button>
