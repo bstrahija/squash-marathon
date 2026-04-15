@@ -76,6 +76,10 @@
         min-height: calc(100svh - (var(--tv-mobile-landscape-padding) * 2));
     }
 
+    .tv-panel-live > .grid {
+        padding: var(--tv-mobile-landscape-padding);
+    }
+
     .tv-panel-right {
         grid-column: 2;
         grid-row: 1;
@@ -98,7 +102,7 @@
 
     .tv-panel-leaderboard {
         height: calc(100svh - (var(--tv-mobile-landscape-padding) * 2));
-        min-height: calc(100svh - (var(--tv-mobile-landscape-padding) * 2));
+        min-height: calc(100svh  - (var(--tv-mobile-landscape-padding) * 2));
     }
 }
 

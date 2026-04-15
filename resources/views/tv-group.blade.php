@@ -24,6 +24,7 @@
         <section class="h-full min-h-0 rounded-3xl border border-border bg-card shadow-sm">
             <div class="h-full min-h-0 rounded-3xl border border-border bg-card/70 shadow-sm">
                 <livewire:tv.group-match :group-number="$groupNumber" :key="'tv-group-fullscreen-' . $groupNumber" />
+                <livewire:tv.group-match :group-number="$groupNumber" :key="'tv-group-fullscreen-' . $groupNumber" />
             </div>
         </section>
     </div>
