@@ -34,24 +34,32 @@ class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
-        return $panel
+        $panel = $panel
             ->default()
             ->id('admin')
             ->path('admin')
             ->login()
             ->colors([
                 'primary' => Color::Amber,
-            ])
-            ->plugin(MoonlightTheme::make())
-            ->plugin(
+            ]);
+
+        if (class_exists(MoonlightTheme::class)) {
+            $panel->plugin(MoonlightTheme::make());
+        }
+
+        if (class_exists(AuthDesignerPlugin::class)) {
+            $panel->plugin(
                 AuthDesignerPlugin::make()
-                ->login(fn (AuthPageConfig $config) => $config
-                    ->media(asset('assets/background.jpg'))
-                    ->mediaPosition(MediaPosition::Left)
-                    ->blur(8)
-                )
-            )
-            ->plugin(
+                    ->login(fn (AuthPageConfig $config) => $config
+                        ->media(asset('assets/background.jpg'))
+                        ->mediaPosition(MediaPosition::Left)
+                        ->blur(8)
+                    ),
+            );
+        }
+
+        if (class_exists(FilamentSocialitePlugin::class)) {
+            $panel->plugin(
                 FilamentSocialitePlugin::make()
                     ->providers([
                         Provider::make('google')
@@ -70,7 +78,10 @@ class AdminPanelProvider extends PanelProvider
                             return redirect()->route('home')->with('status', 'Prijavljeni ste');
                         },
                     ),
-            )
+            );
+        }
+
+        return $panel
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([

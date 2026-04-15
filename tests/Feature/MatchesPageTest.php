@@ -557,7 +557,7 @@ test('matches list can sort by time, status, and duration', function () {
 
 test('matches list shows mobile filters trigger', function () {
     Livewire::test('matches-list')
-        ->assertSee('Filteri');
+        ->assertSee('Filtri');
 });
 
 test('admin can delete match through livewire list', function () {
