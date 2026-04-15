@@ -20,8 +20,8 @@
     @livewireStyles
 </head>
 
-<body class="min-h-svh bg-background text-foreground">
-    <div class="relative flex min-h-svh flex-col overflow-hidden">
+<body class="bg-background min-h-svh text-foreground">
+    <div class="relative flex flex-col min-h-svh overflow-hidden">
         {{ $background ?? '' }}
 
         <x-nav />

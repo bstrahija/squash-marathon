@@ -14,12 +14,12 @@
     @livewireStyles
 </head>
 
-<body class="tv-body overflow-hidden bg-background text-foreground">
+<body class="bg-background overflow-hidden text-foreground tv-body">
     <div id="tv-group-container"
-        class="tv-container h-screen w-screen overflow-hidden bg-background p-2 text-foreground md:px-6 md:py-6 lg:p-4">
-        <section class="h-full min-h-0 rounded-3xl border border-border bg-card shadow-sm">
-            <div class="h-full min-h-0 rounded-3xl border border-border bg-card/70 shadow-sm">
-                <livewire:tv.group-match :group-number="$groupNumber" :key="'tv-group-fullscreen-'.$groupNumber" />
+        class="bg-background p-2 lg:p-4 md:px-6 md:py-6 w-screen h-screen overflow-hidden text-foreground tv-container">
+        <section class="bg-card shadow-sm border border-border rounded-3xl h-full min-h-0">
+            <div class="bg-card/70 shadow-sm border border-border rounded-3xl h-full min-h-0">
+                <livewire:tv.group-match :group-number="$groupNumber" :key="'tv-group-fullscreen-' . $groupNumber" />
             </div>
         </section>
     </div>

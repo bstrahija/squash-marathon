@@ -14,39 +14,39 @@
     @livewireStyles
 </head>
 
-<body class="tv-body bg-background text-foreground overflow-hidden">
+<body class="bg-background overflow-hidden text-foreground tv-body">
     <div id="tv-container"
-        class="tv-container w-screen overflow-hidden bg-background p-2 text-foreground md:px-6 md:py-6 lg:p-4">
-        <div class="tv-grid grid h-full grid-cols-[2fr_1fr_1fr] gap-4">
-            <section class="tv-panel-live min-h-0 rounded-3xl border border-border bg-card shadow-sm">
-                <div class="grid h-full min-h-0 grid-rows-2 gap-4 p-2 md:p-4">
-                    <div class="min-h-0 rounded-3xl border border-border bg-card/70 shadow-sm">
+        class="bg-background p-2 lg:p-4 md:px-6 md:py-6 w-screen overflow-hidden text-foreground tv-container">
+        <div class="gap-4 grid tv-grid grid-cols-[2fr_1fr_1fr] h-full">
+            <section class="bg-card shadow-sm border border-border rounded-3xl min-h-0 tv-panel-live">
+                <div class="gap-4 grid grid-rows-2 p-2 md:p-4 h-full min-h-0">
+                    <div class="bg-card/70 shadow-sm border border-border rounded-3xl min-h-0">
                         <livewire:tv.group-match :group-number="1" :key="'tv-group-match-1'" />
                     </div>
-                    <div class="min-h-0 rounded-3xl border border-border bg-card/70 shadow-sm">
+                    <div class="bg-card/70 shadow-sm border border-border rounded-3xl min-h-0">
                         <livewire:tv.group-match :group-number="2" :key="'tv-group-match-2'" />
                     </div>
                 </div>
             </section>
 
-            <section class="tv-panel-recent min-h-0 rounded-3xl border border-border bg-card shadow-sm">
-                <div class="flex h-full min-h-0 flex-col">
+            <section class="bg-card shadow-sm border border-border rounded-3xl min-h-0 tv-panel-recent">
+                <div class="flex flex-col h-full min-h-0">
                     <div
-                        class="tv-recent-heading border-b border-border/70 px-4 py-3 font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                        class="px-4 py-3 border-border/70 border-b font-semibold text-muted-foreground uppercase tracking-[0.14em] tv-recent-heading">
                         Recent Matches
                     </div>
-                    <div class="min-h-0 flex-1">
+                    <div class="flex-1 min-h-0">
                         <livewire:tv.latest-games />
                     </div>
                 </div>
             </section>
 
             <section class="tv-panel-right min-h-0">
-                <div class="flex h-full min-h-0 flex-col gap-4">
-                    <div class="tv-panel-countdown min-h-0 rounded-3xl border border-border bg-card shadow-sm">
+                <div class="flex flex-col gap-4 h-full min-h-0">
+                    <div class="bg-card shadow-sm border border-border rounded-3xl min-h-0 tv-panel-countdown">
                         <livewire:tv.event-end-countdown />
                     </div>
-                    <div class="tv-panel-leaderboard min-h-0 flex-1 rounded-3xl border border-border bg-card shadow-sm">
+                    <div class="flex-1 bg-card shadow-sm border border-border rounded-3xl min-h-0 tv-panel-leaderboard">
                         <livewire:tv.leaderboard />
                     </div>
                 </div>
