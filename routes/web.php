@@ -45,6 +45,11 @@ Route::view('/matches/{game}/score', 'matches-score')
     ->name('matches.score');
 Route::get('/players/{user}', [PlayerController::class, 'show'])->whereNumber('user')->name('players.show');
 Route::view('/tv', 'tv')->name('tv');
+Route::get('/tv/{group}', function (int $group) {
+    return view('tv-group', [
+        'groupNumber' => $group,
+    ]);
+})->where('group', '[1-9][0-9]*')->name('tv.group');
 
 Route::redirect('/register', '/admin/login')->name('register');
 Route::redirect('/email/verify', '/admin')->name('verification.notice');

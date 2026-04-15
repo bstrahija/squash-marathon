@@ -30,6 +30,48 @@ test('tv status page loads', function () {
     $response->assertSee('Event End Countdown');
 });
 
+test('tv group page shows selected group match from url parameter', function () {
+    $this->withoutVite();
+
+    $event = Event::factory()->create();
+    $playerOne = User::factory()->create();
+    $playerTwo = User::factory()->create();
+
+    $event->users()->attach([$playerOne->id, $playerTwo->id]);
+
+    $round = Round::factory()->create([
+        'event_id' => $event->id,
+        'number' => 1,
+        'name' => 'Round 1',
+    ]);
+    $group = Group::factory()->create([
+        'event_id' => $event->id,
+        'round_id' => $round->id,
+        'number' => 2,
+        'name' => 'Group 2',
+    ]);
+
+    $game = Game::factory()->create([
+        'event_id' => $event->id,
+        'round_id' => $round->id,
+        'group_id' => $group->id,
+        'best_of' => 2,
+        'player_one_id' => $playerOne->id,
+        'player_two_id' => $playerTwo->id,
+        'started_at' => Carbon::create(2026, 2, 27, 20, 0, 0),
+        'finished_at' => null,
+    ]);
+
+    $response = $this->get('/tv/2');
+
+    $response->assertSuccessful();
+    $response->assertSee('tv-group-container');
+    $response->assertSee('Group 2');
+    $response->assertSee(tvShortName($playerOne));
+    $response->assertSee(tvShortName($playerTwo));
+    $response->assertSee(route('matches.score', $game), false);
+});
+
 test('tv event end countdown component shows remaining time and end time', function () {
     $now = Carbon::create(2026, 2, 27, 20, 0, 0);
     Carbon::setTestNow($now);
