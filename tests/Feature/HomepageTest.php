@@ -4,6 +4,8 @@ use App\Enums\RoleName;
 use App\Models\Event;
 use App\Models\Game;
 use App\Models\GameSet;
+use App\Models\Group;
+use App\Models\Round;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Livewire\Livewire;
@@ -188,6 +190,17 @@ test('timeline livewire component shows recent games', function () {
 
 test('timeline livewire orders games by finished_at descending', function () {
     $event = Event::factory()->create();
+    $round = Round::factory()->create([
+        'event_id' => $event->id,
+        'number' => 1,
+        'name' => 'Round 1',
+    ]);
+    $group = Group::factory()->create([
+        'event_id' => $event->id,
+        'round_id' => $round->id,
+        'number' => 1,
+        'name' => 'Group 1',
+    ]);
 
     $olderPlayerOne = User::factory()->create();
     $olderPlayerTwo = User::factory()->create();
@@ -203,6 +216,8 @@ test('timeline livewire orders games by finished_at descending', function () {
 
     $olderGame = Game::factory()->create([
         'event_id' => $event->id,
+        'round_id' => $round->id,
+        'group_id' => $group->id,
         'best_of' => 1,
         'player_one_id' => $olderPlayerOne->id,
         'player_two_id' => $olderPlayerTwo->id,
@@ -214,6 +229,8 @@ test('timeline livewire orders games by finished_at descending', function () {
 
     $newerGame = Game::factory()->create([
         'event_id' => $event->id,
+        'round_id' => $round->id,
+        'group_id' => $group->id,
         'best_of' => 1,
         'player_one_id' => $newerPlayerOne->id,
         'player_two_id' => $newerPlayerTwo->id,

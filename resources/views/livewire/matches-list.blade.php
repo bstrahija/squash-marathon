@@ -2,6 +2,10 @@
 
 use App\Enums\RoleName;
 use App\Models\Game;
+use App\Models\Group;
+use App\Models\Round;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -11,6 +15,16 @@ new class extends Component {
     use WithPagination;
 
     public ?int $confirmingDeletionId = null;
+
+    public string $playerFilter = '';
+
+    public string $roundFilter = '';
+
+    public string $groupFilter = '';
+
+    public string $sortBy = 'time';
+
+    public string $sortDirection = 'desc';
 
     #[Computed]
     public function canManageMatches(): bool
@@ -31,10 +45,106 @@ new class extends Component {
     #[Computed]
     public function matches(): LengthAwarePaginator
     {
-        return Game::query()
-            ->with(['group', 'round', 'playerOne', 'playerTwo', 'sets' => fn($query) => $query->orderBy('created_at')])
-            ->latest('id')
-            ->paginate(50);
+        $query = Game::query()->with(['group', 'round', 'playerOne', 'playerTwo', 'sets' => fn($query) => $query->orderBy('created_at')]);
+
+        if ($this->playerFilter !== '') {
+            $playerId = (int) $this->playerFilter;
+
+            $query->where(function (Builder $builder) use ($playerId): void {
+                $builder->where('player_one_id', $playerId)->orWhere('player_two_id', $playerId);
+            });
+        }
+
+        if ($this->roundFilter !== '') {
+            $query->where('round_id', (int) $this->roundFilter);
+        }
+
+        if ($this->groupFilter !== '') {
+            $query->where('group_id', (int) $this->groupFilter);
+        }
+
+        $this->applySorting($query);
+
+        return $query->paginate(50);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    #[Computed]
+    public function playerOptions(): array
+    {
+        $playerIds = Game::query()
+            ->pluck('player_one_id')
+            ->merge(Game::query()->pluck('player_two_id'))
+            ->filter()
+            ->unique()
+            ->values();
+
+        return User::query()->whereIn('id', $playerIds)->orderBy('first_name')->orderBy('last_name')->get()->mapWithKeys(fn(User $user): array => [$user->id => $user->full_name])->all();
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    #[Computed]
+    public function roundOptions(): array
+    {
+        $roundIds = Game::query()->pluck('round_id')->filter()->unique()->values();
+
+        return Round::query()->whereIn('id', $roundIds)->orderBy('number')->orderBy('id')->get()->mapWithKeys(fn(Round $round): array => [$round->id => $round->name])->all();
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    #[Computed]
+    public function groupOptions(): array
+    {
+        $groupIds = Game::query()->pluck('group_id')->filter()->unique()->values();
+
+        return Group::query()->whereIn('id', $groupIds)->orderBy('number')->orderBy('id')->get()->mapWithKeys(fn(Group $group): array => [$group->id => $group->name])->all();
+    }
+
+    public function updatedPlayerFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedRoundFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedGroupFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedSortBy(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedSortDirection(): void
+    {
+        $this->resetPage();
+    }
+
+    public function sortByColumn(string $column): void
+    {
+        if (!in_array($column, ['time', 'status', 'duration'], true)) {
+            return;
+        }
+
+        if ($this->sortBy === $column) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortBy = $column;
+            $this->sortDirection = 'desc';
+        }
+
+        $this->resetPage();
     }
 
     public function confirmDelete(int $gameId): void
@@ -163,6 +273,37 @@ new class extends Component {
 
         return 'finished';
     }
+
+    private function applySorting(Builder $query): void
+    {
+        if ($this->sortBy === 'status') {
+            $direction = $this->sortDirection === 'asc' ? 'asc' : 'desc';
+
+            $query->orderByRaw("case when started_at is null and finished_at is null then 1 when started_at is not null and finished_at is null then 2 else 3 end {$direction}")->orderByDesc('id');
+
+            return;
+        }
+
+        if ($this->sortBy === 'duration') {
+            if ($this->sortDirection === 'asc') {
+                $query->orderByRaw('duration_seconds is null')->orderBy('duration_seconds')->orderByDesc('id');
+
+                return;
+            }
+
+            $query->orderByRaw('duration_seconds is null')->orderByDesc('duration_seconds')->orderByDesc('id');
+
+            return;
+        }
+
+        if ($this->sortDirection === 'asc') {
+            $query->orderBy('created_at')->orderBy('id');
+
+            return;
+        }
+
+        $query->orderByDesc('created_at')->orderByDesc('id');
+    }
 };
 ?>
 
@@ -174,16 +315,135 @@ new class extends Component {
         </div>
     @endif
 
+    <div class="sm:hidden mb-4" x-data="{ open: false }">
+        <button type="button" @click="open = !open"
+            class="inline-flex items-center gap-2 bg-background/70 hover:bg-muted/60 px-3 py-2 border border-border/70 rounded-xl text-foreground text-sm transition">
+            <x-heroicon-o-funnel class="w-4 h-4" />
+            Filtri
+        </button>
+
+        <div x-cloak x-show="open" x-transition @click.outside="open = false"
+            class="bg-background/95 shadow-lg mt-3 p-3 border border-border/70 rounded-2xl">
+            <div class="gap-3 grid">
+                <label
+                    class="flex flex-col gap-1 font-semibold text-muted-foreground text-xs uppercase tracking-[0.12em]">
+                    Igrač
+                    <select wire:model.live="playerFilter"
+                        class="bg-background/70 px-3 py-2 border border-border/70 focus:border-foreground/40 rounded-xl focus:outline-none text-foreground text-sm normal-case tracking-normal">
+                        <option value="">Svi igrači</option>
+                        @foreach ($this->playerOptions as $playerOptionId => $playerName)
+                            <option value="{{ $playerOptionId }}">{{ $playerName }}</option>
+                        @endforeach
+                    </select>
+                </label>
+
+                <label
+                    class="flex flex-col gap-1 font-semibold text-muted-foreground text-xs uppercase tracking-[0.12em]">
+                    Runda
+                    <select wire:model.live="roundFilter"
+                        class="bg-background/70 px-3 py-2 border border-border/70 focus:border-foreground/40 rounded-xl focus:outline-none text-foreground text-sm normal-case tracking-normal">
+                        <option value="">Sve runde</option>
+                        @foreach ($this->roundOptions as $roundOptionId => $roundName)
+                            <option value="{{ $roundOptionId }}">{{ $roundName }}</option>
+                        @endforeach
+                    </select>
+                </label>
+
+                <label
+                    class="flex flex-col gap-1 font-semibold text-muted-foreground text-xs uppercase tracking-[0.12em]">
+                    Grupa
+                    <select wire:model.live="groupFilter"
+                        class="bg-background/70 px-3 py-2 border border-border/70 focus:border-foreground/40 rounded-xl focus:outline-none text-foreground text-sm normal-case tracking-normal">
+                        <option value="">Sve grupe</option>
+                        @foreach ($this->groupOptions as $groupOptionId => $groupName)
+                            <option value="{{ $groupOptionId }}">{{ $groupName }}</option>
+                        @endforeach
+                    </select>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="hidden gap-3 sm:grid sm:grid-cols-3 mb-4">
+        <label class="flex flex-col gap-1 font-semibold text-muted-foreground text-xs uppercase tracking-[0.12em]">
+            Igrač
+            <select wire:model.live="playerFilter"
+                class="bg-background/70 px-3 py-2 border border-border/70 focus:border-foreground/40 rounded-xl focus:outline-none text-foreground text-sm normal-case tracking-normal">
+                <option value="">Svi igrači</option>
+                @foreach ($this->playerOptions as $playerOptionId => $playerName)
+                    <option value="{{ $playerOptionId }}">{{ $playerName }}</option>
+                @endforeach
+            </select>
+        </label>
+
+        <label class="flex flex-col gap-1 font-semibold text-muted-foreground text-xs uppercase tracking-[0.12em]">
+            Runda
+            <select wire:model.live="roundFilter"
+                class="bg-background/70 px-3 py-2 border border-border/70 focus:border-foreground/40 rounded-xl focus:outline-none text-foreground text-sm normal-case tracking-normal">
+                <option value="">Sve runde</option>
+                @foreach ($this->roundOptions as $roundOptionId => $roundName)
+                    <option value="{{ $roundOptionId }}">{{ $roundName }}</option>
+                @endforeach
+            </select>
+        </label>
+
+        <label class="flex flex-col gap-1 font-semibold text-muted-foreground text-xs uppercase tracking-[0.12em]">
+            Grupa
+            <select wire:model.live="groupFilter"
+                class="bg-background/70 px-3 py-2 border border-border/70 focus:border-foreground/40 rounded-xl focus:outline-none text-foreground text-sm normal-case tracking-normal">
+                <option value="">Sve grupe</option>
+                @foreach ($this->groupOptions as $groupOptionId => $groupName)
+                    <option value="{{ $groupOptionId }}">{{ $groupName }}</option>
+                @endforeach
+            </select>
+        </label>
+    </div>
+
     <div class="overflow-x-auto">
         <table class="w-full min-w-4xl text-sm text-left">
             <thead class="text-muted-foreground text-xs uppercase tracking-wider">
                 <tr>
-                    <th class="px-3 py-3">Vrijeme</th>
-                    <th class="px-3 py-3">Grupa</th>
-                    <th class="px-3 py-3">Igrači</th>
-                    <th class="px-3 py-3">Status</th>
                     <th class="px-3 py-3">Setovi</th>
-                    <th class="px-3 py-3">Trajanje</th>
+                    <th class="px-3 py-3">
+                        <button type="button" wire:click="sortByColumn('time')"
+                            class="inline-flex items-center gap-1 hover:text-foreground transition">
+                            Vrijeme
+                            @if ($sortBy === 'time')
+                                @if ($sortDirection === 'asc')
+                                    <x-heroicon-o-chevron-up class="w-3.5 h-3.5" />
+                                @else
+                                    <x-heroicon-o-chevron-down class="w-3.5 h-3.5" />
+                                @endif
+                            @endif
+                        </button>
+                    </th>
+                    <th class="px-3 py-3">
+                        <button type="button" wire:click="sortByColumn('duration')"
+                            class="inline-flex items-center gap-1 hover:text-foreground transition">
+                            Trajanje
+                            @if ($sortBy === 'duration')
+                                @if ($sortDirection === 'asc')
+                                    <x-heroicon-o-chevron-up class="w-3.5 h-3.5" />
+                                @else
+                                    <x-heroicon-o-chevron-down class="w-3.5 h-3.5" />
+                                @endif
+                            @endif
+                        </button>
+                    </th>
+                    <th class="px-3 py-3">Grupa</th>
+                    <th class="px-3 py-3">
+                        <button type="button" wire:click="sortByColumn('status')"
+                            class="inline-flex items-center gap-1 hover:text-foreground transition">
+                            Status
+                            @if ($sortBy === 'status')
+                                @if ($sortDirection === 'asc')
+                                    <x-heroicon-o-chevron-up class="w-3.5 h-3.5" />
+                                @else
+                                    <x-heroicon-o-chevron-down class="w-3.5 h-3.5" />
+                                @endif
+                            @endif
+                        </button>
+                    </th>
                     @if ($this->canManageMatches)
                         <th class="px-3 py-3 text-right">Akcije</th>
                     @endif
@@ -192,10 +452,34 @@ new class extends Component {
             <tbody class="divide-y divide-border/70">
                 @forelse ($this->matches as $game)
                     <tr wire:key="matches-list-game-{{ $game->id }}">
+                        <td class="px-3 py-3">
+                            <a href="{{ $this->scoreRoute($game) }}"
+                                class="block hover:bg-muted/40 -mx-3 -my-3 px-3 py-3 rounded-lg transition">
+                                <p class="font-semibold text-sm">
+                                    <span class="{{ $this->playerClass($game, $game->player_one_id) }}">
+                                        {{ $game->playerOne?->full_name ?? '—' }}
+                                    </span>
+                                    <span class="text-muted-foreground">vs</span>
+                                    <span class="{{ $this->playerClass($game, $game->player_two_id) }}">
+                                        {{ $game->playerTwo?->full_name ?? '—' }}
+                                    </span>
+                                </p>
+                                <p class="mt-0.5 font-semibold text-foreground text-sm">
+                                    {{ $this->setResultSummary($game) }}
+                                </p>
+                                <p class="text-muted-foreground text-xs">{{ $this->scoreSummary($game) }}</p>
+                            </a>
+                        </td>
                         <td class="px-3 py-3 text-muted-foreground">
                             <a href="{{ $this->scoreRoute($game) }}"
                                 class="block hover:bg-muted/40 -mx-3 -my-3 px-3 py-3 rounded-lg hover:text-foreground transition">
                                 {{ $game->created_at ? $game->created_at->locale('hr')->dayName . ' ' . $game->created_at->format('H:i') : '—' }}
+                            </a>
+                        </td>
+                        <td class="px-3 py-3 text-muted-foreground">
+                            <a href="{{ $this->scoreRoute($game) }}"
+                                class="block hover:bg-muted/40 -mx-3 -my-3 px-3 py-3 rounded-lg hover:text-foreground transition">
+                                {{ $game->duration_seconds ? sprintf('%d:%02d', intdiv($game->duration_seconds, 60), $game->duration_seconds % 60) : '—' }}
                             </a>
                         </td>
                         <td class="px-3 py-3 font-medium">
@@ -207,36 +491,10 @@ new class extends Component {
                         <td class="px-3 py-3">
                             <a href="{{ $this->scoreRoute($game) }}"
                                 class="block hover:bg-muted/40 -mx-3 -my-3 px-3 py-3 rounded-lg transition">
-                                <span class="{{ $this->playerClass($game, $game->player_one_id) }}">
-                                    {{ $game->playerOne?->full_name ?? '—' }}
-                                </span>
-                                <span class="text-muted-foreground">vs</span>
-                                <span class="{{ $this->playerClass($game, $game->player_two_id) }}">
-                                    {{ $game->playerTwo?->full_name ?? '—' }}
-                                </span>
-                            </a>
-                        </td>
-                        <td class="px-3 py-3">
-                            <a href="{{ $this->scoreRoute($game) }}"
-                                class="block hover:bg-muted/40 -mx-3 -my-3 px-3 py-3 rounded-lg transition">
                                 <span
                                     class="inline-flex rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] {{ $this->statusBadgeClass($game) }}">
                                     {{ $this->statusLabel($game) }}
                                 </span>
-                            </a>
-                        </td>
-                        <td class="px-3 py-3">
-                            <a href="{{ $this->scoreRoute($game) }}"
-                                class="block hover:bg-muted/40 -mx-3 -my-3 px-3 py-3 rounded-lg transition">
-                                <p class="font-semibold text-foreground text-sm">{{ $this->setResultSummary($game) }}
-                                </p>
-                                <p class="text-muted-foreground text-xs">{{ $this->scoreSummary($game) }}</p>
-                            </a>
-                        </td>
-                        <td class="px-3 py-3 text-muted-foreground">
-                            <a href="{{ $this->scoreRoute($game) }}"
-                                class="block hover:bg-muted/40 -mx-3 -my-3 px-3 py-3 rounded-lg hover:text-foreground transition">
-                                {{ $game->duration_seconds ? sprintf('%d:%02d', intdiv($game->duration_seconds, 60), $game->duration_seconds % 60) : '—' }}
                             </a>
                         </td>
                         @if ($this->canManageMatches)
@@ -270,7 +528,8 @@ new class extends Component {
                     </tr>
                 @empty
                     <tr>
-                        <td class="px-3 py-8 text-muted-foreground text-sm text-center" colspan="7">Nema mečeva za
+                        <td class="px-3 py-8 text-muted-foreground text-sm text-center"
+                            colspan="{{ $this->canManageMatches ? 6 : 5 }}">Nema mečeva za
                             prikaz.</td>
                     </tr>
                 @endforelse

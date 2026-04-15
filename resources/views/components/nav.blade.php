@@ -78,13 +78,6 @@
                     data-nav-link href="{{ $resolveNavigationHref($link) }}">{{ $link['label'] }}</a>
             @endforeach
 
-            @if (filled($ctaLink))
-                <a class="bg-card mt-2 px-3 py-2 border border-border rounded-xl font-semibold text-foreground text-sm uppercase tracking-wide"
-                    data-nav-link href="{{ $resolveNavigationHref($ctaLink) }}">
-                    {{ $ctaLink['label'] }}
-                </a>
-            @endif
-
             @auth
                 <form method="POST" action="{{ route('logout') }}" class="mt-2">
                     @csrf

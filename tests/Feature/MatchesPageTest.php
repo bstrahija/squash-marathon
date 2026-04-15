@@ -403,6 +403,169 @@ test('matches create livewire shows only active round groups with round names', 
     $component->assertSet('groupId', $firstRoundGroup->id);
 });
 
+test('matches list shows requested column order', function () {
+    $game = createMatchForList();
+
+    $admin = createAdminUser();
+
+    $this->actingAs($admin);
+
+    Livewire::test('matches-list')
+        ->assertSee(route('matches.score', ['game' => $game->id]), false)
+        ->assertSeeInOrder(['Setovi', 'Vrijeme', 'Trajanje', 'Grupa', 'Status', 'Akcije']);
+});
+
+test('matches list can filter by player, round, and group', function () {
+    $event = Event::factory()->create();
+
+    $roundOne = Round::factory()->create([
+        'event_id' => $event->id,
+        'number' => 1,
+        'name' => 'Round 1',
+    ]);
+    $roundTwo = Round::factory()->create([
+        'event_id' => $event->id,
+        'number' => 2,
+        'name' => 'Round 2',
+    ]);
+
+    $groupOne = Group::factory()->create([
+        'event_id' => $event->id,
+        'round_id' => $roundOne->id,
+        'number' => 1,
+        'name' => 'Group 1',
+    ]);
+    $groupTwo = Group::factory()->create([
+        'event_id' => $event->id,
+        'round_id' => $roundTwo->id,
+        'number' => 2,
+        'name' => 'Group 2',
+    ]);
+
+    $playerOne = User::factory()->create();
+    $playerTwo = User::factory()->create();
+    $playerThree = User::factory()->create();
+
+    $gameOne = Game::factory()->create([
+        'event_id' => $event->id,
+        'round_id' => $roundOne->id,
+        'group_id' => $groupOne->id,
+        'player_one_id' => $playerOne->id,
+        'player_two_id' => $playerTwo->id,
+    ]);
+
+    $gameTwo = Game::factory()->create([
+        'event_id' => $event->id,
+        'round_id' => $roundTwo->id,
+        'group_id' => $groupTwo->id,
+        'player_one_id' => $playerTwo->id,
+        'player_two_id' => $playerThree->id,
+    ]);
+
+    $component = Livewire::test('matches-list');
+
+    $component
+        ->set('playerFilter', (string) $playerOne->id)
+        ->assertSee(route('matches.score', ['game' => $gameOne->id]), false)
+        ->assertDontSee(route('matches.score', ['game' => $gameTwo->id]), false);
+
+    $component
+        ->set('playerFilter', '')
+        ->set('roundFilter', (string) $roundTwo->id)
+        ->assertSee(route('matches.score', ['game' => $gameTwo->id]), false)
+        ->assertDontSee(route('matches.score', ['game' => $gameOne->id]), false);
+
+    $component
+        ->set('roundFilter', '')
+        ->set('groupFilter', (string) $groupOne->id)
+        ->assertSee(route('matches.score', ['game' => $gameOne->id]), false)
+        ->assertDontSee(route('matches.score', ['game' => $gameTwo->id]), false);
+});
+
+test('matches list can sort by time, status, and duration', function () {
+    $event = Event::factory()->create();
+
+    $round = Round::factory()->create([
+        'event_id' => $event->id,
+        'number' => 1,
+        'name' => 'Round 1',
+    ]);
+
+    $group = Group::factory()->create([
+        'event_id' => $event->id,
+        'round_id' => $round->id,
+        'number' => 1,
+        'name' => 'Group 1',
+    ]);
+
+    $playerOne = User::factory()->create();
+    $playerTwo = User::factory()->create();
+    $playerThree = User::factory()->create();
+
+    $finishedGame = Game::factory()->create([
+        'event_id' => $event->id,
+        'round_id' => $round->id,
+        'group_id' => $group->id,
+        'player_one_id' => $playerOne->id,
+        'player_two_id' => $playerTwo->id,
+        'created_at' => now()->subMinutes(20),
+        'updated_at' => now()->subMinutes(20),
+        'started_at' => now()->subMinutes(30),
+        'finished_at' => now()->subMinutes(10),
+        'duration_seconds' => 300,
+    ]);
+
+    $liveGame = Game::factory()->create([
+        'event_id' => $event->id,
+        'round_id' => $round->id,
+        'group_id' => $group->id,
+        'player_one_id' => $playerOne->id,
+        'player_two_id' => $playerThree->id,
+        'created_at' => now()->subMinutes(10),
+        'updated_at' => now()->subMinutes(10),
+        'started_at' => now()->subMinutes(8),
+        'finished_at' => null,
+        'duration_seconds' => 120,
+    ]);
+
+    $waitingGame = Game::factory()->create([
+        'event_id' => $event->id,
+        'round_id' => $round->id,
+        'group_id' => $group->id,
+        'player_one_id' => $playerTwo->id,
+        'player_two_id' => $playerThree->id,
+        'created_at' => now()->subMinutes(1),
+        'updated_at' => now()->subMinutes(1),
+        'started_at' => null,
+        'finished_at' => null,
+        'duration_seconds' => null,
+    ]);
+
+    Livewire::test('matches-list')
+        ->assertSeeInOrder([
+            'matches-list-game-'.$waitingGame->id,
+            'matches-list-game-'.$liveGame->id,
+            'matches-list-game-'.$finishedGame->id,
+        ], false)
+        ->call('sortByColumn', 'status')
+        ->assertSeeInOrder([
+            'matches-list-game-'.$finishedGame->id,
+            'matches-list-game-'.$liveGame->id,
+            'matches-list-game-'.$waitingGame->id,
+        ], false)
+        ->call('sortByColumn', 'duration')
+        ->assertSeeInOrder([
+            'matches-list-game-'.$finishedGame->id,
+            'matches-list-game-'.$liveGame->id,
+            'matches-list-game-'.$waitingGame->id,
+        ], false);
+});
+
+test('matches list shows mobile filters trigger', function () {
+    Livewire::test('matches-list')
+        ->assertSee('Filtri');
+});
+
 test('admin can delete match through livewire list', function () {
     $game = createMatchForList();
 
