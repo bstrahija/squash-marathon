@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\File;
 use Illuminate\Validation\Rules\Password;
 
 class ProfileUpdateRequest extends FormRequest
@@ -28,6 +29,7 @@ class ProfileUpdateRequest extends FormRequest
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['prohibited'],
             'password' => ['nullable', 'confirmed', Password::min(8)],
+            'avatar' => ['nullable', File::image()->max('1mb')],
             'role' => ['prohibited'],
             'roles' => ['prohibited'],
         ];

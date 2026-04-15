@@ -12,12 +12,13 @@
         </div>
     </x-slot:background>
 
-    <section class="mx-auto w-full max-w-3xl">
+    <section class="scroll-mt-24">
+        <div class="flex justify-between items-center gap-4 m-6">
+            <h1 class="font-display font-semibold text-foreground text-3xl">Profil</h1>
+        </div>
+
         <div class="bg-card/90 shadow-sm p-6 sm:p-8 border border-border rounded-3xl">
-            <div class="mb-6">
-                <h1 class="font-display font-semibold text-foreground text-3xl">Profil</h1>
-                <p class="mt-2 text-muted-foreground text-sm">Ažurirajte svoje osnovne podatke i lozinku.</p>
-            </div>
+            <p class="mb-6 text-muted-foreground text-sm">Ažurirajte svoje osnovne podatke i lozinku.</p>
 
             @if (session('status'))
                 <div
@@ -30,9 +31,46 @@
                 $user = auth()->user();
             @endphp
 
-            <form method="POST" action="{{ route('profile.update') }}" class="space-y-5">
+            @if ($user?->hasMedia('avatar'))
+                <form id="avatar-remove-form" method="POST" action="{{ route('profile.avatar.destroy') }}"
+                    class="hidden">
+                    @csrf
+                    @method('DELETE')
+                </form>
+            @endif
+
+            <form method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="space-y-5">
                 @csrf
                 @method('PUT')
+
+                <div class="items-center gap-4 grid sm:grid-cols-[auto,1fr]">
+                    <div class="relative mx-auto sm:mx-0">
+                        <img src="{{ $user?->avatarUrl('thumb') }}" alt="Avatar korisnika"
+                            class="border border-border/70 rounded-2xl w-20 h-20 object-cover" loading="lazy"
+                            decoding="async" />
+
+                        @if ($user?->hasMedia('avatar'))
+                            <button type="submit" form="avatar-remove-form" title="Ukloni avatar"
+                                aria-label="Ukloni avatar"
+                                class="inline-flex -top-1 -left-1 absolute justify-center items-center bg-rose-500/95 hover:bg-rose-500 border border-rose-400/80 rounded-full w-5 h-5 text-white transition">
+                                <x-heroicon-o-x-mark class="w-3 h-3" />
+                            </button>
+                        @endif
+                    </div>
+
+                    <label class="block">
+                        <span
+                            class="block mb-1.5 font-semibold text-muted-foreground text-xs uppercase tracking-[0.14em]">
+                            Avatar
+                        </span>
+                        <input type="file" name="avatar" accept="image/*"
+                            class="block bg-background/70 file:bg-card px-3 file:px-3 py-2 file:py-2.5 border file:border border-border/70 file:border-border/70 rounded-xl file:rounded-xl w-full file:font-semibold text-foreground file:text-foreground file:text-xs text-sm file:uppercase file:tracking-wide file:cursor-pointer" />
+                        <p class="mt-1.5 text-muted-foreground text-xs">Dozvoljene su slike do 1 MB.</p>
+                        @error('avatar')
+                            <p class="mt-1.5 text-rose-600 dark:text-rose-300 text-xs">{{ $message }}</p>
+                        @enderror
+                    </label>
+                </div>
 
                 <div class="gap-4 grid sm:grid-cols-2">
                     <label class="block">

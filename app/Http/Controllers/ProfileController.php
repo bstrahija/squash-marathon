@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
@@ -27,6 +28,19 @@ class ProfileController extends Controller
 
         $user->save();
 
+        if ($request->hasFile('avatar')) {
+            $user->addMediaFromRequest('avatar')->toMediaCollection('avatar');
+        }
+
         return redirect()->route('profile')->with('status', 'Profil je uspješno ažuriran.');
+    }
+
+    public function destroyAvatar(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        $user->clearMediaCollection('avatar');
+
+        return redirect()->route('profile')->with('status', 'Avatar je uklonjen.');
     }
 }

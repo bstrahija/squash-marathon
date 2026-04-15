@@ -2,6 +2,7 @@
 
 use App\Enums\RoleName;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 
@@ -125,4 +126,76 @@ test('user cannot change email or role through profile update', function () {
     expect($user->first_name)->toBe('Player');
     expect($user->hasRole(RoleName::Player->value))->toBeTrue();
     expect($user->hasRole(RoleName::Admin->value))->toBeFalse();
+});
+
+test('user can upload avatar on profile page', function () {
+    $this->withoutVite();
+
+    $user = User::factory()->create();
+    $avatar = UploadedFile::fake()->image('avatar.jpg')->size(900);
+
+    $response = $this->actingAs($user)->put(route('profile.update'), [
+        'first_name' => $user->first_name,
+        'last_name' => $user->last_name,
+        'password' => '',
+        'password_confirmation' => '',
+        'avatar' => $avatar,
+    ]);
+
+    $response->assertRedirect(route('profile'));
+
+    $user->refresh();
+
+    expect($user->getMedia('avatar'))->toHaveCount(1);
+});
+
+test('user cannot upload avatar larger than 1mb', function () {
+    $this->withoutVite();
+
+    $user = User::factory()->create();
+    $avatar = UploadedFile::fake()->image('avatar.jpg')->size(1200);
+
+    $response = $this->actingAs($user)
+        ->from(route('profile'))
+        ->put(route('profile.update'), [
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'password' => '',
+            'password_confirmation' => '',
+            'avatar' => $avatar,
+        ]);
+
+    $response->assertRedirect(route('profile'));
+    $response->assertSessionHasErrors(['avatar']);
+
+    $user->refresh();
+
+    expect($user->getMedia('avatar'))->toHaveCount(0);
+});
+
+test('user can remove existing avatar', function () {
+    $this->withoutVite();
+
+    $user = User::factory()->create();
+    $initialAvatar = UploadedFile::fake()->image('initial-avatar.jpg')->size(800);
+
+    $this->actingAs($user)->put(route('profile.update'), [
+        'first_name' => $user->first_name,
+        'last_name' => $user->last_name,
+        'password' => '',
+        'password_confirmation' => '',
+        'avatar' => $initialAvatar,
+    ]);
+
+    $user->refresh();
+    expect($user->getMedia('avatar'))->toHaveCount(1);
+
+    $response = $this->actingAs($user)->delete(route('profile.avatar.destroy'));
+
+    $response->assertRedirect(route('profile'));
+    $response->assertSessionHas('status', 'Avatar je uklonjen.');
+
+    $user->refresh();
+
+    expect($user->getMedia('avatar'))->toHaveCount(0);
 });
