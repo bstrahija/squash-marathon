@@ -38,11 +38,11 @@ class HomeController extends Controller
         $stats = $players->mapWithKeys(function (User $user): array {
             return [
                 $user->id => [
-                    'player' => $user,
-                    'wins' => 0,
-                    'draws' => 0,
-                    'losses' => 0,
-                    'games' => 0,
+                    'player'       => $user,
+                    'wins'         => 0,
+                    'draws'        => 0,
+                    'losses'       => 0,
+                    'games'        => 0,
                     'last_game_at' => null,
                 ],
             ];
@@ -91,16 +91,16 @@ class HomeController extends Controller
 
         $participants = $stats
             ->values()
-            ->sortBy(fn (array $row): string => $row['player']->last_name)
+            ->sortBy(fn (array $row): string => $row['player']->first_name)
             ->map(fn (array $row): array => [
-                'name' => $row['player']->full_name,
-                'initials' => $row['player']->initials,
-                'avatar_url' => $row['player']->hasMedia('avatar') ? $row['player']->avatarUrl('thumb') : null,
+                'name'        => $row['player']->full_name,
+                'initials'    => $row['player']->initials,
+                'avatar_url'  => $row['player']->hasMedia('avatar') ? $row['player']->avatarUrl('thumb') : null,
                 'profile_url' => route('players.show', ['user' => $row['player']->id]),
-                'wins' => $row['wins'],
-                'draws' => $row['draws'],
-                'losses' => $row['losses'],
-                'games' => $row['games'],
+                'wins'        => $row['wins'],
+                'draws'       => $row['draws'],
+                'losses'      => $row['losses'],
+                'games'       => $row['games'],
             ])
             ->values()
             ->all();
