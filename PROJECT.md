@@ -2,12 +2,12 @@
 
 ## Overview
 
-This project will track a 24-hour squash marathon event where participants play continuously over a 24-hour window. The homepage is currently a static Blade landing page built from Blade components, while the main application UI will be a Vue 3 SPA using Inertia.
+This project tracks a 24-hour squash marathon event where participants play continuously over a 24-hour window. The homepage and main application UI are built with Blade and Livewire.
 
 ## Current Stack (Installed)
 
-- Backend: Laravel 12, Fortify (auth), Inertia v2, Wayfinder, Livewire
-- Frontend: Vue 3, Vite, Tailwind CSS v4, TypeScript
+- Backend: Laravel 12, Fortify (auth), Livewire
+- Frontend: Blade, Vite, Tailwind CSS v4
 - Testing: Pest v4, PHPUnit v12
 - Tooling: Pint, ESLint, Prettier
 
@@ -59,7 +59,7 @@ Tailwind CSS is already installed and wired:
 - Homepage: Static Blade components for nav, hero, event info, scoring, participants, leaderboard, courts, timeline, and footer.
 - Navigation: Fixed top bar with smooth-scroll anchors.
 - Dark mode: Toggle with persisted preference.
-- App: Inertia + Vue pages for admin and operations workflow.
+- App: Blade + Livewire pages for admin and operations workflow.
 - Keep data entry quick: keyboard-first, minimal clicks.
 
 ## Non-Functional Requirements
