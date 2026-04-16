@@ -325,9 +325,7 @@ new class extends Component {
 
     protected function resolveCurrentEvent(): ?Event
     {
-        $now = now();
-
-        return Event::query()->where('start_at', '<=', $now)->where('end_at', '>=', $now)->latest('start_at')->first() ?? Event::query()->latest('start_at')->first();
+        return Event::current();
     }
 
     protected function hydrateRoundDraft(): void
@@ -402,41 +400,41 @@ new class extends Component {
 };
 ?>
 
-<div class="rounded-3xl border border-border bg-card/80 p-6 shadow-sm">
+<div class="border-border bg-card/80 rounded-3xl border p-6 shadow-sm">
     <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
         @php($modeText = $this->modeText)
 
         <div>
-            <h1 class="font-display mt-2 text-3xl font-semibold text-foreground">
+            <h1 class="font-display text-foreground mt-2 text-3xl font-semibold">
                 {{ $modeText['heading'] }}
             </h1>
-            <p class="mt-2 text-sm text-muted-foreground">
-                Event: <span class="font-semibold text-foreground">{{ $eventName }}</span>
+            <p class="text-muted-foreground mt-2 text-sm">
+                Event: <span class="text-foreground font-semibold">{{ $eventName }}</span>
             </p>
         </div>
 
         <a href="{{ route('rounds.index') }}"
-            class="rounded-full border border-border px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground transition hover:border-foreground/40 hover:text-foreground">
+           class="border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-wide transition">
             Natrag na runde
         </a>
     </div>
 
     @if (session('status'))
         <div
-            class="mb-4 rounded-2xl border border-emerald-400/40 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-300">
+             class="mb-4 rounded-2xl border border-emerald-400/40 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-300">
             {{ session('status') }}
         </div>
     @endif
 
     @if ($errors->has('eventId'))
         <div
-            class="mb-4 rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:text-red-300">
+             class="mb-4 rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:text-red-300">
             {{ $errors->first('eventId') }}
         </div>
     @endif
 
     @if ($this->eventPlayers->isEmpty())
-        <div class="rounded-2xl border border-border/70 bg-background/70 px-4 py-5 text-sm text-muted-foreground">
+        <div class="border-border/70 bg-background/70 text-muted-foreground rounded-2xl border px-4 py-5 text-sm">
             Nema prijavljenih igrača za ovaj event.
         </div>
     @else
@@ -445,36 +443,36 @@ new class extends Component {
         <form class="space-y-6" wire:submit="saveRound">
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 <x-rounds.group-player-picker title="Grupa 1" :group-number="1" :players="$this->groupOnePlayers" :available-players="$availablePlayers"
-                    add-model="groupOnePlayerToAdd" update-method="updatedGroupOnePlayerToAdd"
-                    error-key="groupOnePlayerIds" error-item-key="groupOnePlayerIds.*"
-                    wire-key-prefix="round-create-group-one" />
+                                              add-model="groupOnePlayerToAdd" update-method="updatedGroupOnePlayerToAdd"
+                                              error-key="groupOnePlayerIds" error-item-key="groupOnePlayerIds.*"
+                                              wire-key-prefix="round-create-group-one" />
 
                 <x-rounds.group-player-picker title="Grupa 2" :group-number="2" :players="$this->groupTwoPlayers" :available-players="$availablePlayers"
-                    add-model="groupTwoPlayerToAdd" update-method="updatedGroupTwoPlayerToAdd"
-                    error-key="groupTwoPlayerIds" error-item-key="groupTwoPlayerIds.*"
-                    wire-key-prefix="round-create-group-two" />
+                                              add-model="groupTwoPlayerToAdd" update-method="updatedGroupTwoPlayerToAdd"
+                                              error-key="groupTwoPlayerIds" error-item-key="groupTwoPlayerIds.*"
+                                              wire-key-prefix="round-create-group-two" />
             </div>
 
             <div class="flex flex-wrap items-center justify-end gap-3">
                 @if ($this->hasPreviousRound)
                     <button type="button" wire:click="seedGroupsFromPreviousRoundPoints" wire:loading.attr="disabled"
-                        wire:target="seedGroupsFromPreviousRoundPoints,seedRandomGroups,saveRound"
-                        class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-foreground transition hover:border-foreground/40 disabled:cursor-not-allowed disabled:opacity-50"
-                        title="Podijeli prema bodovima prethodne runde"
-                        aria-label="Podijeli prema bodovima prethodne runde">
+                            wire:target="seedGroupsFromPreviousRoundPoints,seedRandomGroups,saveRound"
+                            class="border-border text-foreground hover:border-foreground/40 inline-flex h-10 w-10 items-center justify-center rounded-full border transition disabled:cursor-not-allowed disabled:opacity-50"
+                            title="Podijeli prema bodovima prethodne runde"
+                            aria-label="Podijeli prema bodovima prethodne runde">
                         <x-heroicon-o-trophy class="h-4 w-4" />
                     </button>
                 @endif
 
                 <button type="button" wire:click="seedRandomGroups" wire:loading.attr="disabled"
-                    wire:target="seedRandomGroups,saveRound"
-                    class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-foreground transition hover:border-foreground/40 disabled:cursor-not-allowed disabled:opacity-50"
-                    title="Nasumično podijeli igrače" aria-label="Nasumično podijeli igrače">
+                        wire:target="seedRandomGroups,saveRound"
+                        class="border-border text-foreground hover:border-foreground/40 inline-flex h-10 w-10 items-center justify-center rounded-full border transition disabled:cursor-not-allowed disabled:opacity-50"
+                        title="Nasumično podijeli igrače" aria-label="Nasumično podijeli igrače">
                     <x-heroicon-o-arrow-path class="h-4 w-4" />
                 </button>
 
                 <button type="submit"
-                    class="rounded-full bg-primary px-5 py-2.5 text-xs font-semibold uppercase tracking-wide text-primary-foreground shadow-sm transition hover:-translate-y-0.5">
+                        class="bg-primary text-primary-foreground rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wide shadow-sm transition hover:-translate-y-0.5">
                     {{ $modeText['submit'] }}
                 </button>
             </div>

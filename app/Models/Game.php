@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Database\Factories\GameFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -45,7 +46,7 @@ class Game extends Model
             }
 
             if ($game->started_at && $game->finished_at) {
-                $duration = $game->started_at->diffInSeconds($game->finished_at);
+                $duration               = $game->started_at->diffInSeconds($game->finished_at);
                 $game->duration_seconds = max(0, $duration);
             }
 
@@ -67,14 +68,14 @@ class Game extends Model
     protected function casts(): array
     {
         return [
-            'best_of' => 'integer',
-            'player_one_sets' => 'integer',
-            'player_two_sets' => 'integer',
-            'winner_id' => 'integer',
-            'is_draw' => 'boolean',
-            'round_id' => 'integer',
-            'started_at' => 'datetime',
-            'finished_at' => 'datetime',
+            'best_of'          => 'integer',
+            'player_one_sets'  => 'integer',
+            'player_two_sets'  => 'integer',
+            'winner_id'        => 'integer',
+            'is_draw'          => 'boolean',
+            'round_id'         => 'integer',
+            'started_at'       => 'datetime',
+            'finished_at'      => 'datetime',
             'duration_seconds' => 'integer',
         ];
     }
@@ -129,6 +130,64 @@ class Game extends Model
     }
 
     /**
+     * @return array<int, array{player_one_score: int|null, player_two_score: int|null}>
+     */
+    public static function buildSetScoresFromCollection(Collection $sets): array
+    {
+        return $sets
+            ->map(fn (GameSet $set): array => [
+                'player_one_score' => $set->player_one_score,
+                'player_two_score' => $set->player_two_score,
+            ])
+            ->all();
+    }
+
+    /**
+     * @param  Collection<int, GameSet>  $sets
+     * @return array{
+     *     is_complete: bool,
+     *     is_draw: bool,
+     *     winner_id: int|null,
+     *     player_one_wins: int,
+     *     player_two_wins: int
+     * }
+     */
+    public static function determineMatchResultFromSetCollection(
+        Collection $sets,
+        int $bestOf,
+        ?int $playerOneId,
+        ?int $playerTwoId
+    ): array {
+        return self::determineMatchResultFromSetScores(
+            self::buildSetScoresFromCollection($sets),
+            $bestOf,
+            $playerOneId,
+            $playerTwoId
+        );
+    }
+
+    /**
+     * @return array{player_one: int, player_two: int}
+     */
+    public static function summarizeSetPoints(Collection $sets): array
+    {
+        return [
+            'player_one' => (int) $sets->sum(fn (GameSet $set): int => (int) ($set->player_one_score ?? 0)),
+            'player_two' => (int) $sets->sum(fn (GameSet $set): int => (int) ($set->player_two_score ?? 0)),
+        ];
+    }
+
+    public static function formatSetPointsSummary(Collection $sets): string
+    {
+        $scores = $sets
+            ->filter(fn (GameSet $set): bool => filled($set->player_one_score) && filled($set->player_two_score))
+            ->map(fn (GameSet $set): string => "{$set->player_one_score}-{$set->player_two_score}")
+            ->implode(', ');
+
+        return $scores !== '' ? $scores : '—';
+    }
+
+    /**
      * @param  array<int, array<string, mixed>>  $sets
      * @return array{
      *     is_complete: bool,
@@ -146,9 +205,9 @@ class Game extends Model
     ): array {
         if (! in_array($bestOf, self::ALLOWED_BEST_OF_VALUES, true)) {
             return [
-                'is_complete' => false,
-                'is_draw' => false,
-                'winner_id' => null,
+                'is_complete'     => false,
+                'is_draw'         => false,
+                'winner_id'       => null,
                 'player_one_wins' => 0,
                 'player_two_wins' => 0,
             ];
@@ -156,9 +215,9 @@ class Game extends Model
 
         if (! $playerOneId || ! $playerTwoId) {
             return [
-                'is_complete' => false,
-                'is_draw' => false,
-                'winner_id' => null,
+                'is_complete'     => false,
+                'is_draw'         => false,
+                'winner_id'       => null,
                 'player_one_wins' => 0,
                 'player_two_wins' => 0,
             ];
@@ -189,8 +248,8 @@ class Game extends Model
                 continue;
             }
 
-            $maxScore = max($playerOneScore, $playerTwoScore);
-            $minScore = min($playerOneScore, $playerTwoScore);
+            $maxScore   = max($playerOneScore, $playerTwoScore);
+            $minScore   = min($playerOneScore, $playerTwoScore);
             $difference = $maxScore - $minScore;
 
             if ($maxScore < 11 || $difference < 2) {
@@ -208,9 +267,9 @@ class Game extends Model
 
         if ($completedSets < $bestOf) {
             return [
-                'is_complete' => false,
-                'is_draw' => false,
-                'winner_id' => null,
+                'is_complete'     => false,
+                'is_draw'         => false,
+                'winner_id'       => null,
                 'player_one_wins' => $wins[$playerOneId],
                 'player_two_wins' => $wins[$playerTwoId],
             ];
@@ -218,9 +277,9 @@ class Game extends Model
 
         if ($wins[$playerOneId] === $wins[$playerTwoId]) {
             return [
-                'is_complete' => true,
-                'is_draw' => true,
-                'winner_id' => null,
+                'is_complete'     => true,
+                'is_draw'         => true,
+                'winner_id'       => null,
                 'player_one_wins' => $wins[$playerOneId],
                 'player_two_wins' => $wins[$playerTwoId],
             ];
@@ -229,9 +288,9 @@ class Game extends Model
         $winnerId = $wins[$playerOneId] > $wins[$playerTwoId] ? $playerOneId : $playerTwoId;
 
         return [
-            'is_complete' => true,
-            'is_draw' => false,
-            'winner_id' => $winnerId,
+            'is_complete'     => true,
+            'is_draw'         => false,
+            'winner_id'       => $winnerId,
             'player_one_wins' => $wins[$playerOneId],
             'player_two_wins' => $wins[$playerTwoId],
         ];

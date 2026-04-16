@@ -14,7 +14,7 @@ class RoundSeeder extends Seeder
      */
     public function run(): void
     {
-        $event = Event::query()->latest('start_at')->first();
+        $event = Event::current();
 
         if (! $event) {
             return;
@@ -29,7 +29,7 @@ class RoundSeeder extends Seeder
         for ($number = 1; $number <= 9; $number++) {
             $round = Round::query()->firstOrCreate([
                 'event_id' => $event->id,
-                'number' => $number,
+                'number'   => $number,
             ], [
                 'name' => "Round {$number}",
             ]);

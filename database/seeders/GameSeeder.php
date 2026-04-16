@@ -16,21 +16,21 @@ class GameSeeder extends Seeder
      */
     public function run(): void
     {
-        $event = Event::query()->latest('start_at')->first();
+        $event = Event::current();
 
         if (! $event) {
             return;
         }
 
         $startAt = $event->start_at ?? $event->created_at;
-        $endAt = $event->end_at ?? $event->created_at;
+        $endAt   = $event->end_at ?? $event->created_at;
 
         if (! $startAt || ! $endAt) {
             return;
         }
 
         $startTimestamp = $startAt->getTimestamp();
-        $endTimestamp = $endAt->getTimestamp();
+        $endTimestamp   = $endAt->getTimestamp();
 
         if ($endTimestamp < $startTimestamp) {
             return;
@@ -46,12 +46,12 @@ class GameSeeder extends Seeder
             return;
         }
 
-        $totalSeconds = max($endTimestamp - $startTimestamp, 1);
+        $totalSeconds   = max($endTimestamp - $startTimestamp, 1);
         $segmentSeconds = (int) floor($totalSeconds / max($rounds->count(), 1));
 
         foreach ($rounds as $roundIndex => $round) {
             $segmentStart = $startTimestamp + ($segmentSeconds * $roundIndex);
-            $segmentEnd = $roundIndex === $rounds->count() - 1
+            $segmentEnd   = $roundIndex === $rounds->count() - 1
                 ? $endTimestamp
                 : $segmentStart + $segmentSeconds;
 
@@ -80,42 +80,42 @@ class GameSeeder extends Seeder
 
             foreach ($matches as $index => [$group, $playerOne, $playerTwo]) {
                 $segmentEndSafe = max($segmentEnd, $segmentStart);
-                $createdAt = Carbon::createFromTimestamp(
+                $createdAt      = Carbon::createFromTimestamp(
                     random_int($segmentStart, $segmentEndSafe)
                 );
                 $gameDurationSeconds = random_int(900, 2700);
-                $gameStartedAt = $createdAt->copy();
-                $gameFinishedAt = $gameStartedAt->copy()->addSeconds($gameDurationSeconds);
+                $gameStartedAt       = $createdAt->copy();
+                $gameFinishedAt      = $gameStartedAt->copy()->addSeconds($gameDurationSeconds);
 
                 $game = Game::factory()->create([
-                    'event_id' => $event->id,
-                    'round_id' => $round->id,
-                    'group_id' => $group->id,
-                    'best_of' => 2,
-                    'started_at' => $gameStartedAt,
-                    'finished_at' => $gameFinishedAt,
+                    'event_id'      => $event->id,
+                    'round_id'      => $round->id,
+                    'group_id'      => $group->id,
+                    'best_of'       => 2,
+                    'started_at'    => $gameStartedAt,
+                    'finished_at'   => $gameFinishedAt,
                     'player_one_id' => $playerOne->id,
                     'player_two_id' => $playerTwo->id,
-                    'created_at' => $createdAt,
-                    'updated_at' => $createdAt,
+                    'created_at'    => $createdAt,
+                    'updated_at'    => $createdAt,
                 ]);
 
-                $outcome = random_int(0, 2);
+                $outcome    = random_int(0, 2);
                 $setWinners = match ($outcome) {
-                    0 => [true, true],
-                    1 => [false, false],
+                    0       => [true, true],
+                    1       => [false, false],
                     default => [true, false],
                 };
 
-                $setStartAt = $gameStartedAt->copy();
+                $setStartAt       = $gameStartedAt->copy();
                 $remainingSeconds = $gameDurationSeconds;
-                $setCount = count($setWinners);
+                $setCount         = count($setWinners);
 
                 foreach ($setWinners as $setIndex => $playerOneWins) {
                     $scores = $this->generateSetScores($playerOneWins);
 
-                    $minimumSeconds = 240;
-                    $maxForSet = max($minimumSeconds, $remainingSeconds - ($minimumSeconds * ($setCount - $setIndex - 1)));
+                    $minimumSeconds     = 240;
+                    $maxForSet          = max($minimumSeconds, $remainingSeconds - ($minimumSeconds * ($setCount - $setIndex - 1)));
                     $setDurationSeconds = $setIndex === $setCount - 1
                         ? max($minimumSeconds, $remainingSeconds)
                         : random_int($minimumSeconds, $maxForSet);
@@ -123,20 +123,20 @@ class GameSeeder extends Seeder
                     $setFinishedAt = $setStartAt->copy()->addSeconds($setDurationSeconds);
 
                     GameSet::factory()->create([
-                        'game_id' => $game->id,
-                        'round_id' => $round->id,
-                        'group_id' => $group->id,
-                        'started_at' => $setStartAt,
-                        'finished_at' => $setFinishedAt,
-                        'player_one_id' => $playerOne->id,
-                        'player_two_id' => $playerTwo->id,
+                        'game_id'          => $game->id,
+                        'round_id'         => $round->id,
+                        'group_id'         => $group->id,
+                        'started_at'       => $setStartAt,
+                        'finished_at'      => $setFinishedAt,
+                        'player_one_id'    => $playerOne->id,
+                        'player_two_id'    => $playerTwo->id,
                         'player_one_score' => $scores['player_one_score'],
                         'player_two_score' => $scores['player_two_score'],
-                        'created_at' => $createdAt,
-                        'updated_at' => $createdAt,
+                        'created_at'       => $createdAt,
+                        'updated_at'       => $createdAt,
                     ]);
 
-                    $setStartAt = $setFinishedAt->copy();
+                    $setStartAt       = $setFinishedAt->copy();
                     $remainingSeconds = max(0, $remainingSeconds - $setDurationSeconds);
                 }
             }
@@ -170,7 +170,7 @@ class GameSeeder extends Seeder
         $baseCreatedAt = Carbon::createFromTimestamp($endTimestamp)->subMinutes(25);
 
         foreach ($groups as $index => $group) {
-            $players = $group->users->shuffle()->values();
+            $players   = $group->users->shuffle()->values();
             $playerOne = $players->get(0);
             $playerTwo = $players->get(1);
 
@@ -182,17 +182,17 @@ class GameSeeder extends Seeder
 
             if ($index !== 0) {
                 Game::factory()->create([
-                    'event_id' => $event->id,
-                    'round_id' => $round->id,
-                    'group_id' => $group->id,
-                    'best_of' => 2,
-                    'started_at' => null,
-                    'finished_at' => null,
+                    'event_id'         => $event->id,
+                    'round_id'         => $round->id,
+                    'group_id'         => $group->id,
+                    'best_of'          => 2,
+                    'started_at'       => null,
+                    'finished_at'      => null,
                     'duration_seconds' => null,
-                    'player_one_id' => $playerOne->id,
-                    'player_two_id' => $playerTwo->id,
-                    'created_at' => $createdAt,
-                    'updated_at' => $createdAt,
+                    'player_one_id'    => $playerOne->id,
+                    'player_two_id'    => $playerTwo->id,
+                    'created_at'       => $createdAt,
+                    'updated_at'       => $createdAt,
                 ]);
 
                 continue;
@@ -201,50 +201,50 @@ class GameSeeder extends Seeder
             $startedAt = $createdAt->copy()->addMinutes(1);
 
             $game = Game::factory()->create([
-                'event_id' => $event->id,
-                'round_id' => $round->id,
-                'group_id' => $group->id,
-                'best_of' => 2,
-                'started_at' => $startedAt,
-                'finished_at' => null,
+                'event_id'         => $event->id,
+                'round_id'         => $round->id,
+                'group_id'         => $group->id,
+                'best_of'          => 2,
+                'started_at'       => $startedAt,
+                'finished_at'      => null,
                 'duration_seconds' => null,
-                'player_one_id' => $playerOne->id,
-                'player_two_id' => $playerTwo->id,
-                'created_at' => $createdAt,
-                'updated_at' => $createdAt,
+                'player_one_id'    => $playerOne->id,
+                'player_two_id'    => $playerTwo->id,
+                'created_at'       => $createdAt,
+                'updated_at'       => $createdAt,
             ]);
 
             $firstSetDurationSeconds = random_int(360, 900);
-            $firstSetStartedAt = $startedAt->copy();
-            $firstSetFinishedAt = $firstSetStartedAt->copy()->addSeconds($firstSetDurationSeconds);
-            $firstSetScores = $this->generateSetScores((bool) random_int(0, 1));
+            $firstSetStartedAt       = $startedAt->copy();
+            $firstSetFinishedAt      = $firstSetStartedAt->copy()->addSeconds($firstSetDurationSeconds);
+            $firstSetScores          = $this->generateSetScores((bool) random_int(0, 1));
 
             GameSet::factory()->create([
-                'game_id' => $game->id,
-                'round_id' => $round->id,
-                'group_id' => $group->id,
-                'started_at' => $firstSetStartedAt,
-                'finished_at' => $firstSetFinishedAt,
-                'player_one_id' => $playerOne->id,
-                'player_two_id' => $playerTwo->id,
+                'game_id'          => $game->id,
+                'round_id'         => $round->id,
+                'group_id'         => $group->id,
+                'started_at'       => $firstSetStartedAt,
+                'finished_at'      => $firstSetFinishedAt,
+                'player_one_id'    => $playerOne->id,
+                'player_two_id'    => $playerTwo->id,
                 'player_one_score' => $firstSetScores['player_one_score'],
                 'player_two_score' => $firstSetScores['player_two_score'],
-                'created_at' => $createdAt,
-                'updated_at' => $createdAt,
+                'created_at'       => $createdAt,
+                'updated_at'       => $createdAt,
             ]);
 
             GameSet::factory()->create([
-                'game_id' => $game->id,
-                'round_id' => $round->id,
-                'group_id' => $group->id,
-                'started_at' => $firstSetFinishedAt,
-                'finished_at' => null,
-                'player_one_id' => $playerOne->id,
-                'player_two_id' => $playerTwo->id,
+                'game_id'          => $game->id,
+                'round_id'         => $round->id,
+                'group_id'         => $group->id,
+                'started_at'       => $firstSetFinishedAt,
+                'finished_at'      => null,
+                'player_one_id'    => $playerOne->id,
+                'player_two_id'    => $playerTwo->id,
                 'player_one_score' => null,
                 'player_two_score' => null,
-                'created_at' => $createdAt,
-                'updated_at' => $createdAt,
+                'created_at'       => $createdAt,
+                'updated_at'       => $createdAt,
             ]);
         }
     }
@@ -254,8 +254,8 @@ class GameSeeder extends Seeder
      */
     private function generateSetScores(bool $playerOneWins): array
     {
-        $isExtended = (bool) random_int(0, 4);
-        $loserScore = $isExtended ? random_int(10, 15) : random_int(0, 9);
+        $isExtended  = (bool) random_int(0, 4);
+        $loserScore  = $isExtended ? random_int(10, 15) : random_int(0, 9);
         $winnerScore = $isExtended ? $loserScore + 2 : 11;
 
         return [

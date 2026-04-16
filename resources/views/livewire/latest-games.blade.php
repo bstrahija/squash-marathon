@@ -9,7 +9,7 @@ new class extends Component {
     #[Computed]
     public function games(): array
     {
-        $event = Event::query()->latest('start_at')->first();
+        $event = Event::current();
 
         if (!$event) {
             return [];
@@ -18,56 +18,26 @@ new class extends Component {
         return Game::query()
             ->with(['sets', 'playerOne', 'playerTwo'])
             ->where('event_id', $event->id)
+            ->latest('created_at')
+            ->latest('id')
+            ->limit(60)
             ->get()
-            ->filter(function (Game $game): bool {
-                $result = Game::determineMatchResultFromSetScores(
-                    $game->sets
-                        ->map(
-                            fn($set): array => [
-                                'player_one_score' => $set->player_one_score,
-                                'player_two_score' => $set->player_two_score,
-                            ],
-                        )
-                        ->all(),
-                    $game->best_of,
-                    $game->player_one_id,
-                    $game->player_two_id,
-                );
-
-                return $result['is_complete'];
-            })
             ->map(function (Game $game): array {
-                $scores = $game->sets->filter(fn($set): bool => filled($set->player_one_score) && filled($set->player_two_score))->map(fn($set): string => "{$set->player_one_score}-{$set->player_two_score}")->implode(', ');
-                $result = Game::determineMatchResultFromSetScores(
-                    $game->sets
-                        ->map(
-                            fn($set): array => [
-                                'player_one_score' => $set->player_one_score,
-                                'player_two_score' => $set->player_two_score,
-                            ],
-                        )
-                        ->all(),
-                    $game->best_of,
-                    $game->player_one_id,
-                    $game->player_two_id,
-                );
-                $isDraw = (bool) ($result['is_complete'] && $result['is_draw']);
-                $winnerId = $result['winner_id'] ?? null;
-                $playerOneClass = $this->playerClass($game->player_one_id, $winnerId, $isDraw);
-                $playerTwoClass = $this->playerClass($game->player_two_id, $winnerId, $isDraw);
+                $result = Game::determineMatchResultFromSetCollection($game->sets, (int) $game->best_of, $game->player_one_id, $game->player_two_id);
 
                 return [
                     'id' => $game->id,
                     'time' => $game->created_at,
                     'player_one' => $game->playerOne->full_name,
                     'player_two' => $game->playerTwo->full_name,
-                    'player_one_class' => $playerOneClass,
-                    'player_two_class' => $playerTwoClass,
-                    'score' => $scores !== '' ? $scores : '—',
+                    'player_one_class' => $this->playerClass($game->player_one_id, $result['winner_id'], (bool) $result['is_draw']),
+                    'player_two_class' => $this->playerClass($game->player_two_id, $result['winner_id'], (bool) $result['is_draw']),
+                    'score' => Game::formatSetPointsSummary($game->sets),
                     'duration' => $this->formatDuration($game->duration_seconds),
+                    'is_complete' => (bool) $result['is_complete'],
                 ];
             })
-            ->sortByDesc('time')
+            ->filter(fn(array $game): bool => $game['is_complete'])
             ->take(20)
             ->values()
             ->all();
@@ -104,24 +74,24 @@ new class extends Component {
 };
 ?>
 
-<div class="rounded-3xl border border-border bg-card p-5 shadow-sm" wire:poll.5s>
+<div class="border-border bg-card rounded-3xl border p-5 shadow-sm" wire:poll.5s>
     <div class="flex flex-wrap items-end justify-between gap-3">
         <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Najnovije</p>
+            <p class="text-muted-foreground text-xs font-semibold uppercase tracking-[0.2em]">Najnovije</p>
             <h2 class="font-display mt-1 text-xl font-semibold">Zadnjih 20 partija</h2>
         </div>
-        <p class="text-[11px] text-muted-foreground">Skrolaj za više</p>
+        <p class="text-muted-foreground text-[11px]">Skrolaj za više</p>
     </div>
 
     <div class="mt-3 max-h-[60vh] overflow-y-auto pr-2">
         <div class="grid gap-2 sm:grid-cols-2">
             @forelse ($this->games as $game)
-                <div class="rounded-2xl border border-border/70 bg-background/70 p-3"
-                    wire:key="latest-game-{{ $game['id'] }}">
-                    <div class="flex items-center justify-between text-[11px] font-semibold text-muted-foreground">
+                <div class="border-border/70 bg-background/70 rounded-2xl border p-3"
+                     wire:key="latest-game-{{ $game['id'] }}">
+                    <div class="text-muted-foreground flex items-center justify-between text-[11px] font-semibold">
                         <span>{{ $game['time']?->format('H:i') ?? '—' }}</span>
                         <span
-                            class="rounded-full border border-border/70 bg-card px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-foreground">
+                              class="border-border/70 bg-card text-foreground rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.18em]">
                             Kraj
                         </span>
                     </div>
@@ -130,13 +100,13 @@ new class extends Component {
                         <span class="text-muted-foreground">vs</span>
                         <span class="{{ $game['player_two_class'] }}">{{ $game['player_two'] }}</span>
                     </p>
-                    <p class="mt-0.5 text-[11px] text-muted-foreground">Rezultat</p>
-                    <p class="mt-0.5 text-sm font-semibold text-foreground">{{ $game['score'] }}</p>
-                    <p class="mt-0.5 text-[11px] text-muted-foreground">Trajanje {{ $game['duration'] }}</p>
+                    <p class="text-muted-foreground mt-0.5 text-[11px]">Rezultat</p>
+                    <p class="text-foreground mt-0.5 text-sm font-semibold">{{ $game['score'] }}</p>
+                    <p class="text-muted-foreground mt-0.5 text-[11px]">Trajanje {{ $game['duration'] }}</p>
                 </div>
             @empty
                 <div
-                    class="rounded-2xl border border-dashed border-border/70 bg-background/70 px-4 py-6 text-sm text-muted-foreground">
+                     class="border-border/70 bg-background/70 text-muted-foreground rounded-2xl border border-dashed px-4 py-6 text-sm">
                     Još nema završenih partija.
                 </div>
             @endforelse

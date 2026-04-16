@@ -9,7 +9,7 @@ new class extends Component {
     #[Computed]
     public function games(): array
     {
-        $event = Event::query()->latest('start_at')->first();
+        $event = Event::current();
 
         if (!$event) {
             return [];
@@ -18,40 +18,12 @@ new class extends Component {
         return Game::query()
             ->with(['sets', 'playerOne', 'playerTwo'])
             ->where('event_id', $event->id)
+            ->latest('created_at')
+            ->latest('id')
+            ->limit(90)
             ->get()
-            ->filter(function (Game $game): bool {
-                $result = Game::determineMatchResultFromSetScores(
-                    $game->sets
-                        ->map(
-                            fn($set): array => [
-                                'player_one_score' => $set->player_one_score,
-                                'player_two_score' => $set->player_two_score,
-                            ],
-                        )
-                        ->all(),
-                    $game->best_of,
-                    $game->player_one_id,
-                    $game->player_two_id,
-                );
-
-                return $result['is_complete'];
-            })
             ->map(function (Game $game): array {
-                $scores = $game->sets->filter(fn($set): bool => filled($set->player_one_score) && filled($set->player_two_score))->map(fn($set): string => "{$set->player_one_score}-{$set->player_two_score}")->implode(', ');
-
-                $result = Game::determineMatchResultFromSetScores(
-                    $game->sets
-                        ->map(
-                            fn($set): array => [
-                                'player_one_score' => $set->player_one_score,
-                                'player_two_score' => $set->player_two_score,
-                            ],
-                        )
-                        ->all(),
-                    $game->best_of,
-                    $game->player_one_id,
-                    $game->player_two_id,
-                );
+                $result = Game::determineMatchResultFromSetCollection($game->sets, (int) $game->best_of, $game->player_one_id, $game->player_two_id);
 
                 $durationSeconds = $game->duration_seconds;
 
@@ -59,21 +31,19 @@ new class extends Component {
                     $durationSeconds = $game->started_at->diffInSeconds($game->finished_at);
                 }
 
-                $isDraw = (bool) ($result['is_complete'] && $result['is_draw']);
-                $winnerId = $result['winner_id'] ?? null;
-
                 return [
                     'id' => $game->id,
                     'time' => $game->created_at,
                     'player_one' => $game->playerOne->full_name,
                     'player_two' => $game->playerTwo->full_name,
-                    'player_one_class' => $this->playerClass($game->player_one_id, $winnerId, $isDraw),
-                    'player_two_class' => $this->playerClass($game->player_two_id, $winnerId, $isDraw),
-                    'score' => $scores !== '' ? $scores : '—',
+                    'player_one_class' => $this->playerClass($game->player_one_id, $result['winner_id'], (bool) $result['is_draw']),
+                    'player_two_class' => $this->playerClass($game->player_two_id, $result['winner_id'], (bool) $result['is_draw']),
+                    'score' => Game::formatSetPointsSummary($game->sets),
                     'duration' => $this->formatDuration($durationSeconds),
+                    'is_complete' => (bool) $result['is_complete'],
                 ];
             })
-            ->sortByDesc('time')
+            ->filter(fn(array $game): bool => $game['is_complete'])
             ->take(30)
             ->values()
             ->all();
@@ -127,27 +97,27 @@ new class extends Component {
 ?>
 
 <div class="tv-latest-games tv-density-{{ $this->density }} flex h-full min-h-0 flex-col" wire:poll.3s>
-    <div class="min-h-0 flex-1 overflow-hidden bg-background/40">
-        <div class="flex h-full min-h-0 flex-col divide-y divide-border/60 overflow-hidden">
+    <div class="bg-background/40 min-h-0 flex-1 overflow-hidden">
+        <div class="divide-border/60 flex h-full min-h-0 flex-col divide-y overflow-hidden">
             @forelse ($this->games as $game)
                 <article class="tv-latest-game-card odd:bg-background/35 even:bg-transparent"
-                    wire:key="tv-latest-game-{{ $game['id'] }}">
-                    <div class="tv-latest-subtext flex items-center justify-between font-semibold text-muted-foreground">
+                         wire:key="tv-latest-game-{{ $game['id'] }}">
+                    <div class="tv-latest-subtext text-muted-foreground flex items-center justify-between font-semibold">
                         <span>{{ $game['time']?->format('H:i') ?? '—' }}</span>
                         <span>Trajanje {{ $game['duration'] }}</span>
                     </div>
 
-                    <p class="tv-latest-text mt-1.5 leading-tight font-semibold">
+                    <p class="tv-latest-text mt-1.5 font-semibold leading-tight">
                         <span class="{{ $game['player_one_class'] }}">{{ $game['player_one'] }}</span>
                         <span class="text-muted-foreground">vs</span>
                         <span class="{{ $game['player_two_class'] }}">{{ $game['player_two'] }}</span>
                     </p>
 
-                    <p class="tv-latest-subtext mt-0.5 text-muted-foreground">Rezultat {{ $game['score'] }}
+                    <p class="tv-latest-subtext text-muted-foreground mt-0.5">Rezultat {{ $game['score'] }}
                     </p>
                 </article>
             @empty
-                <div class="px-4 py-6 text-sm text-muted-foreground">
+                <div class="text-muted-foreground px-4 py-6 text-sm">
                     Još nema završenih partija.
                 </div>
             @endforelse

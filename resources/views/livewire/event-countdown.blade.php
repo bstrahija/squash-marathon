@@ -9,7 +9,7 @@ new class extends Component {
     #[Computed]
     public function status(): array
     {
-        $event = Event::query()->latest('start_at')->first();
+        $event = Event::current();
 
         if (!$event) {
             return [
@@ -67,27 +67,27 @@ new class extends Component {
 };
 ?>
 
-<div class="rounded-3xl border border-border bg-card p-6 shadow-sm" wire:poll.5s>
+<div class="border-border bg-card rounded-3xl border p-6 shadow-sm" wire:poll.5s>
     <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Status događaja</p>
+            <p class="text-muted-foreground text-xs font-semibold uppercase tracking-[0.2em]">Status događaja</p>
             <h2 class="font-display mt-2 text-2xl font-semibold">
                 {{ $this->status['name'] ?? 'Squash maraton' }}
             </h2>
         </div>
         <div class="flex items-center gap-2">
             <button aria-label="Toggle theme" aria-pressed="false"
-                class="relative flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background/70 text-foreground transition hover:-translate-y-0.5 hover:border-foreground/40"
-                data-theme-toggle title="Toggle theme" type="button">
+                    class="border-border bg-background/70 text-foreground hover:border-foreground/40 relative flex h-9 w-9 items-center justify-center rounded-full border transition hover:-translate-y-0.5"
+                    data-theme-toggle title="Toggle theme" type="button">
                 <x-heroicon-o-sun aria-hidden="true"
-                    class="absolute inset-0 m-auto h-3.5 w-3.5 scale-100 opacity-100 transition duration-300"
-                    data-theme-icon="sun" />
+                                  class="absolute inset-0 m-auto h-3.5 w-3.5 scale-100 opacity-100 transition duration-300"
+                                  data-theme-icon="sun" />
                 <x-heroicon-o-moon aria-hidden="true"
-                    class="absolute inset-0 m-auto h-3.5 w-3.5 scale-75 opacity-0 transition duration-300"
-                    data-theme-icon="moon" />
+                                   class="absolute inset-0 m-auto h-3.5 w-3.5 scale-75 opacity-0 transition duration-300"
+                                   data-theme-icon="moon" />
             </button>
             <span
-                class="rounded-full border border-border/70 bg-background/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-foreground">
+                  class="border-border/70 bg-background/70 text-foreground rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em]">
                 {{ $this->status['is_over'] ? 'Završeno' : 'U tijeku' }}
             </span>
         </div>
@@ -95,30 +95,30 @@ new class extends Component {
 
     @if (!$this->status['has_event'])
         <div
-            class="mt-6 rounded-2xl border border-dashed border-border/70 bg-background/70 px-4 py-6 text-sm text-muted-foreground">
+             class="border-border/70 bg-background/70 text-muted-foreground mt-6 rounded-2xl border border-dashed px-4 py-6 text-sm">
             Još nema aktivnog događaja.
         </div>
     @else
         <div class="mt-6 grid gap-4 sm:grid-cols-2">
-            <div class="rounded-2xl border border-border/70 bg-background/70 p-4">
-                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Preostalo</p>
-                <p class="font-display mt-3 text-3xl font-semibold text-foreground">
+            <div class="border-border/70 bg-background/70 rounded-2xl border p-4">
+                <p class="text-muted-foreground text-xs font-semibold uppercase tracking-[0.2em]">Preostalo</p>
+                <p class="font-display text-foreground mt-3 text-3xl font-semibold">
                     {{ $this->status['is_over'] ? 'Završeno' : $this->status['remaining_label'] ?? '—' }}
                 </p>
             </div>
-            <div class="rounded-2xl border border-border/70 bg-background/70 p-4">
-                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Vrijeme kraja</p>
-                <p class="font-display mt-3 text-3xl font-semibold text-foreground">
+            <div class="border-border/70 bg-background/70 rounded-2xl border p-4">
+                <p class="text-muted-foreground text-xs font-semibold uppercase tracking-[0.2em]">Vrijeme kraja</p>
+                <p class="font-display text-foreground mt-3 text-3xl font-semibold">
                     {{ $this->status['ends_at']?->format('H:i') ?? '—' }}
                 </p>
-                <p class="mt-1 text-xs text-muted-foreground">
+                <p class="text-muted-foreground mt-1 text-xs">
                     {{ $this->status['ends_at']?->format('d.m.Y') ?? '—' }}
                 </p>
             </div>
         </div>
     @endif
 
-    <p class="mt-3 text-[11px] text-muted-foreground">
+    <p class="text-muted-foreground mt-3 text-[11px]">
         Automatsko osvježavanje svakih {{ config('polling.components.event_countdown') }} sekundi
     </p>
 </div>

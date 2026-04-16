@@ -17,7 +17,7 @@ new class extends Component {
     #[Computed]
     public function match(): ?array
     {
-        $event = Event::query()->latest('id')->first();
+        $event = Event::current();
 
         if (!$event) {
             return null;
@@ -27,6 +27,8 @@ new class extends Component {
             ->with(['sets', 'playerOne', 'playerTwo', 'group', 'gameLogs' => fn($query) => $query->orderBy('sequence')])
             ->where('event_id', $event->id)
             ->whereHas('group', fn($query) => $query->where('number', $this->groupNumber))
+            ->latest('id')
+            ->limit(20)
             ->get();
 
         if ($games->isEmpty()) {
@@ -54,19 +56,7 @@ new class extends Component {
         $latestSet = $orderedSets->last();
         $latestLog = $game->gameLogs->last();
 
-        $result = Game::determineMatchResultFromSetScores(
-            $orderedSets
-                ->map(
-                    fn(GameSet $set): array => [
-                        'player_one_score' => $set->player_one_score,
-                        'player_two_score' => $set->player_two_score,
-                    ],
-                )
-                ->all(),
-            $game->best_of,
-            $game->player_one_id,
-            $game->player_two_id,
-        );
+        $result = Game::determineMatchResultFromSetCollection($orderedSets, (int) $game->best_of, $game->player_one_id, $game->player_two_id);
 
         $isLive = $this->isLiveGame($game);
         $isFinished = $this->isFinishedGame($game);
@@ -113,19 +103,7 @@ new class extends Component {
 
     private function isFinishedGame(Game $game): bool
     {
-        $result = Game::determineMatchResultFromSetScores(
-            $game->sets
-                ->map(
-                    fn(GameSet $set): array => [
-                        'player_one_score' => $set->player_one_score,
-                        'player_two_score' => $set->player_two_score,
-                    ],
-                )
-                ->all(),
-            $game->best_of,
-            $game->player_one_id,
-            $game->player_two_id,
-        );
+        $result = Game::determineMatchResultFromSetCollection($game->sets, (int) $game->best_of, $game->player_one_id, $game->player_two_id);
 
         return (bool) ($game->finished_at || $result['is_complete']);
     }
@@ -165,35 +143,35 @@ new class extends Component {
 <div class="tv-group-match flex h-full min-h-0 flex-col" wire:poll.3s>
     @if ($match)
         <a href="{{ $match['score_url'] }}" aria-label="Open match score"
-            class="tv-group-grid grid h-full min-h-0 flex-1 items-stretch overflow-hidden bg-background/35 transition-colors hover:bg-background/50 focus-visible:bg-background/50 focus-visible:outline-none">
+           class="tv-group-grid bg-background/35 hover:bg-background/50 focus-visible:bg-background/50 grid h-full min-h-0 flex-1 items-stretch overflow-hidden transition-colors focus-visible:outline-none">
             <div
-                class="tv-group-player-column tv-group-player-one flex h-full min-h-0 flex-col items-center justify-center text-center">
+                 class="tv-group-player-column tv-group-player-one flex h-full min-h-0 flex-col items-center justify-center text-center">
                 <p title="{{ $match['player_one_full'] }}"
-                    class="tv-group-player-name truncate whitespace-nowrap font-semibold leading-tight {{ $match['player_one_class'] }}">
+                   class="tv-group-player-name {{ $match['player_one_class'] }} truncate whitespace-nowrap font-semibold leading-tight">
                     {{ $match['player_one'] }}</p>
                 <p
-                    class="tv-group-point self-center text-center font-display font-normal leading-none text-foreground/80">
+                   class="tv-group-point font-display text-foreground/80 self-center text-center font-normal leading-none">
                     {{ $match['sets_one'] }}</p>
             </div>
 
             <div class="tv-group-center flex h-full min-w-40 flex-col items-center justify-center">
-                <p class="tv-group-name font-semibold uppercase tracking-wide text-muted-foreground">
+                <p class="tv-group-name text-muted-foreground font-semibold uppercase tracking-wide">
                     {{ $match['group_name'] }}
                 </p>
                 <span
-                    class="tv-group-status rounded-full px-3 py-1 font-semibold tracking-wide {{ $match['status_class'] }} {{ $match['status_effect_class'] }}">
+                      class="tv-group-status {{ $match['status_class'] }} {{ $match['status_effect_class'] }} rounded-full px-3 py-1 font-semibold tracking-wide">
                     {{ $match['status'] }}
                 </span>
                 <div
-                    class="tv-group-set-score font-display font-semibold leading-none tracking-tight text-foreground text-nowrap">
+                     class="tv-group-set-score font-display text-foreground text-nowrap font-semibold leading-none tracking-tight">
                     {{ $match['player_one_current'] }} : {{ $match['player_two_current'] }}
                 </div>
 
                 <div class="tv-group-timeline flex w-full flex-wrap items-center justify-center overflow-hidden">
                     @forelse ($match['timeline'] as $timeline)
                         <span
-                            class="tv-group-chip shrink-0 rounded-full bg-background/80 font-semibold text-muted-foreground"
-                            wire:key="tv-group-{{ $match['id'] }}-set-{{ $timeline['id'] }}">
+                              class="tv-group-chip bg-background/80 text-muted-foreground shrink-0 rounded-full font-semibold"
+                              wire:key="tv-group-{{ $match['id'] }}-set-{{ $timeline['id'] }}">
                             {{ $timeline['score'] }}
                         </span>
                     @empty
@@ -202,18 +180,18 @@ new class extends Component {
             </div>
 
             <div
-                class="tv-group-player-column tv-group-player-two flex h-full min-h-0 flex-col items-center justify-center text-center">
+                 class="tv-group-player-column tv-group-player-two flex h-full min-h-0 flex-col items-center justify-center text-center">
                 <p title="{{ $match['player_two_full'] }}"
-                    class="tv-group-player-name truncate whitespace-nowrap font-semibold leading-tight {{ $match['player_two_class'] }}">
+                   class="tv-group-player-name {{ $match['player_two_class'] }} truncate whitespace-nowrap font-semibold leading-tight">
                     {{ $match['player_two'] }}</p>
                 <p
-                    class="tv-group-point self-center text-center font-display font-normal leading-none text-foreground/80">
+                   class="tv-group-point font-display text-foreground/80 self-center text-center font-normal leading-none">
                     {{ $match['sets_two'] }}</p>
             </div>
         </a>
     @else
         <div
-            class="tv-group-empty flex min-h-0 flex-1 items-center justify-center bg-background/35 px-6 text-center text-muted-foreground">
+             class="tv-group-empty bg-background/35 text-muted-foreground flex min-h-0 flex-1 items-center justify-center px-6 text-center">
             Nema meceva za ovu grupu.
         </div>
     @endif
