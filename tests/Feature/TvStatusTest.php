@@ -242,10 +242,11 @@ test('tv latest games component shows last 30 games with result and duration', f
     }
 
     Livewire::test('tv.latest-games')
-        ->assertSee($playerOne->full_name)
-        ->assertSee($playerTwo->full_name)
+        ->assertSee($playerOne->short_name)
+        ->assertSee($playerTwo->short_name)
         ->assertSee('Rezultat 11-5, 11-7')
-        ->assertSee('Trajanje 1:31')
+        ->assertSee('1:31')
+        ->assertDontSee('Trajanje 1:31')
         ->assertDontSee('Trajanje 1:01');
 });
 

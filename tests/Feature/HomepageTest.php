@@ -79,31 +79,31 @@ test('homepage renders real data sections', function () {
 
     Role::findOrCreate(RoleName::Player->value);
 
-    $event = Event::factory()->create();
+    $event     = Event::factory()->create();
     $playerOne = User::factory()->create()->assignRole(RoleName::Player->value);
     $playerTwo = User::factory()->create()->assignRole(RoleName::Player->value);
 
     $event->users()->attach([$playerOne->id, $playerTwo->id]);
 
     $game = Game::factory()->create([
-        'event_id' => $event->id,
-        'best_of' => 2,
+        'event_id'      => $event->id,
+        'best_of'       => 2,
         'player_one_id' => $playerOne->id,
         'player_two_id' => $playerTwo->id,
     ]);
 
     GameSet::factory()->create([
-        'game_id' => $game->id,
-        'player_one_id' => $playerOne->id,
-        'player_two_id' => $playerTwo->id,
+        'game_id'          => $game->id,
+        'player_one_id'    => $playerOne->id,
+        'player_two_id'    => $playerTwo->id,
         'player_one_score' => 11,
         'player_two_score' => 6,
     ]);
 
     GameSet::factory()->create([
-        'game_id' => $game->id,
-        'player_one_id' => $playerOne->id,
-        'player_two_id' => $playerTwo->id,
+        'game_id'          => $game->id,
+        'player_one_id'    => $playerOne->id,
+        'player_two_id'    => $playerTwo->id,
         'player_one_score' => 11,
         'player_two_score' => 8,
     ]);
@@ -117,34 +117,40 @@ test('homepage renders real data sections', function () {
     $response->assertSee(route('players.show', $playerOne), false);
     $response->assertSee(route('players.show', $playerTwo), false);
     $response->assertSee('11-6');
+    $response->assertSee('W:');
+    $response->assertSee('D:');
+    $response->assertSee('L:');
+    $response->assertDontSee('pobjede');
+    $response->assertDontSee('remija');
+    $response->assertDontSee('poraza');
 });
 
 test('leaderboard livewire component shows players and points', function () {
-    $event = Event::factory()->create();
+    $event     = Event::factory()->create();
     $playerOne = User::factory()->create();
     $playerTwo = User::factory()->create();
 
     $event->users()->attach([$playerOne->id, $playerTwo->id]);
 
     $game = Game::factory()->create([
-        'event_id' => $event->id,
-        'best_of' => 2,
+        'event_id'      => $event->id,
+        'best_of'       => 2,
         'player_one_id' => $playerOne->id,
         'player_two_id' => $playerTwo->id,
     ]);
 
     GameSet::factory()->create([
-        'game_id' => $game->id,
-        'player_one_id' => $playerOne->id,
-        'player_two_id' => $playerTwo->id,
+        'game_id'          => $game->id,
+        'player_one_id'    => $playerOne->id,
+        'player_two_id'    => $playerTwo->id,
         'player_one_score' => 11,
         'player_two_score' => 6,
     ]);
 
     GameSet::factory()->create([
-        'game_id' => $game->id,
-        'player_one_id' => $playerOne->id,
-        'player_two_id' => $playerTwo->id,
+        'game_id'          => $game->id,
+        'player_one_id'    => $playerOne->id,
+        'player_two_id'    => $playerTwo->id,
         'player_one_score' => 11,
         'player_two_score' => 9,
     ]);
@@ -161,40 +167,40 @@ test('leaderboard livewire component shows players and points', function () {
 });
 
 test('timeline livewire component shows recent games', function () {
-    $event = Event::factory()->create();
+    $event     = Event::factory()->create();
     $playerOne = User::factory()->create();
     $playerTwo = User::factory()->create();
-    $gameTime = Carbon::create(2026, 2, 1, 19, 45, 0);
+    $gameTime  = Carbon::create(2026, 2, 1, 19, 45, 0);
 
     $event->users()->attach([$playerOne->id, $playerTwo->id]);
 
     $game = Game::factory()->create([
-        'event_id' => $event->id,
-        'best_of' => 2,
+        'event_id'      => $event->id,
+        'best_of'       => 2,
         'player_one_id' => $playerOne->id,
         'player_two_id' => $playerTwo->id,
-        'created_at' => $gameTime,
-        'updated_at' => $gameTime,
+        'created_at'    => $gameTime,
+        'updated_at'    => $gameTime,
     ]);
 
     GameSet::factory()->create([
-        'game_id' => $game->id,
-        'player_one_id' => $playerOne->id,
-        'player_two_id' => $playerTwo->id,
+        'game_id'          => $game->id,
+        'player_one_id'    => $playerOne->id,
+        'player_two_id'    => $playerTwo->id,
         'player_one_score' => 11,
         'player_two_score' => 6,
-        'created_at' => $gameTime,
-        'updated_at' => $gameTime,
+        'created_at'       => $gameTime,
+        'updated_at'       => $gameTime,
     ]);
 
     GameSet::factory()->create([
-        'game_id' => $game->id,
-        'player_one_id' => $playerOne->id,
-        'player_two_id' => $playerTwo->id,
+        'game_id'          => $game->id,
+        'player_one_id'    => $playerOne->id,
+        'player_two_id'    => $playerTwo->id,
         'player_one_score' => 11,
         'player_two_score' => 9,
-        'created_at' => $gameTime,
-        'updated_at' => $gameTime,
+        'created_at'       => $gameTime,
+        'updated_at'       => $gameTime,
     ]);
 
     Livewire::test('timeline')
@@ -204,21 +210,22 @@ test('timeline livewire component shows recent games', function () {
         ->assertSee($playerOne->full_name)
         ->assertSee($playerTwo->full_name)
         ->assertSee('11-6')
-        ->assertSee('Trajanje');
+        ->assertSee('<svg', false)
+        ->assertDontSee('Trajanje');
 });
 
 test('timeline livewire orders games by finished_at descending', function () {
     $event = Event::factory()->create();
     $round = Round::factory()->create([
         'event_id' => $event->id,
-        'number' => 1,
-        'name' => 'Round 1',
+        'number'   => 1,
+        'name'     => 'Round 1',
     ]);
     $group = Group::factory()->create([
         'event_id' => $event->id,
         'round_id' => $round->id,
-        'number' => 1,
-        'name' => 'Group 1',
+        'number'   => 1,
+        'name'     => 'Group 1',
     ]);
 
     $olderPlayerOne = User::factory()->create();
@@ -234,43 +241,43 @@ test('timeline livewire orders games by finished_at descending', function () {
     ]);
 
     $olderGame = Game::factory()->create([
-        'event_id' => $event->id,
-        'round_id' => $round->id,
-        'group_id' => $group->id,
-        'best_of' => 1,
+        'event_id'      => $event->id,
+        'round_id'      => $round->id,
+        'group_id'      => $group->id,
+        'best_of'       => 1,
         'player_one_id' => $olderPlayerOne->id,
         'player_two_id' => $olderPlayerTwo->id,
-        'created_at' => now()->subMinutes(1),
-        'updated_at' => now()->subMinutes(1),
-        'started_at' => now()->subMinutes(15),
-        'finished_at' => now()->subMinutes(10),
+        'created_at'    => now()->subMinutes(1),
+        'updated_at'    => now()->subMinutes(1),
+        'started_at'    => now()->subMinutes(15),
+        'finished_at'   => now()->subMinutes(10),
     ]);
 
     $newerGame = Game::factory()->create([
-        'event_id' => $event->id,
-        'round_id' => $round->id,
-        'group_id' => $group->id,
-        'best_of' => 1,
+        'event_id'      => $event->id,
+        'round_id'      => $round->id,
+        'group_id'      => $group->id,
+        'best_of'       => 1,
         'player_one_id' => $newerPlayerOne->id,
         'player_two_id' => $newerPlayerTwo->id,
-        'created_at' => now()->subMinutes(30),
-        'updated_at' => now()->subMinutes(30),
-        'started_at' => now()->subMinutes(8),
-        'finished_at' => now()->subMinutes(3),
+        'created_at'    => now()->subMinutes(30),
+        'updated_at'    => now()->subMinutes(30),
+        'started_at'    => now()->subMinutes(8),
+        'finished_at'   => now()->subMinutes(3),
     ]);
 
     GameSet::factory()->create([
-        'game_id' => $olderGame->id,
-        'player_one_id' => $olderPlayerOne->id,
-        'player_two_id' => $olderPlayerTwo->id,
+        'game_id'          => $olderGame->id,
+        'player_one_id'    => $olderPlayerOne->id,
+        'player_two_id'    => $olderPlayerTwo->id,
         'player_one_score' => 11,
         'player_two_score' => 8,
     ]);
 
     GameSet::factory()->create([
-        'game_id' => $newerGame->id,
-        'player_one_id' => $newerPlayerOne->id,
-        'player_two_id' => $newerPlayerTwo->id,
+        'game_id'          => $newerGame->id,
+        'player_one_id'    => $newerPlayerOne->id,
+        'player_two_id'    => $newerPlayerTwo->id,
         'player_one_score' => 11,
         'player_two_score' => 9,
     ]);

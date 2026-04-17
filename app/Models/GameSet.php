@@ -51,8 +51,8 @@ class GameSet extends Model
             }
 
             if ($set->started_at && $set->finished_at) {
-                $duration = $set->started_at->diffInSeconds($set->finished_at);
-                $set->duration_seconds = max(0, $duration);
+                $duration              = $set->started_at->diffInSeconds($set->finished_at);
+                $set->duration_seconds = max(0, (int) round($duration));
             }
 
             $playerOneScore = $set->player_one_score;
@@ -74,8 +74,8 @@ class GameSet extends Model
                 throw new InvalidArgumentException('Set player_two_score must be 0 or higher.');
             }
 
-            $maxScore = max($playerOneScore, $playerTwoScore);
-            $minScore = min($playerOneScore, $playerTwoScore);
+            $maxScore   = max($playerOneScore, $playerTwoScore);
+            $minScore   = min($playerOneScore, $playerTwoScore);
             $difference = $maxScore - $minScore;
 
             if ($maxScore < 11) {
@@ -110,12 +110,12 @@ class GameSet extends Model
     protected function casts(): array
     {
         return [
-            'round_id' => 'integer',
-            'group_id' => 'integer',
+            'round_id'         => 'integer',
+            'group_id'         => 'integer',
             'player_one_score' => 'integer',
             'player_two_score' => 'integer',
-            'started_at' => 'datetime',
-            'finished_at' => 'datetime',
+            'started_at'       => 'datetime',
+            'finished_at'      => 'datetime',
             'duration_seconds' => 'integer',
         ];
     }

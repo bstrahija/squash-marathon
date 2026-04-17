@@ -1,14 +1,16 @@
 <?php
 
+use App\Livewire\Concerns\HasGameDisplayHelpers;
 use App\Models\Event;
 use App\Models\Game;
 use App\Models\GameSet;
-use Illuminate\Support\Carbon;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
 new class extends Component
 {
+    use HasGameDisplayHelpers;
+
     public int $groupNumber = 1;
 
     public function mount(int $groupNumber = 1): void
@@ -108,71 +110,6 @@ new class extends Component
     private function isWaitingGame(Game $game): bool
     {
         return $game->isWaiting();
-    }
-
-    private function matchDurationLabel(Game $game, bool $isLive): string
-    {
-        if ($isLive && $game->started_at) {
-            $seconds = max(0, $game->started_at->diffInSeconds(Carbon::now()));
-
-            return $this->formatDuration($seconds);
-        }
-
-        if ($game->duration_seconds) {
-            return $this->formatDuration($game->duration_seconds);
-        }
-
-        if ($game->started_at && $game->finished_at) {
-            $seconds = max(0, $game->started_at->diffInSeconds($game->finished_at));
-
-            return $this->formatDuration($seconds);
-        }
-
-        if ($game->started_at && ! $game->finished_at) {
-            $seconds = max(0, $game->started_at->diffInSeconds(Carbon::now()));
-
-            return $this->formatDuration($seconds);
-        }
-
-        return '—';
-    }
-
-    private function formatDuration(?int $seconds): string
-    {
-        if (! $seconds) {
-            return '—';
-        }
-
-        $hours            = intdiv($seconds, 3600);
-        $minutes          = intdiv($seconds % 3600, 60);
-        $remainingSeconds = $seconds % 60;
-
-        if ($hours > 0) {
-            return sprintf('%d:%02d:%02d', $hours, $minutes, $remainingSeconds);
-        }
-
-        return sprintf('%d:%02d', $minutes, $remainingSeconds);
-    }
-
-    private function playerClass(?int $playerId, ?int $winnerId, bool $isDraw): string
-    {
-        if (! $playerId) {
-            return 'text-foreground';
-        }
-
-        if ($isDraw) {
-            return 'text-amber-600/90 dark:text-amber-400/90';
-        }
-
-        if ($winnerId && $winnerId === $playerId) {
-            return 'text-emerald-600 dark:text-emerald-400';
-        }
-
-        if ($winnerId) {
-            return 'text-foreground/70';
-        }
-
-        return 'text-foreground';
     }
 };
 ?>

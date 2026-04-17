@@ -1,54 +1,54 @@
 <?php
 
 use App\Models\Event;
-use Illuminate\Support\Carbon;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
-new class extends Component {
+new class extends Component
+{
     #[Computed]
     public function status(): array
     {
         $event = Event::current();
 
-        if (!$event) {
+        if (! $event) {
             return [
-                'has_event' => false,
-                'name' => null,
-                'starts_at' => null,
-                'ends_at' => null,
-                'is_over' => false,
+                'has_event'       => false,
+                'name'            => null,
+                'starts_at'       => null,
+                'ends_at'         => null,
+                'is_over'         => false,
                 'remaining_label' => null,
             ];
         }
 
-        $now = now();
-        $endsAt = $event->end_at;
-        $secondsRemaining = $endsAt ? $now->diffInSeconds($endsAt, false) : null;
+        $now              = now();
+        $endsAt           = $event->end_at;
+        $secondsRemaining = $endsAt ? (int) round($now->diffInSeconds($endsAt, false)) : null;
 
         if ($secondsRemaining !== null && $secondsRemaining < 0) {
             $secondsRemaining = 0;
         }
 
         return [
-            'has_event' => true,
-            'name' => $event->name,
-            'starts_at' => $event->start_at,
-            'ends_at' => $endsAt,
-            'is_over' => $endsAt ? $now->greaterThanOrEqualTo($endsAt) : false,
+            'has_event'       => true,
+            'name'            => $event->name,
+            'starts_at'       => $event->start_at,
+            'ends_at'         => $endsAt,
+            'is_over'         => $endsAt ? $now->greaterThanOrEqualTo($endsAt) : false,
             'remaining_label' => $secondsRemaining !== null ? $this->formatDuration($secondsRemaining) : null,
         ];
     }
 
     private function formatDuration(int $seconds): string
     {
-        $seconds = max(0, $seconds);
-        $hours = intdiv($seconds, 3600);
-        $minutes = intdiv($seconds % 3600, 60);
+        $seconds          = max(0, $seconds);
+        $hours            = intdiv($seconds, 3600);
+        $minutes          = intdiv($seconds % 3600, 60);
         $remainingSeconds = $seconds % 60;
 
         if ($hours >= 24) {
-            $days = intdiv($hours, 24);
+            $days  = intdiv($hours, 24);
             $hours = $hours % 24;
 
             return sprintf('%dd %dh %dmin', $days, $hours, $minutes);

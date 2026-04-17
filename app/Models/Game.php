@@ -46,7 +46,7 @@ class Game extends Model
 
             if ($game->started_at && $game->finished_at) {
                 $duration               = $game->started_at->diffInSeconds($game->finished_at);
-                $game->duration_seconds = max(0, $duration);
+                $game->duration_seconds = max(0, (int) round($duration));
             }
 
             if (! in_array($game->best_of, self::ALLOWED_BEST_OF_VALUES, true)) {

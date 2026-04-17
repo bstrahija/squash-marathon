@@ -3,11 +3,11 @@
 use App\Livewire\Concerns\HasGameDisplayHelpers;
 use App\Models\Event;
 use App\Models\Game;
-use App\Models\User;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
-new class extends Component {
+new class extends Component
+{
     use HasGameDisplayHelpers;
 
     #[Computed]
@@ -47,7 +47,7 @@ new class extends Component {
                 $durationSeconds = $game->duration_seconds;
 
                 if ($durationSeconds === null && $game->started_at && $game->finished_at) {
-                    $durationSeconds = $game->started_at->diffInSeconds($game->finished_at);
+                    $durationSeconds = (int) round($game->started_at->diffInSeconds($game->finished_at));
                 }
 
                 $isDraw   = $result['is_draw'];
@@ -114,8 +114,9 @@ new class extends Component {
                 {{-- <p class="mt-3 text-muted-foreground text-xs text-center">
                     Trajanje {{ $entry['duration'] }} • {{ $entry['time']?->format('H:i') ?? '—' }}
                 </p> --}}
-                <p class="mt-3 text-muted-foreground text-xs text-center">
-                    Trajanje {{ $entry['duration'] }}
+                <p class="mt-3 inline-flex w-full items-center justify-center gap-1 text-xs text-muted-foreground">
+                    <x-heroicon-o-clock class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                    {{ $entry['duration'] }}
                 </p>
             </div>
         @empty

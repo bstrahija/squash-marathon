@@ -6,7 +6,8 @@ use App\Models\Game;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
-new class extends Component {
+new class extends Component
+{
     use HasGameDisplayHelpers;
 
     #[Computed]
@@ -27,12 +28,14 @@ new class extends Component {
                 return [
                     'id'               => $game->id,
                     'time'             => $game->created_at,
-                    'player_one'       => $game->playerOne->full_name,
-                    'player_two'       => $game->playerTwo->full_name,
+                    'player_one'       => $game->playerOne->short_name,
+                    'player_two'       => $game->playerTwo->short_name,
                     'player_one_class' => $this->playerClass($game->player_one_id, $winnerId, $isDraw),
                     'player_two_class' => $this->playerClass($game->player_two_id, $winnerId, $isDraw),
                     'score'            => $game->scoreSummary(),
-                    'duration'         => $this->formatDuration($game->duration_seconds),
+                    'is_live'          => $game->isLive(),
+                    'started_at_ts'    => $game->started_at?->timestamp,
+                    'duration'         => $this->matchDurationLabel($game, $game->isLive()),
                 ];
             })
             ->all();
@@ -64,7 +67,34 @@ new class extends Component {
                     wire:key="tv-latest-game-{{ $game['id'] }}">
                     <div class="tv-latest-subtext flex items-center justify-between font-semibold text-muted-foreground">
                         <span>{{ $game['time']?->format('H:i') ?? '—' }}</span>
-                        <span>Trajanje {{ $game['duration'] }}</span>
+                        <span class="flex items-center gap-1"
+                            x-data="{
+                                startedAtTs: {{ $game['started_at_ts'] ?? 'null' }},
+                                isLive: {{ $game['is_live'] ? 'true' : 'false' }},
+                                now: Math.floor(Date.now() / 1000),
+                                get elapsed() {
+                                    if (!this.isLive || this.startedAtTs === null) return null;
+                                    return Math.max(0, this.now - this.startedAtTs);
+                                },
+                                formatDuration(totalSeconds) {
+                                    if (totalSeconds === null || totalSeconds <= 0) return '—';
+                                    const hours = Math.floor(totalSeconds / 3600);
+                                    const minutes = Math.floor((totalSeconds % 3600) / 60);
+                                    const secs = totalSeconds % 60;
+                                    if (hours > 0) return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+                                    return `${minutes}:${String(secs).padStart(2, '0')}`;
+                                },
+                            }"
+                            x-init="
+                                if (isLive && startedAtTs !== null) {
+                                    const interval = setInterval(() => { now = Math.floor(Date.now() / 1000); }, 1000);
+                                    $cleanup(() => clearInterval(interval));
+                                }
+                            ">
+                            <x-heroicon-o-clock class="size-3 shrink-0" />
+                            <span x-show="!isLive" x-cloak>{{ $game['duration'] }}</span>
+                            <span x-show="isLive" x-cloak x-text="formatDuration(elapsed)"></span>
+                        </span>
                     </div>
 
                     <p class="tv-latest-text mt-1.5 leading-tight font-semibold">

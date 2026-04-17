@@ -4,43 +4,44 @@ use App\Models\Event;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
-new class extends Component {
+new class extends Component
+{
     #[Computed]
     public function status(): array
     {
         $event = Event::current();
 
-        if (!$event) {
+        if (! $event) {
             return [
-                'has_event' => false,
-                'name' => null,
-                'ends_at' => null,
-                'ends_at_unix' => null,
+                'has_event'         => false,
+                'name'              => null,
+                'ends_at'           => null,
+                'ends_at_unix'      => null,
                 'remaining_seconds' => null,
-                'remaining_label' => '—',
-                'is_over' => false,
+                'remaining_label'   => '—',
+                'is_over'           => false,
             ];
         }
 
-        $now = now();
-        $endsAt = $event->end_at;
-        $secondsRemaining = $endsAt ? max(0, $now->diffInSeconds($endsAt, false)) : null;
+        $now              = now();
+        $endsAt           = $event->end_at;
+        $secondsRemaining = $endsAt ? max(0, (int) round($now->diffInSeconds($endsAt, false))) : null;
 
         return [
-            'has_event' => true,
-            'name' => $event->name,
-            'ends_at' => $endsAt,
-            'ends_at_unix' => $endsAt?->getTimestamp(),
+            'has_event'         => true,
+            'name'              => $event->name,
+            'ends_at'           => $endsAt,
+            'ends_at_unix'      => $endsAt?->getTimestamp(),
             'remaining_seconds' => $secondsRemaining,
-            'remaining_label' => $secondsRemaining !== null ? $this->formatDuration($secondsRemaining) : '—',
-            'is_over' => $endsAt ? $now->greaterThanOrEqualTo($endsAt) : false,
+            'remaining_label'   => $secondsRemaining !== null ? $this->formatDuration($secondsRemaining) : '—',
+            'is_over'           => $endsAt ? $now->greaterThanOrEqualTo($endsAt) : false,
         ];
     }
 
     private function formatDuration(int $seconds): string
     {
-        $hours = intdiv($seconds, 3600);
-        $minutes = intdiv($seconds % 3600, 60);
+        $hours            = intdiv($seconds, 3600);
+        $minutes          = intdiv($seconds % 3600, 60);
         $remainingSeconds = $seconds % 60;
 
         return sprintf('%02d:%02d:%02d', $hours, $minutes, $remainingSeconds);

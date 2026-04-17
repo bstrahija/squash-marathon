@@ -16,7 +16,7 @@
                 $profileUrl = $participant['profile_url'] ?? null;
                 $summary =
                     $participant['games'] > 0
-                        ? "{$participant['wins']} pobjede · {$participant['draws']} remija · {$participant['losses']} poraza"
+                        ? "W: {$participant['wins']} | D: {$participant['draws']} | L: {$participant['losses']}"
                         : 'Još bez odigranih';
             @endphp
             <div class="rounded-2xl border border-border/70 bg-background/70 p-4">
