@@ -56,19 +56,7 @@ new class extends Component
         $latestSet   = $orderedSets->last();
         $latestLog   = $game->gameLogs->last();
 
-        $result = Game::determineMatchResultFromSetScores(
-            $orderedSets
-                ->map(
-                    fn (GameSet $set): array => [
-                        'player_one_score' => $set->player_one_score,
-                        'player_two_score' => $set->player_two_score,
-                    ],
-                )
-                ->all(),
-            $game->best_of,
-            $game->player_one_id,
-            $game->player_two_id,
-        );
+        $result = $game->resultFromSets();
 
         $isLive     = $this->isLiveGame($game);
         $isFinished = $this->isFinishedGame($game);
@@ -109,35 +97,17 @@ new class extends Component
 
     private function isLiveGame(Game $game): bool
     {
-        if (! $game->started_at || $game->finished_at) {
-            return false;
-        }
-
-        return ! $this->isFinishedGame($game);
+        return $game->isLive();
     }
 
     private function isFinishedGame(Game $game): bool
     {
-        $result = Game::determineMatchResultFromSetScores(
-            $game->sets
-                ->map(
-                    fn (GameSet $set): array => [
-                        'player_one_score' => $set->player_one_score,
-                        'player_two_score' => $set->player_two_score,
-                    ],
-                )
-                ->all(),
-            $game->best_of,
-            $game->player_one_id,
-            $game->player_two_id,
-        );
-
-        return (bool) ($game->finished_at || $result['is_complete']);
+        return $game->isFinished();
     }
 
     private function isWaitingGame(Game $game): bool
     {
-        return ! $game->started_at && ! $game->finished_at;
+        return $game->isWaiting();
     }
 
     private function matchDurationLabel(Game $game, bool $isLive): string

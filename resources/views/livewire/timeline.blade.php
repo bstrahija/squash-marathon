@@ -44,11 +44,6 @@ new class extends Component {
                     return null;
                 }
 
-                $scores = $game->sets
-                    ->filter(fn ($set): bool => filled($set->player_one_score) && filled($set->player_two_score))
-                    ->map(fn ($set): string => "{$set->player_one_score}-{$set->player_two_score}")
-                    ->implode(', ');
-
                 $durationSeconds = $game->duration_seconds;
 
                 if ($durationSeconds === null && $game->started_at && $game->finished_at) {
@@ -69,7 +64,7 @@ new class extends Component {
                     'player_two_sets_class' => $this->setScoreClass($game->player_two_id, $winnerId, $isDraw),
                     'player_one_sets'       => $result['player_one_wins'],
                     'player_two_sets'       => $result['player_two_wins'],
-                    'score_details'         => $scores !== '' ? $scores : '—',
+                    'score_details'         => $game->scoreSummary(),
                     'duration'              => $this->formatDuration($durationSeconds),
                 ];
             })

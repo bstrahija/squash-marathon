@@ -137,6 +137,70 @@ class Game extends Model
     }
 
     /**
+     * Whether the game has not yet started.
+     */
+    public function isWaiting(): bool
+    {
+        return ! $this->started_at && ! $this->finished_at;
+    }
+
+    /**
+     * Whether the game is currently in progress.
+     *
+     * Falls back to checking the result when sets are loaded.
+     */
+    public function isLive(): bool
+    {
+        return (bool) ($this->started_at && ! $this->isFinished());
+    }
+
+    /**
+     * Whether the game is finished (by timestamp or by completed result).
+     *
+     * When the `sets` relation is loaded, also considers whether the result
+     * is logically complete — even if `finished_at` has not been written yet.
+     */
+    public function isFinished(): bool
+    {
+        if ($this->finished_at) {
+            return true;
+        }
+
+        if ($this->relationLoaded('sets')) {
+            return $this->resultFromSets()['is_complete'];
+        }
+
+        return false;
+    }
+
+    /**
+     * A formatted string of per-set scores, e.g. "11-8, 11-7".
+     *
+     * Requires the `sets` relation to be loaded.
+     */
+    public function scoreSummary(): string
+    {
+        $scores = $this->sets
+            ->filter(fn (GameSet $set): bool => filled($set->player_one_score) && filled($set->player_two_score))
+            ->map(fn (GameSet $set): string => "{$set->player_one_score}-{$set->player_two_score}")
+            ->implode(', ');
+
+        return $scores !== '' ? $scores : '—';
+    }
+
+    /**
+     * A "{player_one_wins}-{player_two_wins}" set-wins summary.
+     *
+     * Requires the `sets` relation to be loaded.
+     */
+    public function setResultSummary(): string
+    {
+        $result = $this->resultFromSets();
+
+        return "{$result['player_one_wins']}-{$result['player_two_wins']}";
+    }
+
+    /**
      * @param  array<int, array<string, mixed>>  $sets
      */
     public static function determineWinnerIdFromSetScores(

@@ -74,14 +74,16 @@ new class extends Component {
     #[Computed]
     public function playerOptions(): array
     {
-        $playerIds = Game::query()
-            ->pluck('player_one_id')
-            ->merge(Game::query()->pluck('player_two_id'))
-            ->filter()
-            ->unique()
-            ->values();
-
-        return User::query()->whereIn('id', $playerIds)->orderBy('first_name')->orderBy('last_name')->get()->mapWithKeys(fn(User $user): array => [$user->id => $user->full_name])->all();
+        return User::query()
+            ->where(function (Builder $query): void {
+                $query->whereIn('id', Game::query()->select('player_one_id')->whereNotNull('player_one_id'))
+                    ->orWhereIn('id', Game::query()->select('player_two_id')->whereNotNull('player_two_id'));
+            })
+            ->orderBy('first_name')
+            ->orderBy('last_name')
+            ->get()
+            ->mapWithKeys(fn (User $user): array => [$user->id => $user->full_name])
+            ->all();
     }
 
     /**
@@ -90,9 +92,12 @@ new class extends Component {
     #[Computed]
     public function roundOptions(): array
     {
-        $roundIds = Game::query()->pluck('round_id')->filter()->unique()->values();
-
-        return Round::query()->whereIn('id', $roundIds)->orderBy('number')->orderBy('id')->get()->mapWithKeys(fn(Round $round): array => [$round->id => $round->name])->all();
+        return Round::query()
+            ->whereIn('id', Game::query()->select('round_id')->whereNotNull('round_id')->distinct())
+            ->orderBy('number')
+            ->get()
+            ->mapWithKeys(fn (Round $round): array => [$round->id => $round->name])
+            ->all();
     }
 
     /**
@@ -101,9 +106,12 @@ new class extends Component {
     #[Computed]
     public function groupOptions(): array
     {
-        $groupIds = Game::query()->pluck('group_id')->filter()->unique()->values();
-
-        return Group::query()->whereIn('id', $groupIds)->orderBy('number')->orderBy('id')->get()->mapWithKeys(fn(Group $group): array => [$group->id => $group->name])->all();
+        return Group::query()
+            ->whereIn('id', Game::query()->select('group_id')->whereNotNull('group_id')->distinct())
+            ->orderBy('number')
+            ->get()
+            ->mapWithKeys(fn (Group $group): array => [$group->id => $group->name])
+            ->all();
     }
 
     public function updatedPlayerFilter(): void
@@ -179,46 +187,38 @@ new class extends Component {
 
     public function statusLabel(Game $game): string
     {
-        return match ($this->statusType($game)) {
-            'waiting' => 'NA ČEKANJU',
-            'live' => 'UŽIVO',
-            default => 'ZAVRŠENO',
-        };
+        if ($game->isWaiting()) {
+            return 'NA ČEKANJU';
+        }
+
+        if ($game->isLive()) {
+            return 'UŽIVO';
+        }
+
+        return 'ZAVRŠENO';
     }
 
     public function statusBadgeClass(Game $game): string
     {
-        return match ($this->statusType($game)) {
-            'waiting' => 'border-amber-400/40 bg-amber-400/10 text-amber-700 dark:text-amber-300',
-            'live' => 'border-emerald-400/40 bg-emerald-400/10 text-emerald-700 dark:text-emerald-300',
-            default => 'border-sky-400/40 bg-sky-400/10 text-sky-700 dark:text-sky-300',
-        };
+        if ($game->isWaiting()) {
+            return 'border-amber-400/40 bg-amber-400/10 text-amber-700 dark:text-amber-300';
+        }
+
+        if ($game->isLive()) {
+            return 'border-emerald-400/40 bg-emerald-400/10 text-emerald-700 dark:text-emerald-300';
+        }
+
+        return 'border-sky-400/40 bg-sky-400/10 text-sky-700 dark:text-sky-300';
     }
 
     public function scoreSummary(Game $game): string
     {
-        $scores = $game->sets->filter(fn($set): bool => filled($set->player_one_score) && filled($set->player_two_score))->map(fn($set): string => "{$set->player_one_score}-{$set->player_two_score}")->implode(', ');
-
-        return $scores !== '' ? $scores : '—';
+        return $game->scoreSummary();
     }
 
     public function setResultSummary(Game $game): string
     {
-        $result = Game::determineMatchResultFromSetScores(
-            $game->sets
-                ->map(
-                    fn($set): array => [
-                        'player_one_score' => $set->player_one_score,
-                        'player_two_score' => $set->player_two_score,
-                    ],
-                )
-                ->all(),
-            $game->best_of,
-            $game->player_one_id,
-            $game->player_two_id,
-        );
-
-        return "{$result['player_one_wins']}-{$result['player_two_wins']}";
+        return $game->setResultSummary();
     }
 
     public function scoreRoute(Game $game): string
@@ -228,25 +228,13 @@ new class extends Component {
 
     public function playerClass(Game $game, ?int $playerId): string
     {
-        if (!$playerId) {
+        if (! $playerId) {
             return 'text-foreground';
         }
 
-        $result = Game::determineMatchResultFromSetScores(
-            $game->sets
-                ->map(
-                    fn($set): array => [
-                        'player_one_score' => $set->player_one_score,
-                        'player_two_score' => $set->player_two_score,
-                    ],
-                )
-                ->all(),
-            $game->best_of,
-            $game->player_one_id,
-            $game->player_two_id,
-        );
+        $result = $game->resultFromSets();
 
-        if (!$result['is_complete']) {
+        if (! $result['is_complete']) {
             return 'text-foreground';
         }
 
@@ -259,19 +247,6 @@ new class extends Component {
         }
 
         return 'text-foreground/70';
-    }
-
-    private function statusType(Game $game): string
-    {
-        if (!$game->started_at && !$game->finished_at) {
-            return 'waiting';
-        }
-
-        if ($game->started_at && !$game->finished_at) {
-            return 'live';
-        }
-
-        return 'finished';
     }
 
     private function applySorting(Builder $query): void

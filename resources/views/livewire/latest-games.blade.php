@@ -22,11 +22,6 @@ new class extends Component {
             ->map(function (Game $game): array {
                 $result = $game->resultFromSets();
 
-                $scores = $game->sets
-                    ->filter(fn ($set): bool => filled($set->player_one_score) && filled($set->player_two_score))
-                    ->map(fn ($set): string => "{$set->player_one_score}-{$set->player_two_score}")
-                    ->implode(', ');
-
                 $isDraw   = $result['is_draw'];
                 $winnerId = $result['winner_id'];
 
@@ -37,7 +32,7 @@ new class extends Component {
                     'player_two'       => $game->playerTwo->full_name,
                     'player_one_class' => $this->playerClass($game->player_one_id, $winnerId, $isDraw),
                     'player_two_class' => $this->playerClass($game->player_two_id, $winnerId, $isDraw),
-                    'score'            => $scores !== '' ? $scores : '—',
+                    'score'            => $game->scoreSummary(),
                     'duration'         => $this->formatDuration($game->duration_seconds),
                 ];
             })
