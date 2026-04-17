@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Enums\RoleName;
 use Database\Factories\EventFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 use InvalidArgumentException;
 use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
@@ -76,6 +78,43 @@ class Event extends Model implements HasMedia
         }
 
         return asset('images/placeholder-event.svg');
+    }
+
+    /**
+     * Resolve the participants for this event, falling back progressively.
+     *
+     * @return Collection<int, User>
+     */
+    public function resolveParticipants(): Collection
+    {
+        $players = $this->users()->get();
+
+        if ($players->isEmpty()) {
+            $players = User::role(RoleName::Player->value)->get();
+        }
+
+        if ($players->isEmpty()) {
+            $players = User::query()->get();
+        }
+
+        return $players;
+    }
+
+    /**
+     * Return the most recent completed games for this event, sorted newest first.
+     *
+     * @return Collection<int, Game>
+     */
+    public function latestCompletedGames(int $limit = 20): Collection
+    {
+        return Game::query()
+            ->with(['sets', 'playerOne', 'playerTwo'])
+            ->where('event_id', $this->id)
+            ->latest('id')
+            ->get()
+            ->filter(fn (Game $game): bool => $game->resultFromSets()['is_complete'])
+            ->take($limit)
+            ->values();
     }
 
     public static function current(): ?self

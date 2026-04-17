@@ -39,19 +39,7 @@ class PlayerController extends Controller
         $completed = 0;
 
         foreach ($allEventMatches as $game) {
-            $result = Game::determineMatchResultFromSetScores(
-                $game->sets
-                    ->map(
-                        fn ($set): array => [
-                            'player_one_score' => $set->player_one_score,
-                            'player_two_score' => $set->player_two_score,
-                        ],
-                    )
-                    ->all(),
-                $game->best_of,
-                $game->player_one_id,
-                $game->player_two_id,
-            );
+            $result = $game->resultFromSets();
 
             if (! $result['is_complete']) {
                 continue;
@@ -72,7 +60,9 @@ class PlayerController extends Controller
             }
         }
 
-        $inProgress = $allEventMatches->filter(fn (Game $game): bool => filled($game->started_at) && blank($game->finished_at))->count();
+        $inProgress = $allEventMatches
+            ->filter(fn (Game $game): bool => filled($game->started_at) && blank($game->finished_at))
+            ->count();
 
         return view('player-show', [
             'player'  => $user,

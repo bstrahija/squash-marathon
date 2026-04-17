@@ -7,7 +7,8 @@ use Illuminate\Support\Carbon;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
-new class extends Component {
+new class extends Component
+{
     public int $groupNumber = 1;
 
     public function mount(int $groupNumber = 1): void
@@ -20,21 +21,21 @@ new class extends Component {
     {
         $event = Event::current();
 
-        if (!$event) {
+        if (! $event) {
             return null;
         }
 
         $games = Game::query()
-            ->with(['sets', 'playerOne', 'playerTwo', 'group', 'gameLogs' => fn($query) => $query->orderBy('sequence')])
+            ->with(['sets', 'playerOne', 'playerTwo', 'group', 'gameLogs' => fn ($query) => $query->orderBy('sequence')])
             ->where('event_id', $event->id)
-            ->whereHas('group', fn($query) => $query->where('number', $this->groupNumber))
+            ->whereHas('group', fn ($query) => $query->where('number', $this->groupNumber))
             ->get();
 
         if ($games->isEmpty()) {
             return null;
         }
 
-        $liveGame = $games->filter(fn(Game $game): bool => $this->isLiveGame($game))->sortByDesc('id')->first();
+        $liveGame = $games->filter(fn (Game $game): bool => $this->isLiveGame($game))->sortByDesc('id')->first();
 
         if ($liveGame) {
             return $this->mapGame($liveGame);
@@ -42,7 +43,7 @@ new class extends Component {
 
         $latestGame = $games->sortByDesc('id')->first();
 
-        if (!$latestGame) {
+        if (! $latestGame) {
             return null;
         }
 
@@ -52,13 +53,13 @@ new class extends Component {
     private function mapGame(Game $game): array
     {
         $orderedSets = $game->sets->sortBy('created_at')->values();
-        $latestSet = $orderedSets->last();
-        $latestLog = $game->gameLogs->last();
+        $latestSet   = $orderedSets->last();
+        $latestLog   = $game->gameLogs->last();
 
         $result = Game::determineMatchResultFromSetScores(
             $orderedSets
                 ->map(
-                    fn(GameSet $set): array => [
+                    fn (GameSet $set): array => [
                         'player_one_score' => $set->player_one_score,
                         'player_two_score' => $set->player_two_score,
                     ],
@@ -69,50 +70,50 @@ new class extends Component {
             $game->player_two_id,
         );
 
-        $isLive = $this->isLiveGame($game);
+        $isLive     = $this->isLiveGame($game);
         $isFinished = $this->isFinishedGame($game);
-        $isDraw = (bool) ($result['is_complete'] && $result['is_draw']);
-        $winnerId = $result['winner_id'] ?? null;
+        $isDraw     = (bool) ($result['is_complete'] && $result['is_draw']);
+        $winnerId   = $result['winner_id'] ?? null;
 
         return [
-            'id' => $game->id,
-            'score_url' => route('matches.score', $game),
-            'group_name' => $game->group?->name ?? "Group {$this->groupNumber}",
-            'player_one' => $game->playerOne?->short_name ?? 'Igrac 1',
-            'player_two' => $game->playerTwo?->short_name ?? 'Igrac 2',
-            'player_one_full' => $game->playerOne?->full_name ?? 'Igrac 1',
-            'player_two_full' => $game->playerTwo?->full_name ?? 'Igrac 2',
+            'id'                 => $game->id,
+            'score_url'          => route('matches.score', $game),
+            'group_name'         => $game->group?->name ?? "Group {$this->groupNumber}",
+            'player_one'         => $game->playerOne?->short_name ?? 'Igrac 1',
+            'player_two'         => $game->playerTwo?->short_name ?? 'Igrac 2',
+            'player_one_full'    => $game->playerOne?->full_name ?? 'Igrac 1',
+            'player_two_full'    => $game->playerTwo?->full_name ?? 'Igrac 2',
             'player_one_current' => (int) ($latestLog?->player_one_score ?? ($latestSet?->player_one_score ?? 0)),
             'player_two_current' => (int) ($latestLog?->player_two_score ?? ($latestSet?->player_two_score ?? 0)),
-            'sets_one' => $result['player_one_wins'],
-            'sets_two' => $result['player_two_wins'],
-            'timeline' => $orderedSets
-                ->filter(fn(GameSet $set): bool => filled($set->player_one_score) && filled($set->player_two_score))
+            'sets_one'           => $result['player_one_wins'],
+            'sets_two'           => $result['player_two_wins'],
+            'timeline'           => $orderedSets
+                ->filter(fn (GameSet $set): bool => filled($set->player_one_score) && filled($set->player_two_score))
                 ->map(
-                    fn(GameSet $set): array => [
-                        'id' => $set->id,
+                    fn (GameSet $set): array => [
+                        'id'    => $set->id,
                         'score' => "{$set->player_one_score}:{$set->player_two_score}",
                     ],
                 )
                 ->all(),
-            'duration' => $this->matchDurationLabel($game, $isLive),
-            'duration_seconds' => $this->matchDurationSeconds($game, $isLive),
-            'is_live' => $isLive,
-            'status' => $isLive ? 'UŽIVO' : ($isFinished ? 'ZAVRŠENO' : 'NA ČEKANJU'),
-            'status_class' => $isLive ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : ($isFinished ? 'bg-sky-500/15 text-sky-600 dark:text-sky-400' : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'),
+            'duration'            => $this->matchDurationLabel($game, $isLive),
+            'started_at_ts'       => $game->started_at?->timestamp,
+            'is_live'             => $isLive,
+            'status'              => $isLive ? 'UŽIVO' : ($isFinished ? 'ZAVRŠENO' : 'NA ČEKANJU'),
+            'status_class'        => $isLive ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : ($isFinished ? 'bg-sky-500/15 text-sky-600 dark:text-sky-400' : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'),
             'status_effect_class' => $isLive ? 'tv-group-status-live' : '',
-            'player_one_class' => $this->playerClass($game->player_one_id, $winnerId, $isDraw),
-            'player_two_class' => $this->playerClass($game->player_two_id, $winnerId, $isDraw),
+            'player_one_class'    => $this->playerClass($game->player_one_id, $winnerId, $isDraw),
+            'player_two_class'    => $this->playerClass($game->player_two_id, $winnerId, $isDraw),
         ];
     }
 
     private function isLiveGame(Game $game): bool
     {
-        if (!$game->started_at || $game->finished_at) {
+        if (! $game->started_at || $game->finished_at) {
             return false;
         }
 
-        return !$this->isFinishedGame($game);
+        return ! $this->isFinishedGame($game);
     }
 
     private function isFinishedGame(Game $game): bool
@@ -120,7 +121,7 @@ new class extends Component {
         $result = Game::determineMatchResultFromSetScores(
             $game->sets
                 ->map(
-                    fn(GameSet $set): array => [
+                    fn (GameSet $set): array => [
                         'player_one_score' => $set->player_one_score,
                         'player_two_score' => $set->player_two_score,
                     ],
@@ -136,7 +137,7 @@ new class extends Component {
 
     private function isWaitingGame(Game $game): bool
     {
-        return !$game->started_at && !$game->finished_at;
+        return ! $game->started_at && ! $game->finished_at;
     }
 
     private function matchDurationLabel(Game $game, bool $isLive): string
@@ -157,7 +158,7 @@ new class extends Component {
             return $this->formatDuration($seconds);
         }
 
-        if ($game->started_at && !$game->finished_at) {
+        if ($game->started_at && ! $game->finished_at) {
             $seconds = max(0, $game->started_at->diffInSeconds(Carbon::now()));
 
             return $this->formatDuration($seconds);
@@ -166,35 +167,14 @@ new class extends Component {
         return '—';
     }
 
-    private function matchDurationSeconds(Game $game, bool $isLive): ?int
-    {
-        if ($isLive && $game->started_at) {
-            return max(0, $game->started_at->diffInSeconds(Carbon::now()));
-        }
-
-        if ($game->duration_seconds) {
-            return (int) $game->duration_seconds;
-        }
-
-        if ($game->started_at && $game->finished_at) {
-            return max(0, $game->started_at->diffInSeconds($game->finished_at));
-        }
-
-        if ($game->started_at && !$game->finished_at) {
-            return max(0, $game->started_at->diffInSeconds(Carbon::now()));
-        }
-
-        return null;
-    }
-
     private function formatDuration(?int $seconds): string
     {
-        if (!$seconds) {
+        if (! $seconds) {
             return '—';
         }
 
-        $hours = intdiv($seconds, 3600);
-        $minutes = intdiv($seconds % 3600, 60);
+        $hours            = intdiv($seconds, 3600);
+        $minutes          = intdiv($seconds % 3600, 60);
         $remainingSeconds = $seconds % 60;
 
         if ($hours > 0) {
@@ -206,7 +186,7 @@ new class extends Component {
 
     private function playerClass(?int $playerId, ?int $winnerId, bool $isDraw): string
     {
-        if (!$playerId) {
+        if (! $playerId) {
             return 'text-foreground';
         }
 
@@ -251,8 +231,13 @@ new class extends Component {
                 </p>
                 <p class="tv-group-duration inline-flex items-center gap-1.5 text-muted-foreground text-xs"
                     x-data="{
-                        seconds: {{ $match['duration_seconds'] === null ? 'null' : (int) $match['duration_seconds'] }},
+                        startedAtTs: {{ $match['started_at_ts'] ?? 'null' }},
                         isLive: {{ $match['is_live'] ? 'true' : 'false' }},
+                        now: Math.floor(Date.now() / 1000),
+                        get elapsed() {
+                            if (!this.isLive || this.startedAtTs === null) return null;
+                            return Math.max(0, this.now - this.startedAtTs);
+                        },
                         formatDuration(totalSeconds) {
                             if (totalSeconds === null || totalSeconds <= 0) {
                                 return '—';
@@ -268,16 +253,16 @@ new class extends Component {
 
                             return `${minutes}:${String(remainingSeconds).padStart(2, '0')}`;
                         },
-                        tick() {
-                            if (this.isLive && this.seconds !== null) {
-                                this.seconds++;
-                            }
-                        },
                     }"
-                    x-init="if (isLive) { setInterval(() => tick(), 1000); }">
+                    x-init="
+                        if (isLive && startedAtTs !== null) {
+                            const interval = setInterval(() => { now = Math.floor(Date.now() / 1000); }, 1000);
+                            $cleanup(() => clearInterval(interval));
+                        }
+                    ">
                     <x-heroicon-o-clock class="h-4 w-4" aria-hidden="true" />
-                    <span>{{ $match['duration'] }}</span>
-                    <span x-show="isLive" x-cloak x-text="formatDuration(seconds)"></span>
+                    <span x-show="!isLive" x-cloak>{{ $match['duration'] }}</span>
+                    <span x-show="isLive" x-cloak x-text="formatDuration(elapsed)"></span>
                 </p>
                 <span
                     class="tv-group-status rounded-full px-3 py-1 font-semibold tracking-wide {{ $match['status_class'] }} {{ $match['status_effect_class'] }}">

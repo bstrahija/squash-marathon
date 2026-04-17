@@ -1,6 +1,6 @@
 <?php
 
-use App\Enums\RoleName;
+use App\Livewire\Concerns\HasGameDisplayHelpers;
 use App\Models\Event;
 use App\Models\Game;
 use App\Models\User;
@@ -8,26 +8,18 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 
 new class extends Component {
+    use HasGameDisplayHelpers;
+
     #[Computed]
     public function timeline(): array
     {
         $event = Event::current();
 
-        if (!$event) {
+        if (! $event) {
             return [];
         }
 
-        $players = $event->users()->get();
-
-        if ($players->isEmpty()) {
-            $players = User::role(RoleName::Player->value)->get();
-        }
-
-        if ($players->isEmpty()) {
-            $players = User::query()->get();
-        }
-
-        $playerIds = $players->pluck('id')->all();
+        $playerIds = $event->resolveParticipants()->pluck('id')->all();
 
         $games = Game::query()
             ->with(['sets', 'playerOne', 'playerTwo'])
@@ -37,118 +29,54 @@ new class extends Component {
             ->get();
 
         return $games
-            ->filter(function ($game) use ($playerIds): bool {
-                if (!in_array($game->player_one_id, $playerIds, true)) {
-                    return false;
+            ->map(function (Game $game) use ($playerIds): ?array {
+                if (! in_array($game->player_one_id, $playerIds, true)) {
+                    return null;
                 }
 
-                if (!in_array($game->player_two_id, $playerIds, true)) {
-                    return false;
+                if (! in_array($game->player_two_id, $playerIds, true)) {
+                    return null;
                 }
 
-                $result = Game::determineMatchResultFromSetScores(
-                    $game->sets
-                        ->map(
-                            fn($set): array => [
-                                'player_one_score' => $set->player_one_score,
-                                'player_two_score' => $set->player_two_score,
-                            ],
-                        )
-                        ->all(),
-                    $game->best_of,
-                    $game->player_one_id,
-                    $game->player_two_id,
-                );
+                $result = $game->resultFromSets();
 
-                return $result['is_complete'];
-            })
-            ->map(function ($game): array {
-                $scores = $game->sets->filter(fn($set): bool => filled($set->player_one_score) && filled($set->player_two_score))->map(fn($set): string => "{$set->player_one_score}-{$set->player_two_score}")->implode(', ');
-                $result = Game::determineMatchResultFromSetScores(
-                    $game->sets
-                        ->map(
-                            fn($set): array => [
-                                'player_one_score' => $set->player_one_score,
-                                'player_two_score' => $set->player_two_score,
-                            ],
-                        )
-                        ->all(),
-                    $game->best_of,
-                    $game->player_one_id,
-                    $game->player_two_id,
-                );
+                if (! $result['is_complete']) {
+                    return null;
+                }
+
+                $scores = $game->sets
+                    ->filter(fn ($set): bool => filled($set->player_one_score) && filled($set->player_two_score))
+                    ->map(fn ($set): string => "{$set->player_one_score}-{$set->player_two_score}")
+                    ->implode(', ');
+
                 $durationSeconds = $game->duration_seconds;
 
                 if ($durationSeconds === null && $game->started_at && $game->finished_at) {
                     $durationSeconds = $game->started_at->diffInSeconds($game->finished_at);
                 }
 
-                $isDraw = (bool) ($result['is_complete'] && $result['is_draw']);
-                $winnerId = $result['winner_id'] ?? null;
-                $playerOneClass = $this->playerClass($game->player_one_id, $winnerId, $isDraw);
-                $playerTwoClass = $this->playerClass($game->player_two_id, $winnerId, $isDraw);
-                $playerOneSetsClass = $this->setScoreClass($game->player_one_id, $winnerId, $isDraw);
-                $playerTwoSetsClass = $this->setScoreClass($game->player_two_id, $winnerId, $isDraw);
+                $isDraw   = $result['is_draw'];
+                $winnerId = $result['winner_id'];
+
                 return [
-                    'id' => $game->id,
-                    'time' => $game->finished_at,
-                    'player_one' => $game->playerOne->full_name,
-                    'player_two' => $game->playerTwo->full_name,
-                    'player_one_class' => $playerOneClass,
-                    'player_two_class' => $playerTwoClass,
-                    'player_one_sets_class' => $playerOneSetsClass,
-                    'player_two_sets_class' => $playerTwoSetsClass,
-                    'player_one_sets' => $result['player_one_wins'],
-                    'player_two_sets' => $result['player_two_wins'],
-                    'score_details' => $scores !== '' ? $scores : '—',
-                    'duration' => $this->formatDuration($durationSeconds),
+                    'id'                    => $game->id,
+                    'time'                  => $game->finished_at,
+                    'player_one'            => $game->playerOne->full_name,
+                    'player_two'            => $game->playerTwo->full_name,
+                    'player_one_class'      => $this->playerClass($game->player_one_id, $winnerId, $isDraw),
+                    'player_two_class'      => $this->playerClass($game->player_two_id, $winnerId, $isDraw),
+                    'player_one_sets_class' => $this->setScoreClass($game->player_one_id, $winnerId, $isDraw),
+                    'player_two_sets_class' => $this->setScoreClass($game->player_two_id, $winnerId, $isDraw),
+                    'player_one_sets'       => $result['player_one_wins'],
+                    'player_two_sets'       => $result['player_two_wins'],
+                    'score_details'         => $scores !== '' ? $scores : '—',
+                    'duration'              => $this->formatDuration($durationSeconds),
                 ];
             })
+            ->filter()
             ->take(24)
             ->values()
             ->all();
-    }
-
-    private function formatDuration(?int $seconds): string
-    {
-        if (!$seconds) {
-            return '—';
-        }
-
-        $minutes = intdiv($seconds, 60);
-        $remainingSeconds = $seconds % 60;
-
-        return sprintf('%d:%02d', $minutes, $remainingSeconds);
-    }
-
-    private function playerClass(?int $playerId, ?int $winnerId, bool $isDraw): string
-    {
-        if (!$playerId) {
-            return 'text-foreground';
-        }
-
-        if ($isDraw) {
-            return 'text-amber-600/90 dark:text-amber-400/90';
-        }
-
-        if ($winnerId && $playerId === $winnerId) {
-            return 'text-emerald-600 dark:text-emerald-400';
-        }
-
-        return 'text-foreground/70';
-    }
-
-    private function setScoreClass(?int $playerId, ?int $winnerId, bool $isDraw): string
-    {
-        if (!$playerId || $isDraw || !$winnerId) {
-            return 'text-foreground';
-        }
-
-        if ($playerId === $winnerId) {
-            return 'text-foreground';
-        }
-
-        return 'text-foreground/60';
     }
 };
 ?>
