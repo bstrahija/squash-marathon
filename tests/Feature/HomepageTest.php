@@ -207,8 +207,8 @@ test('timeline livewire component shows recent games', function () {
         ->assertSee('Kronologija')
         ->assertSee('Najsvježije završene partije')
         ->assertSee('Zadnjih 24 završenih partija.')
-        ->assertSee($playerOne->full_name)
-        ->assertSee($playerTwo->full_name)
+        ->assertSee($playerOne->short_name)
+        ->assertSee($playerTwo->short_name)
         ->assertSee('11-6')
         ->assertSee('<svg', false)
         ->assertDontSee('Trajanje');
@@ -284,7 +284,7 @@ test('timeline livewire orders games by finished_at descending', function () {
 
     Livewire::test('timeline')
         ->assertSeeInOrder([
-            $newerPlayerOne->full_name,
-            $olderPlayerOne->full_name,
+            $newerPlayerOne->short_name,
+            $olderPlayerOne->short_name,
         ]);
 });

@@ -146,8 +146,8 @@ test('latest games livewire component shows recent games', function () {
     ]);
 
     Livewire::test('latest-games')
-        ->assertSee($playerOne->full_name)
-        ->assertSee($playerTwo->full_name)
+        ->assertSee($playerOne->short_name)
+        ->assertSee($playerTwo->short_name)
         ->assertSee('11-6')
         ->assertSee('19:50');
 });

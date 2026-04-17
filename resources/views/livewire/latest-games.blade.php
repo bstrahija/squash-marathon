@@ -6,7 +6,8 @@ use App\Models\Game;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
-new class extends Component {
+new class extends Component
+{
     use HasGameDisplayHelpers;
 
     #[Computed]
@@ -28,8 +29,8 @@ new class extends Component {
                 return [
                     'id'               => $game->id,
                     'time'             => $game->created_at,
-                    'player_one'       => $game->playerOne->full_name,
-                    'player_two'       => $game->playerTwo->full_name,
+                    'player_one'       => $game->playerOne->short_name,
+                    'player_two'       => $game->playerTwo->short_name,
                     'player_one_class' => $this->playerClass($game->player_one_id, $winnerId, $isDraw),
                     'player_two_class' => $this->playerClass($game->player_two_id, $winnerId, $isDraw),
                     'score'            => $game->scoreSummary(),

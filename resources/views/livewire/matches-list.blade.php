@@ -2,16 +2,16 @@
 
 use App\Enums\RoleName;
 use App\Models\Game;
-use App\Models\Group;
 use App\Models\Round;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new class extends Component {
+new class extends Component
+{
     use WithPagination;
 
     public ?int $confirmingDeletionId = null;
@@ -19,8 +19,6 @@ new class extends Component {
     public string $playerFilter = '';
 
     public string $roundFilter = '';
-
-    public string $groupFilter = '';
 
     public string $sortBy = 'time';
 
@@ -45,7 +43,7 @@ new class extends Component {
     #[Computed]
     public function matches(): LengthAwarePaginator
     {
-        $query = Game::query()->with(['group', 'round', 'playerOne', 'playerTwo', 'sets' => fn($query) => $query->orderBy('created_at')]);
+        $query = Game::query()->with(['round', 'playerOne', 'playerTwo', 'sets' => fn ($query) => $query->orderBy('created_at')]);
 
         if ($this->playerFilter !== '') {
             $playerId = (int) $this->playerFilter;
@@ -57,10 +55,6 @@ new class extends Component {
 
         if ($this->roundFilter !== '') {
             $query->where('round_id', (int) $this->roundFilter);
-        }
-
-        if ($this->groupFilter !== '') {
-            $query->where('group_id', (int) $this->groupFilter);
         }
 
         $this->applySorting($query);
@@ -100,31 +94,12 @@ new class extends Component {
             ->all();
     }
 
-    /**
-     * @return array<int, string>
-     */
-    #[Computed]
-    public function groupOptions(): array
-    {
-        return Group::query()
-            ->whereIn('id', Game::query()->select('group_id')->whereNotNull('group_id')->distinct())
-            ->orderBy('number')
-            ->get()
-            ->mapWithKeys(fn (Group $group): array => [$group->id => $group->name])
-            ->all();
-    }
-
     public function updatedPlayerFilter(): void
     {
         $this->resetPage();
     }
 
     public function updatedRoundFilter(): void
-    {
-        $this->resetPage();
-    }
-
-    public function updatedGroupFilter(): void
     {
         $this->resetPage();
     }
@@ -141,14 +116,14 @@ new class extends Component {
 
     public function sortByColumn(string $column): void
     {
-        if (!in_array($column, ['time', 'status', 'duration'], true)) {
+        if (! in_array($column, ['time', 'status', 'duration'], true)) {
             return;
         }
 
         if ($this->sortBy === $column) {
             $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
         } else {
-            $this->sortBy = $column;
+            $this->sortBy        = $column;
             $this->sortDirection = 'desc';
         }
 
@@ -157,7 +132,7 @@ new class extends Component {
 
     public function confirmDelete(int $gameId): void
     {
-        if (!$this->canManageMatches) {
+        if (! $this->canManageMatches) {
             return;
         }
 
@@ -171,7 +146,7 @@ new class extends Component {
 
     public function deleteMatch(int $gameId): void
     {
-        if (!$this->canDeleteMatches) {
+        if (! $this->canDeleteMatches) {
             abort(403);
         }
 
@@ -323,23 +298,11 @@ new class extends Component {
                         @endforeach
                     </select>
                 </label>
-
-                <label
-                    class="flex flex-col gap-1 font-semibold text-muted-foreground text-xs uppercase tracking-[0.12em]">
-                    Grupa
-                    <select wire:model.live="groupFilter"
-                        class="bg-background/70 px-3 py-2 border border-border/70 focus:border-foreground/40 rounded-xl focus:outline-none text-foreground text-sm normal-case tracking-normal">
-                        <option value="">Sve grupe</option>
-                        @foreach ($this->groupOptions as $groupOptionId => $groupName)
-                            <option value="{{ $groupOptionId }}">{{ $groupName }}</option>
-                        @endforeach
-                    </select>
-                </label>
             </div>
         </div>
     </div>
 
-    <div class="hidden gap-3 sm:grid sm:grid-cols-3 mb-4">
+    <div class="hidden gap-3 sm:grid sm:grid-cols-2 mb-4">
         <label class="flex flex-col gap-1 font-semibold text-muted-foreground text-xs uppercase tracking-[0.12em]">
             Igrač
             <select wire:model.live="playerFilter"
@@ -358,17 +321,6 @@ new class extends Component {
                 <option value="">Sve runde</option>
                 @foreach ($this->roundOptions as $roundOptionId => $roundName)
                     <option value="{{ $roundOptionId }}">{{ $roundName }}</option>
-                @endforeach
-            </select>
-        </label>
-
-        <label class="flex flex-col gap-1 font-semibold text-muted-foreground text-xs uppercase tracking-[0.12em]">
-            Grupa
-            <select wire:model.live="groupFilter"
-                class="bg-background/70 px-3 py-2 border border-border/70 focus:border-foreground/40 rounded-xl focus:outline-none text-foreground text-sm normal-case tracking-normal">
-                <option value="">Sve grupe</option>
-                @foreach ($this->groupOptions as $groupOptionId => $groupName)
-                    <option value="{{ $groupOptionId }}">{{ $groupName }}</option>
                 @endforeach
             </select>
         </label>
@@ -405,8 +357,7 @@ new class extends Component {
                             @endif
                         </button>
                     </th>
-                    <th class="px-3 py-3">Grupa</th>
-                    <th class="px-3 py-3">
+                    <th class="px-3 py-3 text-left">
                         <button type="button" wire:click="sortByColumn('status')"
                             class="inline-flex items-center gap-1 hover:text-foreground transition">
                             Status
@@ -432,11 +383,11 @@ new class extends Component {
                                 class="block hover:bg-muted/40 -mx-3 -my-3 px-3 py-3 rounded-lg transition">
                                 <p class="font-semibold text-sm">
                                     <span class="{{ $this->playerClass($game, $game->player_one_id) }}">
-                                        {{ $game->playerOne?->full_name ?? '—' }}
+                                        {{ $game->playerOne?->short_name ?? '—' }}
                                     </span>
                                     <span class="text-muted-foreground">vs</span>
                                     <span class="{{ $this->playerClass($game, $game->player_two_id) }}">
-                                        {{ $game->playerTwo?->full_name ?? '—' }}
+                                        {{ $game->playerTwo?->short_name ?? '—' }}
                                     </span>
                                 </p>
                                 <p class="mt-0.5 font-semibold text-foreground text-sm">
@@ -455,12 +406,6 @@ new class extends Component {
                             <a href="{{ $this->scoreRoute($game) }}"
                                 class="block hover:bg-muted/40 -mx-3 -my-3 px-3 py-3 rounded-lg hover:text-foreground transition">
                                 {{ $game->duration_seconds ? sprintf('%d:%02d', intdiv($game->duration_seconds, 60), $game->duration_seconds % 60) : '—' }}
-                            </a>
-                        </td>
-                        <td class="px-3 py-3 font-medium">
-                            <a href="{{ $this->scoreRoute($game) }}"
-                                class="block hover:bg-muted/40 -mx-3 -my-3 px-3 py-3 rounded-lg transition">
-                                {{ $game->group?->name ?? '—' }}
                             </a>
                         </td>
                         <td class="px-3 py-3">
