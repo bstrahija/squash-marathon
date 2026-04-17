@@ -8,7 +8,7 @@ new class extends Component {
     #[Computed]
     public function status(): array
     {
-        $event = Event::query()->latest('id')->first();
+        $event = Event::current();
 
         if (!$event) {
             return [
@@ -60,52 +60,52 @@ new class extends Component {
             const hours = Math.floor(total / 3600);
             const minutes = Math.floor((total % 3600) / 60);
             const secs = total % 60;
-    
+
             return [hours, minutes, secs].map((value) => String(value).padStart(2, '0')).join(':');
         },
         syncFromServer() {
             const rawTargetEpoch = this.$el.dataset.endsAtUnix;
             const nextTargetEpoch = rawTargetEpoch === '' ? null : Number(rawTargetEpoch);
-    
+
             this.targetEpoch = Number.isNaN(nextTargetEpoch) ? null : nextTargetEpoch;
             this.isOver = this.$el.dataset.isOver === '1';
-    
+
             if (this.targetEpoch === null) {
                 this.displayLabel = '—';
-    
+
                 return;
             }
-    
+
             this.tick();
         },
         tick() {
             if (this.targetEpoch === null) {
                 return;
             }
-    
+
             const nowEpoch = Math.floor(Date.now() / 1000);
             const remainingSeconds = Math.max(0, this.targetEpoch - nowEpoch);
-    
+
             if (this.isOver || remainingSeconds === 0) {
                 this.isOver = true;
                 this.displayLabel = '00:00:00';
-    
+
                 return;
             }
-    
+
             this.displayLabel = this.formatDuration(remainingSeconds);
         },
         init() {
             this.syncFromServer();
-    
+
             if (this.$el._tvCountdownTimer) {
                 window.clearInterval(this.$el._tvCountdownTimer);
             }
-    
+
             if (this.$el._tvCountdownObserver) {
                 this.$el._tvCountdownObserver.disconnect();
             }
-    
+
             this.$el._tvCountdownTimer = window.setInterval(() => this.tick(), 1000);
             this.$el._tvCountdownObserver = new MutationObserver(() => this.syncFromServer());
             this.$el._tvCountdownObserver.observe(this.$el, {

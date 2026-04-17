@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\EventFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -14,7 +15,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class Event extends Model implements HasMedia
 {
-    /** @use HasFactory<\Database\Factories\EventFactory> */
+    /** @use HasFactory<EventFactory> */
     use HasFactory, InteractsWithMedia;
 
     protected static function booted(): void
@@ -46,7 +47,7 @@ class Event extends Model implements HasMedia
     {
         return [
             'start_at' => 'datetime',
-            'end_at' => 'datetime',
+            'end_at'   => 'datetime',
         ];
     }
 
@@ -75,6 +76,11 @@ class Event extends Model implements HasMedia
         }
 
         return asset('images/placeholder-event.svg');
+    }
+
+    public static function current(): ?self
+    {
+        return self::query()->latest('start_at')->first();
     }
 
     public function users(): BelongsToMany

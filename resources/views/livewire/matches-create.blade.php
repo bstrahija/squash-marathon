@@ -22,7 +22,7 @@ new class extends Component {
 
     public function mount(): void
     {
-        $event = Event::query()->latest('start_at')->first();
+        $event = Event::current();
 
         if (!$event) {
             return;

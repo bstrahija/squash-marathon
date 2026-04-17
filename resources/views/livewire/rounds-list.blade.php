@@ -24,9 +24,7 @@ new class extends Component {
     #[Computed]
     public function currentEvent(): ?Event
     {
-        $now = now();
-
-        return Event::query()->where('start_at', '<=', $now)->where('end_at', '>=', $now)->latest('start_at')->first() ?? Event::query()->latest('start_at')->first();
+        return Event::current();
     }
 
     #[Computed]

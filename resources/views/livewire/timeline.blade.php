@@ -11,7 +11,7 @@ new class extends Component {
     #[Computed]
     public function timeline(): array
     {
-        $event = Event::query()->latest('start_at')->first();
+        $event = Event::current();
 
         if (!$event) {
             return [];

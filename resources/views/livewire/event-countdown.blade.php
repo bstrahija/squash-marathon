@@ -9,7 +9,7 @@ new class extends Component {
     #[Computed]
     public function status(): array
     {
-        $event = Event::query()->latest('start_at')->first();
+        $event = Event::current();
 
         if (!$event) {
             return [

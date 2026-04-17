@@ -11,7 +11,7 @@ class PlayerController extends Controller
 {
     public function show(User $user): View
     {
-        $event = $this->resolveCurrentEvent();
+        $event = Event::current();
 
         $matches = Game::query()
             ->with(['group', 'round', 'playerOne', 'playerTwo', 'sets' => fn ($query) => $query->orderBy('created_at')])
@@ -33,9 +33,9 @@ class PlayerController extends Controller
             )
             ->get();
 
-        $wins = 0;
-        $draws = 0;
-        $losses = 0;
+        $wins      = 0;
+        $draws     = 0;
+        $losses    = 0;
         $completed = 0;
 
         foreach ($allEventMatches as $game) {
@@ -75,29 +75,17 @@ class PlayerController extends Controller
         $inProgress = $allEventMatches->filter(fn (Game $game): bool => filled($game->started_at) && blank($game->finished_at))->count();
 
         return view('player-show', [
-            'player' => $user,
-            'event' => $event,
+            'player'  => $user,
+            'event'   => $event,
             'matches' => $matches,
-            'stats' => [
-                'completed' => $completed,
-                'wins' => $wins,
-                'draws' => $draws,
-                'losses' => $losses,
-                'points' => ($wins * 3) + ($draws * 2) + $losses,
+            'stats'   => [
+                'completed'   => $completed,
+                'wins'        => $wins,
+                'draws'       => $draws,
+                'losses'      => $losses,
+                'points'      => ($wins * 3) + ($draws * 2) + $losses,
                 'in_progress' => $inProgress,
             ],
         ]);
-    }
-
-    private function resolveCurrentEvent(): ?Event
-    {
-        $now = now();
-
-        return Event::query()
-            ->where('start_at', '<=', $now)
-            ->where('end_at', '>=', $now)
-            ->latest('start_at')
-            ->first()
-            ?? Event::query()->latest('start_at')->first();
     }
 }

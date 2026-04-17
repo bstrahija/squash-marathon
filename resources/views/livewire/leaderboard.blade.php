@@ -11,7 +11,7 @@ new class extends Component {
     #[Computed]
     public function leaderboard(): array
     {
-        $event = Event::query()->latest('start_at')->first();
+        $event = Event::current();
 
         if (!$event) {
             return [];
