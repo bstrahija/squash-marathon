@@ -3,6 +3,7 @@
 use App\Models\Event;
 use App\Models\Game;
 use App\Models\GameSet;
+use Illuminate\Support\Carbon;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -94,6 +95,9 @@ new class extends Component {
                     ],
                 )
                 ->all(),
+            'duration' => $this->matchDurationLabel($game, $isLive),
+            'duration_seconds' => $this->matchDurationSeconds($game, $isLive),
+            'is_live' => $isLive,
             'status' => $isLive ? 'UŽIVO' : ($isFinished ? 'ZAVRŠENO' : 'NA ČEKANJU'),
             'status_class' => $isLive ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : ($isFinished ? 'bg-sky-500/15 text-sky-600 dark:text-sky-400' : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'),
             'status_effect_class' => $isLive ? 'tv-group-status-live' : '',
@@ -133,6 +137,71 @@ new class extends Component {
     private function isWaitingGame(Game $game): bool
     {
         return !$game->started_at && !$game->finished_at;
+    }
+
+    private function matchDurationLabel(Game $game, bool $isLive): string
+    {
+        if ($isLive && $game->started_at) {
+            $seconds = max(0, $game->started_at->diffInSeconds(Carbon::now()));
+
+            return $this->formatDuration($seconds);
+        }
+
+        if ($game->duration_seconds) {
+            return $this->formatDuration($game->duration_seconds);
+        }
+
+        if ($game->started_at && $game->finished_at) {
+            $seconds = max(0, $game->started_at->diffInSeconds($game->finished_at));
+
+            return $this->formatDuration($seconds);
+        }
+
+        if ($game->started_at && !$game->finished_at) {
+            $seconds = max(0, $game->started_at->diffInSeconds(Carbon::now()));
+
+            return $this->formatDuration($seconds);
+        }
+
+        return '—';
+    }
+
+    private function matchDurationSeconds(Game $game, bool $isLive): ?int
+    {
+        if ($isLive && $game->started_at) {
+            return max(0, $game->started_at->diffInSeconds(Carbon::now()));
+        }
+
+        if ($game->duration_seconds) {
+            return (int) $game->duration_seconds;
+        }
+
+        if ($game->started_at && $game->finished_at) {
+            return max(0, $game->started_at->diffInSeconds($game->finished_at));
+        }
+
+        if ($game->started_at && !$game->finished_at) {
+            return max(0, $game->started_at->diffInSeconds(Carbon::now()));
+        }
+
+        return null;
+    }
+
+    private function formatDuration(?int $seconds): string
+    {
+        if (!$seconds) {
+            return '—';
+        }
+
+        $hours = intdiv($seconds, 3600);
+        $minutes = intdiv($seconds % 3600, 60);
+        $remainingSeconds = $seconds % 60;
+
+        if ($hours > 0) {
+            return sprintf('%d:%02d:%02d', $hours, $minutes, $remainingSeconds);
+        }
+
+        return sprintf('%d:%02d', $minutes, $remainingSeconds);
     }
 
     private function playerClass(?int $playerId, ?int $winnerId, bool $isDraw): string
@@ -179,6 +248,36 @@ new class extends Component {
             <div class="tv-group-center flex h-full min-w-40 flex-col items-center justify-center">
                 <p class="tv-group-name font-semibold uppercase tracking-wide text-muted-foreground">
                     {{ $match['group_name'] }}
+                </p>
+                <p class="tv-group-duration inline-flex items-center gap-1.5 text-muted-foreground text-xs"
+                    x-data="{
+                        seconds: {{ $match['duration_seconds'] === null ? 'null' : (int) $match['duration_seconds'] }},
+                        isLive: {{ $match['is_live'] ? 'true' : 'false' }},
+                        formatDuration(totalSeconds) {
+                            if (totalSeconds === null || totalSeconds <= 0) {
+                                return '—';
+                            }
+
+                            const hours = Math.floor(totalSeconds / 3600);
+                            const minutes = Math.floor((totalSeconds % 3600) / 60);
+                            const remainingSeconds = totalSeconds % 60;
+
+                            if (hours > 0) {
+                                return `${hours}:${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+                            }
+
+                            return `${minutes}:${String(remainingSeconds).padStart(2, '0')}`;
+                        },
+                        tick() {
+                            if (this.isLive && this.seconds !== null) {
+                                this.seconds++;
+                            }
+                        },
+                    }"
+                    x-init="if (isLive) { setInterval(() => tick(), 1000); }">
+                    <x-heroicon-o-clock class="h-4 w-4" aria-hidden="true" />
+                    <span>{{ $match['duration'] }}</span>
+                    <span x-show="isLive" x-cloak x-text="formatDuration(seconds)"></span>
                 </p>
                 <span
                     class="tv-group-status rounded-full px-3 py-1 font-semibold tracking-wide {{ $match['status_class'] }} {{ $match['status_effect_class'] }}">
