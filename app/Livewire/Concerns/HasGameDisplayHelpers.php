@@ -17,7 +17,7 @@ trait HasGameDisplayHelpers
     protected function matchDurationLabel(Game $game, bool $isLive): string
     {
         if ($isLive && $game->started_at) {
-            $seconds = max(0, (int) round($game->started_at->diffInSeconds(Carbon::now())));
+            $seconds = max(0, (int) $game->started_at->diffInSeconds(Carbon::now()));
 
             return $this->formatDuration($seconds);
         }
@@ -27,13 +27,13 @@ trait HasGameDisplayHelpers
         }
 
         if ($game->started_at && $game->finished_at) {
-            $seconds = max(0, (int) round($game->started_at->diffInSeconds($game->finished_at)));
+            $seconds = max(0, (int) $game->started_at->diffInSeconds($game->finished_at));
 
             return $this->formatDuration($seconds);
         }
 
         if ($game->started_at && ! $game->finished_at) {
-            $seconds = max(0, (int) round($game->started_at->diffInSeconds(Carbon::now())));
+            $seconds = max(0, (int) $game->started_at->diffInSeconds(Carbon::now()));
 
             return $this->formatDuration($seconds);
         }

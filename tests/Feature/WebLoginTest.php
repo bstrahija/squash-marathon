@@ -128,7 +128,7 @@ test('google callback logs in existing player by email and stores socialite link
         ->exists())->toBeTrue();
 });
 
-test('user with id one logs in through web login and is redirected to admin panel', function () {
+test('user with id one logs in through web login and is redirected to homepage', function () {
     $user = User::query()->find(1) ?? User::factory()->create(['id' => 1, 'password' => 'password']);
 
     $response = $this->post(route('login.store'), [
@@ -136,7 +136,8 @@ test('user with id one logs in through web login and is redirected to admin pane
         'password' => 'password',
     ]);
 
-    $response->assertRedirect('/admin');
+    $response->assertRedirect(route('home'));
+    $response->assertSessionHas('status', 'Prijavljeni ste');
     $this->assertAuthenticatedAs($user);
     expect($user->fresh()->last_login_at)->not->toBeNull();
 });

@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Auth;
 use App\Enums\RoleName;
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use Filament\Facades\Filament;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -30,7 +29,7 @@ class SocialiteAuthenticatedSessionController extends Controller
     {
         try {
             /** @var GoogleProvider $driver */
-            $driver = Socialite::driver('google');
+            $driver    = Socialite::driver('google');
             $oauthUser = $driver
                 ->redirectUrl(route('oauth.google.callback'))
                 ->user();
@@ -51,7 +50,7 @@ class SocialiteAuthenticatedSessionController extends Controller
         Auth::login($user, true);
         request()->session()->regenerate();
 
-        return $this->redirectAfterLogin($user);
+        return $this->redirectAfterLogin();
     }
 
     private function resolveAllowedUser(OAuthUser $oauthUser): ?User
@@ -85,11 +84,11 @@ class SocialiteAuthenticatedSessionController extends Controller
 
         DB::table('socialite_users')->updateOrInsert(
             [
-                'provider' => 'google',
+                'provider'    => 'google',
                 'provider_id' => $providerId,
             ],
             [
-                'user_id' => $user->id,
+                'user_id'    => $user->id,
                 'updated_at' => now(),
                 'created_at' => now(),
             ],
@@ -98,12 +97,8 @@ class SocialiteAuthenticatedSessionController extends Controller
         return $user;
     }
 
-    private function redirectAfterLogin(User $user): RedirectResponse
+    private function redirectAfterLogin(): RedirectResponse
     {
-        if ((int) $user->getAuthIdentifier() === 1) {
-            return redirect()->intended(Filament::getUrl());
-        }
-
         return redirect()->route('home')->with('status', 'Prijavljeni ste');
     }
 }

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use Filament\Facades\Filament;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,7 +19,7 @@ class AuthenticatedSessionController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $credentials = $request->validate([
-            'email' => ['required', 'email'],
+            'email'    => ['required', 'email'],
             'password' => ['required', 'string'],
         ]);
 
@@ -31,12 +30,6 @@ class AuthenticatedSessionController extends Controller
         }
 
         $request->session()->regenerate();
-
-        $userId = (int) ($request->user()?->getAuthIdentifier() ?? 0);
-
-        if ($userId === 1) {
-            return redirect()->intended(Filament::getUrl());
-        }
 
         return redirect()->route('home')->with('status', 'Prijavljeni ste');
     }

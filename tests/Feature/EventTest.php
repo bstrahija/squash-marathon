@@ -92,8 +92,13 @@ test('latestCompletedGames returns only complete games', function () {
     $playerOne = User::factory()->create();
     $playerTwo = User::factory()->create();
 
+    $round = Round::factory()->create(['event_id' => $event->id, 'number' => 1]);
+    $group = Group::factory()->create(['event_id' => $event->id, 'round_id' => $round->id]);
+
     $completeGame = Game::factory()->create([
         'event_id'      => $event->id,
+        'round_id'      => $round->id,
+        'group_id'      => $group->id,
         'best_of'       => 2,
         'player_one_id' => $playerOne->id,
         'player_two_id' => $playerTwo->id,
@@ -118,6 +123,8 @@ test('latestCompletedGames returns only complete games', function () {
     // Incomplete game: best_of=3, only 1 set played
     $incompleteGame = Game::factory()->create([
         'event_id'      => $event->id,
+        'round_id'      => $round->id,
+        'group_id'      => $group->id,
         'best_of'       => 3,
         'player_one_id' => $playerOne->id,
         'player_two_id' => $playerTwo->id,
