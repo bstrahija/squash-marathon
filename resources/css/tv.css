@@ -78,10 +78,6 @@
         min-height: calc(100svh - (var(--tv-mobile-landscape-padding) * 2));
     }
 
-    .tv-panel-live > .grid {
-        padding: var(--tv-mobile-landscape-padding);
-    }
-
     .tv-panel-right {
         grid-column: 2;
         grid-row: 1;
@@ -162,6 +158,7 @@
     .tv-grid {
         grid-template-columns: minmax(0, 1fr);
         grid-template-rows: auto auto auto;
+        gap: 0.5rem;
     }
 
     .tv-panel-live,
@@ -175,12 +172,20 @@
         grid-row: 1;
     }
 
+    .tv-panel-live > .grid {
+        gap: 0.5rem;
+    }
+
     .tv-panel-recent {
         grid-row: 2;
     }
 
     .tv-panel-right {
         grid-row: 3;
+    }
+
+    .tv-panel-right > .flex {
+        gap: 0.5rem;
     }
 }
 
