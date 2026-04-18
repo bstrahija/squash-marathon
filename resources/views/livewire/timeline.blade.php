@@ -76,7 +76,7 @@ new class extends Component
 };
 ?>
 
-<div class="bg-card shadow-sm p-6 border border-border rounded-3xl">
+<div class="bg-card shadow-sm p-6 border border-border rounded-3xl" wire:poll.20s>
     <div class="flex flex-wrap justify-between items-end gap-4">
         <div>
             <p class="font-semibold text-muted-foreground text-xs uppercase tracking-[0.2em]">Kronologija</p>

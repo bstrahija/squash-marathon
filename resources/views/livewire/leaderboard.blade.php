@@ -5,7 +5,8 @@ use App\Models\Event;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
-new class extends Component {
+new class extends Component
+{
     #[Computed]
     public function leaderboard(): array
     {
@@ -49,7 +50,7 @@ new class extends Component {
 ?>
 
 
-<div class="rounded-3xl border border-border bg-card p-6 shadow-sm">
+<div class="rounded-3xl border border-border bg-card p-6 shadow-sm" wire:poll.20s>
     <div class="flex flex-wrap items-end justify-between gap-4">
         <div>
             <p class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Poredak</p>
