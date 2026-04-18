@@ -100,15 +100,41 @@ new class extends Component
     @if ($match)
         data-score-a="{{ $match['player_one_current'] }}"
         data-score-b="{{ $match['player_two_current'] }}"
+        data-is-live="{{ $match['is_live'] ? '1' : '0' }}"
+        data-started-at="{{ $match['started_at_ts'] ?? '' }}"
+        data-duration="{{ $match['duration'] }}"
     @endif
     x-data="{
         flashA: false,
         flashB: false,
         currentScoreA: {{ $match['player_one_current'] ?? 0 }},
         currentScoreB: {{ $match['player_two_current'] ?? 0 }},
+        isLive: {{ ($match && $match['is_live']) ? 'true' : 'false' }},
+        startedAtTs: {{ $match['started_at_ts'] ?? 'null' }},
+        staticDuration: '{{ $match['duration'] ?? '—' }}',
+        now: Math.floor(Date.now() / 1000),
+        get elapsed() {
+            if (!this.isLive || this.startedAtTs === null) return null;
+            return Math.max(0, this.now - this.startedAtTs);
+        },
+        formatDuration(totalSeconds) {
+            if (totalSeconds === null || totalSeconds <= 0) return '—';
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const secs = totalSeconds % 60;
+            if (hours > 0) {
+                return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            }
+            return `${minutes}:${String(secs).padStart(2, '0')}`;
+        },
     }"
     x-init="
-        new MutationObserver((mutations) => {
+        if (window._overlayTick) clearInterval(window._overlayTick);
+        if (window._overlayObs) window._overlayObs.disconnect();
+
+        window._overlayTick = setInterval(() => { now = Math.floor(Date.now() / 1000); }, 1000);
+
+        window._overlayObs = new MutationObserver((mutations) => {
             for (const m of mutations) {
                 if (m.attributeName === 'data-score-a') {
                     const v = Number($el.dataset.scoreA);
@@ -126,8 +152,20 @@ new class extends Component
                         setTimeout(() => { flashB = false; }, 350);
                     }
                 }
+                if (m.attributeName === 'data-is-live') {
+                    isLive = $el.dataset.isLive === '1';
+                }
+                if (m.attributeName === 'data-started-at') {
+                    const v = $el.dataset.startedAt;
+                    startedAtTs = v ? Number(v) : null;
+                    now = Math.floor(Date.now() / 1000);
+                }
+                if (m.attributeName === 'data-duration') {
+                    staticDuration = $el.dataset.duration;
+                }
             }
-        }).observe($el, { attributes: true, attributeFilter: ['data-score-a', 'data-score-b'] });
+        });
+        window._overlayObs.observe($el, { attributes: true, attributeFilter: ['data-score-a', 'data-score-b', 'data-is-live', 'data-started-at', 'data-duration'] });
     ">
     @if ($match)
         <div class="flex w-full max-w-3xl flex-col items-center gap-2">
@@ -159,44 +197,17 @@ new class extends Component
                         {{ $match['player_one'] }}
                     </span>
                     {{-- Sets won --}}
-                    <div class="ml-auto flex shrink-0 gap-1.5">
-                        @if ($match['sets_one'] === 0)
-                            <span class="flex h-5 w-5 items-center justify-center rounded bg-white/20 text-xs font-black text-white/40 shadow">0</span>
-                        @else
-                            @for ($i = 0; $i < $match['sets_one']; $i++)
-                                <span class="flex h-5 w-5 items-center justify-center rounded bg-white/90 text-xs font-black text-black shadow">{{ $i + 1 }}</span>
-                            @endfor
-                        @endif
+                    <div class="ml-auto flex shrink-0">
+                        <span @class([
+                            'flex h-5 w-5 items-center justify-center rounded text-xs font-black shadow',
+                            'bg-white/20 text-white/40' => $match['sets_one'] === 0,
+                            'bg-white/90 text-black'   => $match['sets_one'] > 0,
+                        ])>{{ $match['sets_one'] }}</span>
                     </div>
                 </div>
 
                 {{-- Score --}}
-                <div class="flex shrink-0 flex-col items-center bg-black/80 px-5 py-4 backdrop-blur-sm"
-                    x-data="{
-                        startedAtTs: {{ $match['started_at_ts'] ?? 'null' }},
-                        isLive: {{ $match['is_live'] ? 'true' : 'false' }},
-                        now: Math.floor(Date.now() / 1000),
-                        get elapsed() {
-                            if (!this.isLive || this.startedAtTs === null) return null;
-                            return Math.max(0, this.now - this.startedAtTs);
-                        },
-                        formatDuration(totalSeconds) {
-                            if (totalSeconds === null || totalSeconds <= 0) return '—';
-                            const hours = Math.floor(totalSeconds / 3600);
-                            const minutes = Math.floor((totalSeconds % 3600) / 60);
-                            const secs = totalSeconds % 60;
-                            if (hours > 0) {
-                                return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-                            }
-                            return `${minutes}:${String(secs).padStart(2, '0')}`;
-                        },
-                    }"
-                    x-init="
-                        if (isLive && startedAtTs !== null) {
-                            const interval = setInterval(() => { now = Math.floor(Date.now() / 1000); }, 1000);
-                            $cleanup(() => clearInterval(interval));
-                        }
-                    ">
+                <div class="flex shrink-0 flex-col items-center bg-black/80 px-5 py-4 backdrop-blur-sm">
                     <div class="flex items-center">
                         <span :class="flashA ? 'scale-125 text-yellow-300' : 'scale-100 text-white'"
                             class="font-display tabular-nums text-6xl font-black leading-none drop-shadow-lg transition-all duration-200 overlay-score-a">
@@ -210,7 +221,7 @@ new class extends Component
                     </div>
                     <div class="mt-1.5 flex items-center gap-1 text-xs text-white/50">
                         <x-heroicon-o-clock class="h-3 w-3 shrink-0" aria-hidden="true" />
-                        <span x-show="!isLive" x-cloak>{{ $match['duration'] }}</span>
+                        <span x-show="!isLive" x-cloak x-text="staticDuration"></span>
                         <span x-show="isLive" x-cloak x-text="formatDuration(elapsed)"></span>
                     </div>
                 </div>
@@ -226,14 +237,12 @@ new class extends Component
                         {{ $match['player_two'] }}
                     </span>
                     {{-- Sets won --}}
-                    <div class="mr-auto flex shrink-0 gap-1.5">
-                        @if ($match['sets_two'] === 0)
-                            <span class="flex h-5 w-5 items-center justify-center rounded bg-white/20 text-xs font-black text-white/40 shadow">0</span>
-                        @else
-                            @for ($i = 0; $i < $match['sets_two']; $i++)
-                                <span class="flex h-5 w-5 items-center justify-center rounded bg-white/90 text-xs font-black text-black shadow">{{ $i + 1 }}</span>
-                            @endfor
-                        @endif
+                    <div class="mr-auto flex shrink-0">
+                        <span @class([
+                            'flex h-5 w-5 items-center justify-center rounded text-xs font-black shadow',
+                            'bg-white/20 text-white/40' => $match['sets_two'] === 0,
+                            'bg-white/90 text-black'   => $match['sets_two'] > 0,
+                        ])>{{ $match['sets_two'] }}</span>
                     </div>
                 </div>
 

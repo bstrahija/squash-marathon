@@ -162,9 +162,10 @@ new class extends Component
                         },
                     }"
                     x-init="
+                        const _key = '_tvTick' + {{ $groupNumber }};
+                        if (window[_key]) clearInterval(window[_key]);
                         if (isLive && startedAtTs !== null) {
-                            const interval = setInterval(() => { now = Math.floor(Date.now() / 1000); }, 1000);
-                            $cleanup(() => clearInterval(interval));
+                            window[_key] = setInterval(() => { now = Math.floor(Date.now() / 1000); }, 1000);
                         }
                     ">
                     <x-heroicon-o-clock class="h-4 w-4" aria-hidden="true" />
