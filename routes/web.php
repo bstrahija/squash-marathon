@@ -51,5 +51,11 @@ Route::get('/tv/{group}', function (int $group) {
     ]);
 })->where('group', '[1-9][0-9]*')->name('tv.group');
 
+Route::get('/overlay/{group}', function (int $group) {
+    return view('overlay-group', [
+        'groupNumber' => $group,
+    ]);
+})->where('group', '[1-9][0-9]*')->name('overlay.group');
+
 Route::redirect('/register', '/admin/login')->name('register');
 Route::redirect('/email/verify', '/admin')->name('verification.notice');
