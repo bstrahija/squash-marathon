@@ -91,6 +91,48 @@ test('tv event end countdown component shows remaining time and end time', funct
     Carbon::setTestNow();
 });
 
+test('tv event end countdown component shows duration and start time when event has not started', function () {
+    $now = Carbon::create(2026, 2, 27, 8, 0, 0);
+    Carbon::setTestNow($now);
+
+    Event::factory()->create([
+        'name'     => 'Maraton 2026',
+        'start_at' => $now->copy()->addHours(2),
+        'end_at'   => $now->copy()->addHours(26),
+    ]);
+
+    Livewire::test('tv.event-end-countdown')
+        ->assertSee('Countdown do kraja')
+        ->assertSeeHtml('Maraton 2026')
+        ->assertSee('24:00:00')
+        ->assertSee('Počinje')
+        ->assertSee('10:00');
+
+    Carbon::setTestNow();
+});
+
+test('tv event end countdown shows Croatian day and month when event starts on a future date', function () {
+    // now = Friday 2026-04-17, event starts next Sunday 2026-04-19 at 09:00
+    $now = Carbon::create(2026, 4, 17, 12, 0, 0);
+    Carbon::setTestNow($now);
+
+    Event::factory()->create([
+        'name'     => 'Maraton 2026',
+        'start_at' => Carbon::create(2026, 4, 19, 9, 0, 0),
+        'end_at'   => Carbon::create(2026, 4, 20, 9, 0, 0),
+    ]);
+
+    Livewire::test('tv.event-end-countdown')
+        ->assertSee('Countdown do kraja')
+        ->assertSee('24:00:00')
+        ->assertSee('Počinje')
+        ->assertSee('nedjelja')
+        ->assertSee('travnja')
+        ->assertSee('09:00');
+
+    Carbon::setTestNow();
+});
+
 test('event countdown livewire component renders event details', function () {
     $now = Carbon::create(2026, 2, 27, 20, 0, 0);
     Carbon::setTestNow($now);
