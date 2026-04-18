@@ -183,6 +183,52 @@ test('overlay group component shows 0 for player with no sets won', function () 
         ->assertSeeHtml('>0<');  // player two shows 0
 });
 
+test('overlay group component shows duration with clock icon for live game', function () {
+    $event    = Event::factory()->create();
+    $round    = Round::factory()->create(['event_id' => $event->id, 'number' => 1]);
+    $group    = Group::factory()->create(['event_id' => $event->id, 'round_id' => $round->id, 'number' => 1]);
+    $player   = User::factory()->create();
+    $opponent = User::factory()->create();
+
+    Game::factory()->create([
+        'event_id'      => $event->id,
+        'group_id'      => $group->id,
+        'round_id'      => $round->id,
+        'best_of'       => 3,
+        'player_one_id' => $player->id,
+        'player_two_id' => $opponent->id,
+        'started_at'    => now()->subMinutes(15),
+        'finished_at'   => null,
+    ]);
+
+    Livewire::test('overlay.group-match', ['groupNumber' => 1])
+        ->assertSee('15:')                       // duration label rendered
+        ->assertSeeHtml('<svg', false);           // clock icon (blade icon renders as svg)
+});
+
+test('overlay group component shows duration for finished game', function () {
+    $event    = Event::factory()->create();
+    $round    = Round::factory()->create(['event_id' => $event->id, 'number' => 1]);
+    $group    = Group::factory()->create(['event_id' => $event->id, 'round_id' => $round->id, 'number' => 1]);
+    $player   = User::factory()->create();
+    $opponent = User::factory()->create();
+
+    Game::factory()->create([
+        'event_id'         => $event->id,
+        'group_id'         => $group->id,
+        'round_id'         => $round->id,
+        'best_of'          => 3,
+        'player_one_id'    => $player->id,
+        'player_two_id'    => $opponent->id,
+        'started_at'       => now()->subMinutes(32),
+        'finished_at'      => now()->subMinutes(2),
+        'duration_seconds' => 1800,              // 30:00
+    ]);
+
+    Livewire::test('overlay.group-match', ['groupNumber' => 1])
+        ->assertSee('30:00');
+});
+
 test('overlay group component renders nothing visible when no games exist for group', function () {
     $event = Event::factory()->create();
     $round = Round::factory()->create(['event_id' => $event->id, 'number' => 1, 'name' => 'Round 1']);

@@ -74,6 +74,8 @@ new class extends Component
             'sets_two'           => $result['player_two_wins'],
             'serves_player_one'  => $isLive && $servingPlayerId !== null && $servingPlayerId === $game->player_one_id,
             'serves_player_two'  => $isLive && $servingPlayerId !== null && $servingPlayerId === $game->player_two_id,
+            'duration'           => $this->matchDurationLabel($game, $isLive),
+            'started_at_ts'      => $game->started_at?->timestamp,
             'is_live'            => $isLive,
             'is_finished'        => $isFinished,
             'status'             => $isLive ? 'UŽIVO' : ($isFinished ? 'ZAVRŠENO' : 'NA ČEKANJU'),
@@ -169,16 +171,48 @@ new class extends Component
                 </div>
 
                 {{-- Score --}}
-                <div class="flex shrink-0 items-center bg-black/80 px-5 py-4 backdrop-blur-sm">
-                    <span :class="flashA ? 'scale-125 text-yellow-300' : 'scale-100 text-white'"
-                        class="font-display tabular-nums text-6xl font-black leading-none drop-shadow-lg transition-all duration-200 overlay-score-a">
-                        {{ $match['player_one_current'] }}
-                    </span>
-                    <span class="mx-2 text-2xl font-thin leading-none text-white/30">:</span>
-                    <span :class="flashB ? 'scale-125 text-yellow-300' : 'scale-100 text-white'"
-                        class="font-display tabular-nums text-6xl font-black leading-none drop-shadow-lg transition-all duration-200 overlay-score-b">
-                        {{ $match['player_two_current'] }}
-                    </span>
+                <div class="flex shrink-0 flex-col items-center bg-black/80 px-5 py-4 backdrop-blur-sm"
+                    x-data="{
+                        startedAtTs: {{ $match['started_at_ts'] ?? 'null' }},
+                        isLive: {{ $match['is_live'] ? 'true' : 'false' }},
+                        now: Math.floor(Date.now() / 1000),
+                        get elapsed() {
+                            if (!this.isLive || this.startedAtTs === null) return null;
+                            return Math.max(0, this.now - this.startedAtTs);
+                        },
+                        formatDuration(totalSeconds) {
+                            if (totalSeconds === null || totalSeconds <= 0) return '—';
+                            const hours = Math.floor(totalSeconds / 3600);
+                            const minutes = Math.floor((totalSeconds % 3600) / 60);
+                            const secs = totalSeconds % 60;
+                            if (hours > 0) {
+                                return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+                            }
+                            return `${minutes}:${String(secs).padStart(2, '0')}`;
+                        },
+                    }"
+                    x-init="
+                        if (isLive && startedAtTs !== null) {
+                            const interval = setInterval(() => { now = Math.floor(Date.now() / 1000); }, 1000);
+                            $cleanup(() => clearInterval(interval));
+                        }
+                    ">
+                    <div class="flex items-center">
+                        <span :class="flashA ? 'scale-125 text-yellow-300' : 'scale-100 text-white'"
+                            class="font-display tabular-nums text-6xl font-black leading-none drop-shadow-lg transition-all duration-200 overlay-score-a">
+                            {{ $match['player_one_current'] }}
+                        </span>
+                        <span class="mx-2 text-2xl font-thin leading-none text-white/30">:</span>
+                        <span :class="flashB ? 'scale-125 text-yellow-300' : 'scale-100 text-white'"
+                            class="font-display tabular-nums text-6xl font-black leading-none drop-shadow-lg transition-all duration-200 overlay-score-b">
+                            {{ $match['player_two_current'] }}
+                        </span>
+                    </div>
+                    <div class="mt-1.5 flex items-center gap-1 text-xs text-white/50">
+                        <x-heroicon-o-clock class="h-3 w-3 shrink-0" aria-hidden="true" />
+                        <span x-show="!isLive" x-cloak>{{ $match['duration'] }}</span>
+                        <span x-show="isLive" x-cloak x-text="formatDuration(elapsed)"></span>
+                    </div>
                 </div>
 
                 {{-- Player B --}}
