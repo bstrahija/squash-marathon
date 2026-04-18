@@ -214,6 +214,62 @@ test('timeline livewire component shows recent games', function () {
         ->assertDontSee('Trajanje');
 });
 
+test('hero countdown shows Počinje za when event has not started', function () {
+    $now = Carbon::create(2026, 4, 24, 14, 0, 0);
+    Carbon::setTestNow($now);
+
+    Event::factory()->create([
+        'start_at' => $now->copy()->addHours(3),
+        'end_at'   => $now->copy()->addHours(27),
+    ]);
+
+    Livewire::test('hero-countdown')
+        ->assertSee('Počinje za')
+        ->assertSee('3h 0m 0s')
+        ->assertDontSee('Završava za');
+
+    Carbon::setTestNow();
+});
+
+test('hero countdown shows Završava za when event is in progress', function () {
+    $now = Carbon::create(2026, 4, 24, 20, 0, 0);
+    Carbon::setTestNow($now);
+
+    Event::factory()->create([
+        'start_at' => $now->copy()->subHours(3),
+        'end_at'   => $now->copy()->addHours(21),
+    ]);
+
+    Livewire::test('hero-countdown')
+        ->assertSee('Završava za')
+        ->assertSee('21h 0m 0s')
+        ->assertDontSee('Počinje za');
+
+    Carbon::setTestNow();
+});
+
+test('hero countdown is hidden when event is over', function () {
+    $now = Carbon::create(2026, 4, 25, 18, 0, 0);
+    Carbon::setTestNow($now);
+
+    Event::factory()->create([
+        'start_at' => $now->copy()->subHours(25),
+        'end_at'   => $now->copy()->subHour(),
+    ]);
+
+    Livewire::test('hero-countdown')
+        ->assertDontSee('Počinje za')
+        ->assertDontSee('Završava za');
+
+    Carbon::setTestNow();
+});
+
+test('hero countdown is hidden when there is no event', function () {
+    Livewire::test('hero-countdown')
+        ->assertDontSee('Počinje za')
+        ->assertDontSee('Završava za');
+});
+
 test('timeline livewire orders games by finished_at descending', function () {
     $event = Event::factory()->create();
     $round = Round::factory()->create([

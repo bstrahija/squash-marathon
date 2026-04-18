@@ -31,6 +31,7 @@
                 Skoči na poredak
             </a>
         </div>
+        <livewire:hero-countdown />
     </div>
     <div class="rounded-3xl border border-border bg-card/90 p-6 shadow-xl">
         <div class="flex items-center justify-between">
