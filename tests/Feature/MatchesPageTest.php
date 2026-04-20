@@ -179,7 +179,7 @@ test('admin is redirected to create round when creating match without active rou
     $response->assertRedirect(route('rounds.create', ['redirect' => 'matches.create']));
 });
 
-test('any authenticated user can access matches create page', function () {
+test('any authenticated user without role cannot access matches create page', function () {
     $this->withoutVite();
 
     $event = Event::factory()->create([
@@ -194,7 +194,7 @@ test('any authenticated user can access matches create page', function () {
 
     $response = $this->actingAs(User::factory()->create())->get('/matches/create');
 
-    $response->assertSuccessful();
+    $response->assertForbidden();
 });
 
 test('admin can access matches score page', function () {
@@ -240,7 +240,7 @@ test('player cannot access matches score page when match is finished', function 
     $response->assertForbidden();
 });
 
-test('any authenticated user can access matches score page when match is ongoing', function () {
+test('any authenticated user without role cannot access matches score page when match is ongoing', function () {
     $this->withoutVite();
 
     $game = createMatchForList();
@@ -252,7 +252,7 @@ test('any authenticated user can access matches score page when match is ongoing
 
     $response = $this->actingAs(User::factory()->create())->get("/matches/{$game->id}/score");
 
-    $response->assertSuccessful();
+    $response->assertForbidden();
 });
 
 test('any authenticated user cannot access matches score page when match is finished', function () {

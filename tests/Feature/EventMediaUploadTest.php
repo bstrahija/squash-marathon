@@ -27,10 +27,10 @@ test('filament event create saves media to spatie media library', function () {
 
     Livewire::test(CreateEvent::class)
         ->fillForm([
-            'name' => 'Test Event Upload',
+            'name'     => 'Test Event Upload',
             'start_at' => now()->addDays(1),
-            'end_at' => now()->addDays(2),
-            'photo' => [$fakeImage],
+            'end_at'   => now()->addDays(2),
+            'photo'    => $fakeImage,
         ])
         ->call('create')
         ->assertHasNoFormErrors();
@@ -50,7 +50,7 @@ test('filament event edit saves media to spatie media library', function () {
 
     Livewire::test(EditEvent::class, ['record' => $event->getRouteKey()])
         ->fillForm([
-            'photo' => [$fakeImage],
+            'photo' => $fakeImage,
         ])
         ->call('save')
         ->assertHasNoFormErrors();
@@ -62,16 +62,16 @@ test('filament user create saves avatar to spatie media library', function () {
     $this->actingAs(actingAsAdminUser());
 
     $fakeImage = UploadedFile::fake()->image('test-avatar.jpg');
-    $email = 'filament-user-avatar@example.com';
+    $email     = 'filament-user-avatar@example.com';
 
     Livewire::test(CreateUser::class)
         ->fillForm([
-            'first_name' => 'Filament',
-            'last_name' => 'Avatar',
-            'email' => $email,
-            'password' => 'password',
+            'first_name'            => 'Filament',
+            'last_name'             => 'Avatar',
+            'email'                 => $email,
+            'password'              => 'password',
             'password_confirmation' => 'password',
-            'avatar' => [$fakeImage],
+            'avatar'                => $fakeImage,
         ])
         ->call('create')
         ->assertHasNoFormErrors();

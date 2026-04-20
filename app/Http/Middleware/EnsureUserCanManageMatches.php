@@ -25,6 +25,8 @@ class EnsureUserCanManageMatches
             return $next($request);
         }
 
+        abort_unless($user->hasRole(RoleName::Player->value), 403);
+
         $gameId = $request->route('game');
 
         if ($gameId === null) {

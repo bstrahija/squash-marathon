@@ -26,8 +26,11 @@ test('tv status page loads', function () {
     $response->assertSee('tv-container');
     $response->assertSee('tv-grid');
     $response->assertSee('grid-cols-[2fr_1fr_1fr]');
-    $response->assertSee('Recent Matches');
-    $response->assertSee('Event End Countdown');
+    $response->assertSee('tv-panel-group-leaderboards');
+    $response->assertSee('col-start-2');
+    $response->assertSee('Grupa 1');
+    $response->assertSee('Grupa 2');
+    $response->assertSeeInOrder(['Event End Countdown', 'Recent Matches']);
 });
 
 test('tv group page shows selected group match from url parameter', function () {

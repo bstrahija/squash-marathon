@@ -33,14 +33,13 @@
                 </div>
             </section>
 
-            <section class="bg-card shadow-sm border border-border rounded-3xl min-h-0 tv-panel-recent col-start-2 row-span-full portrait:row-auto">
-                <div class="flex flex-col h-full min-h-0">
-                    <div
-                        class="px-4 py-3 border-border/70 border-b font-semibold text-muted-foreground uppercase tracking-[0.14em] tv-recent-heading">
-                        Recent Matches
+            <section class="tv-panel-group-leaderboards min-h-0 col-start-2 row-span-full portrait:row-auto">
+                <div class="gap-4 grid grid-rows-2 h-full min-h-0">
+                    <div class="bg-card shadow-sm border border-border rounded-3xl min-h-0">
+                        <livewire:tv.group-leaderboard :group-number="1" :key="'tv-group-leaderboard-1'" />
                     </div>
-                    <div class="flex-1 min-h-0">
-                        <livewire:tv.latest-games />
+                    <div class="bg-card shadow-sm border border-border rounded-3xl min-h-0">
+                        <livewire:tv.group-leaderboard :group-number="2" :key="'tv-group-leaderboard-2'" />
                     </div>
                 </div>
             </section>
@@ -50,8 +49,16 @@
                     <div class="bg-card shadow-sm border border-border rounded-3xl min-h-0 tv-panel-countdown">
                         <livewire:tv.event-end-countdown />
                     </div>
-                    <div class="flex-1 bg-card shadow-sm border border-border rounded-3xl min-h-0 tv-panel-leaderboard">
-                        <livewire:tv.leaderboard />
+                    <div class="flex-1 bg-card shadow-sm border border-border rounded-3xl min-h-0 tv-panel-recent">
+                        <div class="flex flex-col h-full min-h-0">
+                            <div
+                                class="px-4 py-3 border-border/70 border-b font-semibold text-muted-foreground uppercase tracking-[0.14em] tv-recent-heading">
+                                Recent Matches
+                            </div>
+                            <div class="flex-1 min-h-0">
+                                <livewire:tv.latest-games />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
