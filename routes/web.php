@@ -37,7 +37,7 @@ Route::view('/rounds/{round}/edit', 'rounds-edit')
     ->middleware(['auth', 'verified', EnsureUserIsAdmin::class])
     ->name('rounds.edit');
 Route::view('/matches/create', 'matches-create')
-    ->middleware(['auth', 'verified', EnsureUserCanManageMatches::class])
+    ->middleware(['auth', 'verified'])
     ->name('matches.create');
 Route::view('/matches/{game}/score', 'matches-score')
     ->whereNumber('game')

@@ -32,28 +32,28 @@ function createCompletedGroupGame(
     $winnerId = $playerOneScore > $playerTwoScore ? $playerOne->id : $playerTwo->id;
 
     $game = Game::factory()->create([
-        'event_id' => $event->id,
-        'round_id' => $round->id,
-        'group_id' => $group->id,
-        'best_of' => 1,
+        'event_id'      => $event->id,
+        'round_id'      => $round->id,
+        'group_id'      => $group->id,
+        'best_of'       => 1,
         'player_one_id' => $playerOne->id,
         'player_two_id' => $playerTwo->id,
-        'winner_id' => $winnerId,
-        'is_draw' => false,
-        'started_at' => now()->subMinute(),
-        'finished_at' => now(),
+        'winner_id'     => $winnerId,
+        'is_draw'       => false,
+        'started_at'    => now()->subMinute(),
+        'finished_at'   => now(),
     ]);
 
     GameSet::factory()->create([
-        'game_id' => $game->id,
-        'round_id' => $round->id,
-        'group_id' => $group->id,
-        'player_one_id' => $playerOne->id,
-        'player_two_id' => $playerTwo->id,
+        'game_id'          => $game->id,
+        'round_id'         => $round->id,
+        'group_id'         => $group->id,
+        'player_one_id'    => $playerOne->id,
+        'player_two_id'    => $playerTwo->id,
         'player_one_score' => $playerOneScore,
         'player_two_score' => $playerTwoScore,
-        'started_at' => now()->subMinute(),
-        'finished_at' => now(),
+        'started_at'       => now()->subMinute(),
+        'finished_at'      => now(),
     ]);
 
     return $game;
@@ -106,7 +106,7 @@ test('admin can access rounds edit page', function () {
 
     $event = Event::factory()->create([
         'start_at' => now()->subHour(),
-        'end_at' => now()->addHour(),
+        'end_at'   => now()->addHour(),
     ]);
 
     $player = User::factory()->create();
@@ -114,8 +114,8 @@ test('admin can access rounds edit page', function () {
 
     $round = Round::factory()->create([
         'event_id' => $event->id,
-        'number' => 1,
-        'name' => 'Grupa 1',
+        'number'   => 1,
+        'name'     => 'Grupa 1',
     ]);
 
     $response = $this->actingAs($admin)->get("/rounds/{$round->id}/edit");
@@ -129,13 +129,13 @@ test('non-admin cannot access rounds edit page', function () {
 
     $event = Event::factory()->create([
         'start_at' => now()->subHour(),
-        'end_at' => now()->addHour(),
+        'end_at'   => now()->addHour(),
     ]);
 
     $round = Round::factory()->create([
         'event_id' => $event->id,
-        'number' => 1,
-        'name' => 'Grupa 1',
+        'number'   => 1,
+        'name'     => 'Grupa 1',
     ]);
 
     $response = $this->actingAs(User::factory()->create())->get("/rounds/{$round->id}/edit");
@@ -150,13 +150,13 @@ test('player cannot access rounds edit page', function () {
 
     $event = Event::factory()->create([
         'start_at' => now()->subHour(),
-        'end_at' => now()->addHour(),
+        'end_at'   => now()->addHour(),
     ]);
 
     $round = Round::factory()->create([
         'event_id' => $event->id,
-        'number' => 1,
-        'name' => 'Grupa 1',
+        'number'   => 1,
+        'name'     => 'Grupa 1',
     ]);
 
     $player = User::factory()->create();
@@ -172,9 +172,9 @@ test('rounds page shows create round button when current event has no rounds', f
     $this->actingAs($admin);
 
     Event::factory()->create([
-        'name' => 'Current Event',
+        'name'     => 'Current Event',
         'start_at' => now()->subHour(),
-        'end_at' => now()->addHour(),
+        'end_at'   => now()->addHour(),
     ]);
 
     Livewire::test('rounds-list')
@@ -188,15 +188,15 @@ test('rounds page shows finish round button when current event already has round
     $this->actingAs($admin);
 
     $event = Event::factory()->create([
-        'name' => 'Current Event',
+        'name'     => 'Current Event',
         'start_at' => now()->subHour(),
-        'end_at' => now()->addHour(),
+        'end_at'   => now()->addHour(),
     ]);
 
     Round::factory()->create([
         'event_id' => $event->id,
-        'number' => 1,
-        'name' => 'Round 1',
+        'number'   => 1,
+        'name'     => 'Round 1',
     ]);
 
     Livewire::test('rounds-list')
@@ -222,7 +222,7 @@ test('rounds create livewire exposes previous-round points seeding only when pre
 
     $event = Event::factory()->create([
         'start_at' => now()->subHour(),
-        'end_at' => now()->addHour(),
+        'end_at'   => now()->addHour(),
     ]);
 
     $withoutPreviousRound = Livewire::test('rounds-create');
@@ -231,8 +231,8 @@ test('rounds create livewire exposes previous-round points seeding only when pre
 
     Round::factory()->create([
         'event_id' => $event->id,
-        'number' => 1,
-        'name' => 'Runda 1',
+        'number'   => 1,
+        'name'     => 'Runda 1',
     ]);
 
     $withPreviousRound = Livewire::test('rounds-create');
@@ -246,13 +246,13 @@ test('admin can see round edit action and delete a round', function () {
 
     $event = Event::factory()->create([
         'start_at' => now()->subHour(),
-        'end_at' => now()->addHour(),
+        'end_at'   => now()->addHour(),
     ]);
 
     $round = Round::factory()->create([
         'event_id' => $event->id,
-        'number' => 1,
-        'name' => 'Round 1',
+        'number'   => 1,
+        'name'     => 'Round 1',
     ]);
 
     Livewire::test('rounds-list')
@@ -270,13 +270,13 @@ test('rounds create livewire creates a new active round and assigns players to t
 
     $event = Event::factory()->create([
         'start_at' => now()->subHour(),
-        'end_at' => now()->addHour(),
+        'end_at'   => now()->addHour(),
     ]);
 
     $existingRound = Round::factory()->create([
-        'event_id' => $event->id,
-        'number' => 1,
-        'name' => 'Grupa 1',
+        'event_id'  => $event->id,
+        'number'    => 1,
+        'name'      => 'Grupa 1',
         'is_active' => true,
     ]);
 
@@ -322,7 +322,7 @@ test('rounds create livewire picker adds and removes players while keeping group
 
     $event = Event::factory()->create([
         'start_at' => now()->subHour(),
-        'end_at' => now()->addHour(),
+        'end_at'   => now()->addHour(),
     ]);
 
     $players = User::factory()->count(3)->create();
@@ -350,7 +350,7 @@ test('rounds create livewire can randomly seed players into two balanced groups'
 
     $event = Event::factory()->create([
         'start_at' => now()->subHour(),
-        'end_at' => now()->addHour(),
+        'end_at'   => now()->addHour(),
     ]);
 
     $players = User::factory()->count(5)->create();
@@ -380,7 +380,7 @@ test('rounds create livewire can seed players by previous round points', functio
 
     $event = Event::factory()->create([
         'start_at' => now()->subHour(),
-        'end_at' => now()->addHour(),
+        'end_at'   => now()->addHour(),
     ]);
 
     $players = User::factory()->count(4)->create();
@@ -388,22 +388,22 @@ test('rounds create livewire can seed players by previous round points', functio
 
     $previousRound = Round::factory()->create([
         'event_id' => $event->id,
-        'number' => 1,
-        'name' => 'Runda 1',
+        'number'   => 1,
+        'name'     => 'Runda 1',
     ]);
 
     $groupOne = Group::factory()->create([
         'event_id' => $event->id,
         'round_id' => $previousRound->id,
-        'number' => 1,
-        'name' => 'Grupa 1',
+        'number'   => 1,
+        'name'     => 'Grupa 1',
     ]);
 
     $groupTwo = Group::factory()->create([
         'event_id' => $event->id,
         'round_id' => $previousRound->id,
-        'number' => 2,
-        'name' => 'Grupa 2',
+        'number'   => 2,
+        'name'     => 'Grupa 2',
     ]);
 
     $groupOne->users()->sync([$players[0]->id, $players[1]->id]);
@@ -426,7 +426,7 @@ test('rounds create livewire redirects back to matches create when requested', f
 
     $event = Event::factory()->create([
         'start_at' => now()->subHour(),
-        'end_at' => now()->addHour(),
+        'end_at'   => now()->addHour(),
     ]);
 
     $players = User::factory()->count(4)->create();
@@ -446,27 +446,27 @@ test('rounds edit livewire updates round title and players by groups', function 
 
     $event = Event::factory()->create([
         'start_at' => now()->subHour(),
-        'end_at' => now()->addHour(),
+        'end_at'   => now()->addHour(),
     ]);
 
     $round = Round::factory()->create([
         'event_id' => $event->id,
-        'number' => 1,
-        'name' => 'Grupa 1',
+        'number'   => 1,
+        'name'     => 'Grupa 1',
     ]);
 
     $groupOne = Group::factory()->create([
         'event_id' => $event->id,
         'round_id' => $round->id,
-        'number' => 1,
-        'name' => 'Grupa 1',
+        'number'   => 1,
+        'name'     => 'Grupa 1',
     ]);
 
     $groupTwo = Group::factory()->create([
         'event_id' => $event->id,
         'round_id' => $round->id,
-        'number' => 2,
-        'name' => 'Grupa 2',
+        'number'   => 2,
+        'name'     => 'Grupa 2',
     ]);
 
     $players = User::factory()->count(4)->create();
@@ -502,13 +502,13 @@ test('rounds edit livewire exposes previous-round points seeding only when previ
 
     $event = Event::factory()->create([
         'start_at' => now()->subHour(),
-        'end_at' => now()->addHour(),
+        'end_at'   => now()->addHour(),
     ]);
 
     $roundOne = Round::factory()->create([
         'event_id' => $event->id,
-        'number' => 1,
-        'name' => 'Runda 1',
+        'number'   => 1,
+        'name'     => 'Runda 1',
     ]);
 
     $withoutPreviousRound = Livewire::test('rounds-edit', ['roundId' => $roundOne->id]);
@@ -517,8 +517,8 @@ test('rounds edit livewire exposes previous-round points seeding only when previ
 
     $roundTwo = Round::factory()->create([
         'event_id' => $event->id,
-        'number' => 2,
-        'name' => 'Runda 2',
+        'number'   => 2,
+        'name'     => 'Runda 2',
     ]);
 
     $withPreviousRound = Livewire::test('rounds-edit', ['roundId' => $roundTwo->id]);
@@ -532,7 +532,7 @@ test('rounds edit livewire can seed players by previous round points', function 
 
     $event = Event::factory()->create([
         'start_at' => now()->subHour(),
-        'end_at' => now()->addHour(),
+        'end_at'   => now()->addHour(),
     ]);
 
     $players = User::factory()->count(4)->create();
@@ -540,42 +540,42 @@ test('rounds edit livewire can seed players by previous round points', function 
 
     $previousRound = Round::factory()->create([
         'event_id' => $event->id,
-        'number' => 1,
-        'name' => 'Runda 1',
+        'number'   => 1,
+        'name'     => 'Runda 1',
     ]);
 
     $currentRound = Round::factory()->create([
         'event_id' => $event->id,
-        'number' => 2,
-        'name' => 'Runda 2',
+        'number'   => 2,
+        'name'     => 'Runda 2',
     ]);
 
     $previousGroupOne = Group::factory()->create([
         'event_id' => $event->id,
         'round_id' => $previousRound->id,
-        'number' => 1,
-        'name' => 'Grupa 1',
+        'number'   => 1,
+        'name'     => 'Grupa 1',
     ]);
 
     $previousGroupTwo = Group::factory()->create([
         'event_id' => $event->id,
         'round_id' => $previousRound->id,
-        'number' => 2,
-        'name' => 'Grupa 2',
+        'number'   => 2,
+        'name'     => 'Grupa 2',
     ]);
 
     Group::factory()->create([
         'event_id' => $event->id,
         'round_id' => $currentRound->id,
-        'number' => 1,
-        'name' => 'Grupa 1',
+        'number'   => 1,
+        'name'     => 'Grupa 1',
     ]);
 
     Group::factory()->create([
         'event_id' => $event->id,
         'round_id' => $currentRound->id,
-        'number' => 2,
-        'name' => 'Grupa 2',
+        'number'   => 2,
+        'name'     => 'Grupa 2',
     ]);
 
     $previousGroupOne->users()->sync([$players[0]->id, $players[1]->id]);
@@ -598,13 +598,13 @@ test('non-admin cannot delete round through livewire list', function () {
 
     $event = Event::factory()->create([
         'start_at' => now()->subHour(),
-        'end_at' => now()->addHour(),
+        'end_at'   => now()->addHour(),
     ]);
 
     $round = Round::factory()->create([
         'event_id' => $event->id,
-        'number' => 1,
-        'name' => 'Round 1',
+        'number'   => 1,
+        'name'     => 'Round 1',
     ]);
 
     Livewire::test('rounds-list')

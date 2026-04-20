@@ -34,6 +34,10 @@ new class extends Component {
         $activeRoundId = $this->activeRoundId();
 
         if (!$activeRoundId) {
+            $activeRoundId = $this->latestRoundId();
+        }
+
+        if (!$activeRoundId) {
             $this->redirectForMissingRound();
 
             return;
@@ -102,6 +106,10 @@ new class extends Component {
         $activeRoundId = $this->activeRoundId();
 
         if (!$activeRoundId) {
+            $activeRoundId = $this->latestRoundId();
+        }
+
+        if (!$activeRoundId) {
             return [];
         }
 
@@ -128,6 +136,15 @@ new class extends Component {
         return Round::query()->where('event_id', $this->eventId)->where('is_active', true)->orderByDesc('number')->orderByDesc('id')->value('id');
     }
 
+    public function latestRoundId(): ?int
+    {
+        if (!$this->eventId) {
+            return null;
+        }
+
+        return Round::query()->where('event_id', $this->eventId)->orderByDesc('number')->orderByDesc('id')->value('id');
+    }
+
     private function redirectForMissingRound(): void
     {
         $user = auth()->user();
@@ -138,7 +155,7 @@ new class extends Component {
             return;
         }
 
-        session()->flash('status', 'Nema aktivne runde. Obratite se administratoru.');
+        session()->flash('status', 'Nema dostupne runde. Obratite se administratoru.');
         $this->redirectRoute('matches.index');
     }
 

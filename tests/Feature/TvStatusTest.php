@@ -17,6 +17,20 @@ function tvShortName(User $user): string
     return $user->short_name;
 }
 
+function formatTvDuration(int $seconds): string
+{
+    $seconds          = max(0, $seconds);
+    $hours            = intdiv($seconds, 3600);
+    $minutes          = intdiv($seconds % 3600, 60);
+    $remainingSeconds = $seconds % 60;
+
+    if ($hours > 0) {
+        return sprintf('%d:%02d:%02d', $hours, $minutes, $remainingSeconds);
+    }
+
+    return sprintf('%02d:%02d', $minutes, $remainingSeconds);
+}
+
 test('tv status page loads', function () {
     $this->withoutVite();
 
@@ -33,7 +47,7 @@ test('tv status page loads', function () {
 test('tv group page shows selected group match from url parameter', function () {
     $this->withoutVite();
 
-    $event = Event::factory()->create();
+    $event     = Event::factory()->create();
     $playerOne = User::factory()->create();
     $playerTwo = User::factory()->create();
 
@@ -41,25 +55,25 @@ test('tv group page shows selected group match from url parameter', function () 
 
     $round = Round::factory()->create([
         'event_id' => $event->id,
-        'number' => 1,
-        'name' => 'Round 1',
+        'number'   => 1,
+        'name'     => 'Round 1',
     ]);
     $group = Group::factory()->create([
         'event_id' => $event->id,
         'round_id' => $round->id,
-        'number' => 2,
-        'name' => 'Group 2',
+        'number'   => 2,
+        'name'     => 'Group 2',
     ]);
 
     $game = Game::factory()->create([
-        'event_id' => $event->id,
-        'round_id' => $round->id,
-        'group_id' => $group->id,
-        'best_of' => 2,
+        'event_id'      => $event->id,
+        'round_id'      => $round->id,
+        'group_id'      => $group->id,
+        'best_of'       => 2,
         'player_one_id' => $playerOne->id,
         'player_two_id' => $playerTwo->id,
-        'started_at' => Carbon::create(2026, 2, 27, 20, 0, 0),
-        'finished_at' => null,
+        'started_at'    => Carbon::create(2026, 2, 27, 20, 0, 0),
+        'finished_at'   => null,
     ]);
 
     $response = $this->get('/tv/2');
@@ -77,9 +91,9 @@ test('tv event end countdown component shows remaining time and end time', funct
     Carbon::setTestNow($now);
 
     Event::factory()->create([
-        'name' => 'Maraton 2026',
+        'name'     => 'Maraton 2026',
         'start_at' => $now->copy()->subHours(3),
-        'end_at' => $now->copy()->addHour(),
+        'end_at'   => $now->copy()->addHour(),
     ]);
 
     Livewire::test('tv.event-end-countdown')
@@ -96,9 +110,9 @@ test('event countdown livewire component renders event details', function () {
     Carbon::setTestNow($now);
 
     Event::factory()->create([
-        'name' => 'Maraton 2026',
+        'name'     => 'Maraton 2026',
         'start_at' => $now->copy()->subHours(2),
-        'end_at' => $now->copy()->addMinutes(30),
+        'end_at'   => $now->copy()->addMinutes(30),
     ]);
 
     Livewire::test('event-countdown')
@@ -109,40 +123,40 @@ test('event countdown livewire component renders event details', function () {
 });
 
 test('latest games livewire component shows recent games', function () {
-    $event = Event::factory()->create();
+    $event     = Event::factory()->create();
     $playerOne = User::factory()->create();
     $playerTwo = User::factory()->create();
-    $gameTime = Carbon::create(2026, 2, 27, 19, 50, 0);
+    $gameTime  = Carbon::create(2026, 2, 27, 19, 50, 0);
 
     $event->users()->attach([$playerOne->id, $playerTwo->id]);
 
     $game = Game::factory()->create([
-        'event_id' => $event->id,
-        'best_of' => 2,
+        'event_id'      => $event->id,
+        'best_of'       => 2,
         'player_one_id' => $playerOne->id,
         'player_two_id' => $playerTwo->id,
-        'created_at' => $gameTime,
-        'updated_at' => $gameTime,
+        'created_at'    => $gameTime,
+        'updated_at'    => $gameTime,
     ]);
 
     GameSet::factory()->create([
-        'game_id' => $game->id,
-        'player_one_id' => $playerOne->id,
-        'player_two_id' => $playerTwo->id,
+        'game_id'          => $game->id,
+        'player_one_id'    => $playerOne->id,
+        'player_two_id'    => $playerTwo->id,
         'player_one_score' => 11,
         'player_two_score' => 6,
-        'created_at' => $gameTime,
-        'updated_at' => $gameTime,
+        'created_at'       => $gameTime,
+        'updated_at'       => $gameTime,
     ]);
 
     GameSet::factory()->create([
-        'game_id' => $game->id,
-        'player_one_id' => $playerOne->id,
-        'player_two_id' => $playerTwo->id,
+        'game_id'          => $game->id,
+        'player_one_id'    => $playerOne->id,
+        'player_two_id'    => $playerTwo->id,
         'player_one_score' => 11,
         'player_two_score' => 8,
-        'created_at' => $gameTime,
-        'updated_at' => $gameTime,
+        'created_at'       => $gameTime,
+        'updated_at'       => $gameTime,
     ]);
 
     Livewire::test('latest-games')
@@ -153,32 +167,32 @@ test('latest games livewire component shows recent games', function () {
 });
 
 test('tv leaderboard livewire component shows all event players', function () {
-    $event = Event::factory()->create();
-    $playerOne = User::factory()->create();
-    $playerTwo = User::factory()->create();
+    $event       = Event::factory()->create();
+    $playerOne   = User::factory()->create();
+    $playerTwo   = User::factory()->create();
     $playerThree = User::factory()->create();
 
     $event->users()->attach([$playerOne->id, $playerTwo->id, $playerThree->id]);
 
     $game = Game::factory()->create([
-        'event_id' => $event->id,
-        'best_of' => 2,
+        'event_id'      => $event->id,
+        'best_of'       => 2,
         'player_one_id' => $playerOne->id,
         'player_two_id' => $playerTwo->id,
     ]);
 
     GameSet::factory()->create([
-        'game_id' => $game->id,
-        'player_one_id' => $playerOne->id,
-        'player_two_id' => $playerTwo->id,
+        'game_id'          => $game->id,
+        'player_one_id'    => $playerOne->id,
+        'player_two_id'    => $playerTwo->id,
         'player_one_score' => 11,
         'player_two_score' => 9,
     ]);
 
     GameSet::factory()->create([
-        'game_id' => $game->id,
-        'player_one_id' => $playerOne->id,
-        'player_two_id' => $playerTwo->id,
+        'game_id'          => $game->id,
+        'player_one_id'    => $playerOne->id,
+        'player_two_id'    => $playerTwo->id,
         'player_one_score' => 11,
         'player_two_score' => 7,
     ]);
@@ -193,49 +207,49 @@ test('tv leaderboard livewire component shows all event players', function () {
 });
 
 test('tv latest games component shows last 30 games with result and duration', function () {
-    $event = Event::factory()->create();
+    $event     = Event::factory()->create();
     $playerOne = User::factory()->create();
     $playerTwo = User::factory()->create();
-    $baseTime = Carbon::create(2026, 2, 27, 18, 0, 0);
-    $round = Round::factory()->create([
+    $baseTime  = Carbon::create(2026, 2, 27, 18, 0, 0);
+    $round     = Round::factory()->create([
         'event_id' => $event->id,
-        'number' => 1,
-        'name' => 'Round 1',
+        'number'   => 1,
+        'name'     => 'Round 1',
     ]);
     $group = Group::factory()->create([
         'event_id' => $event->id,
         'round_id' => $round->id,
-        'number' => 1,
-        'name' => 'Group 1',
+        'number'   => 1,
+        'name'     => 'Group 1',
     ]);
 
     $event->users()->attach([$playerOne->id, $playerTwo->id]);
 
     foreach (range(1, 31) as $index) {
         $game = Game::factory()->create([
-            'event_id' => $event->id,
-            'round_id' => $round->id,
-            'group_id' => $group->id,
-            'best_of' => 2,
-            'player_one_id' => $playerOne->id,
-            'player_two_id' => $playerTwo->id,
+            'event_id'         => $event->id,
+            'round_id'         => $round->id,
+            'group_id'         => $group->id,
+            'best_of'          => 2,
+            'player_one_id'    => $playerOne->id,
+            'player_two_id'    => $playerTwo->id,
             'duration_seconds' => 60 + $index,
-            'created_at' => $baseTime->copy()->addMinutes($index),
-            'updated_at' => $baseTime->copy()->addMinutes($index),
+            'created_at'       => $baseTime->copy()->addMinutes($index),
+            'updated_at'       => $baseTime->copy()->addMinutes($index),
         ]);
 
         GameSet::factory()->create([
-            'game_id' => $game->id,
-            'player_one_id' => $playerOne->id,
-            'player_two_id' => $playerTwo->id,
+            'game_id'          => $game->id,
+            'player_one_id'    => $playerOne->id,
+            'player_two_id'    => $playerTwo->id,
             'player_one_score' => 11,
             'player_two_score' => 5,
         ]);
 
         GameSet::factory()->create([
-            'game_id' => $game->id,
-            'player_one_id' => $playerOne->id,
-            'player_two_id' => $playerTwo->id,
+            'game_id'          => $game->id,
+            'player_one_id'    => $playerOne->id,
+            'player_two_id'    => $playerTwo->id,
             'player_one_score' => 11,
             'player_two_score' => 7,
         ]);
@@ -250,9 +264,9 @@ test('tv latest games component shows last 30 games with result and duration', f
 });
 
 test('tv group match component prefers live game over finished game in same group', function () {
-    $event = Event::factory()->create();
-    $livePlayerOne = User::factory()->create();
-    $livePlayerTwo = User::factory()->create();
+    $event             = Event::factory()->create();
+    $livePlayerOne     = User::factory()->create();
+    $livePlayerTwo     = User::factory()->create();
     $finishedPlayerOne = User::factory()->create();
     $finishedPlayerTwo = User::factory()->create();
 
@@ -265,59 +279,59 @@ test('tv group match component prefers live game over finished game in same grou
 
     $round = Round::factory()->create([
         'event_id' => $event->id,
-        'number' => 1,
-        'name' => 'Round 1',
+        'number'   => 1,
+        'name'     => 'Round 1',
     ]);
     $group = Group::factory()->create([
         'event_id' => $event->id,
         'round_id' => $round->id,
-        'number' => 1,
-        'name' => 'Group 1',
+        'number'   => 1,
+        'name'     => 'Group 1',
     ]);
 
     $finishedGame = Game::factory()->create([
-        'event_id' => $event->id,
-        'round_id' => $round->id,
-        'group_id' => $group->id,
-        'best_of' => 2,
+        'event_id'      => $event->id,
+        'round_id'      => $round->id,
+        'group_id'      => $group->id,
+        'best_of'       => 2,
         'player_one_id' => $finishedPlayerOne->id,
         'player_two_id' => $finishedPlayerTwo->id,
-        'created_at' => Carbon::create(2026, 2, 27, 19, 40, 0),
-        'started_at' => Carbon::create(2026, 2, 27, 19, 40, 0),
-        'finished_at' => Carbon::create(2026, 2, 27, 19, 55, 0),
+        'created_at'    => Carbon::create(2026, 2, 27, 19, 40, 0),
+        'started_at'    => Carbon::create(2026, 2, 27, 19, 40, 0),
+        'finished_at'   => Carbon::create(2026, 2, 27, 19, 55, 0),
     ]);
 
     GameSet::factory()->create([
-        'game_id' => $finishedGame->id,
-        'player_one_id' => $finishedPlayerOne->id,
-        'player_two_id' => $finishedPlayerTwo->id,
+        'game_id'          => $finishedGame->id,
+        'player_one_id'    => $finishedPlayerOne->id,
+        'player_two_id'    => $finishedPlayerTwo->id,
         'player_one_score' => 11,
         'player_two_score' => 8,
     ]);
     GameSet::factory()->create([
-        'game_id' => $finishedGame->id,
-        'player_one_id' => $finishedPlayerOne->id,
-        'player_two_id' => $finishedPlayerTwo->id,
+        'game_id'          => $finishedGame->id,
+        'player_one_id'    => $finishedPlayerOne->id,
+        'player_two_id'    => $finishedPlayerTwo->id,
         'player_one_score' => 11,
         'player_two_score' => 7,
     ]);
 
     $liveGame = Game::factory()->create([
-        'event_id' => $event->id,
-        'round_id' => $round->id,
-        'group_id' => $group->id,
-        'best_of' => 2,
+        'event_id'      => $event->id,
+        'round_id'      => $round->id,
+        'group_id'      => $group->id,
+        'best_of'       => 2,
         'player_one_id' => $livePlayerOne->id,
         'player_two_id' => $livePlayerTwo->id,
-        'created_at' => Carbon::create(2026, 2, 27, 19, 58, 0),
-        'started_at' => Carbon::create(2026, 2, 27, 19, 58, 0),
-        'finished_at' => null,
+        'created_at'    => Carbon::create(2026, 2, 27, 19, 58, 0),
+        'started_at'    => Carbon::create(2026, 2, 27, 19, 58, 0),
+        'finished_at'   => null,
     ]);
 
     GameSet::factory()->create([
-        'game_id' => $liveGame->id,
-        'player_one_id' => $livePlayerOne->id,
-        'player_two_id' => $livePlayerTwo->id,
+        'game_id'          => $liveGame->id,
+        'player_one_id'    => $livePlayerOne->id,
+        'player_two_id'    => $livePlayerTwo->id,
         'player_one_score' => 11,
         'player_two_score' => 9,
     ]);
@@ -332,9 +346,9 @@ test('tv group match component prefers live game over finished game in same grou
 });
 
 test('tv group match component falls back to latest finished game when no live game exists', function () {
-    $event = Event::factory()->create();
-    $olderPlayerOne = User::factory()->create();
-    $olderPlayerTwo = User::factory()->create();
+    $event           = Event::factory()->create();
+    $olderPlayerOne  = User::factory()->create();
+    $olderPlayerTwo  = User::factory()->create();
     $latestPlayerOne = User::factory()->create();
     $latestPlayerTwo = User::factory()->create();
 
@@ -347,66 +361,66 @@ test('tv group match component falls back to latest finished game when no live g
 
     $round = Round::factory()->create([
         'event_id' => $event->id,
-        'number' => 1,
-        'name' => 'Round 1',
+        'number'   => 1,
+        'name'     => 'Round 1',
     ]);
     $group = Group::factory()->create([
         'event_id' => $event->id,
         'round_id' => $round->id,
-        'number' => 1,
-        'name' => 'Group 1',
+        'number'   => 1,
+        'name'     => 'Group 1',
     ]);
 
     $olderGame = Game::factory()->create([
-        'event_id' => $event->id,
-        'round_id' => $round->id,
-        'group_id' => $group->id,
-        'best_of' => 2,
+        'event_id'      => $event->id,
+        'round_id'      => $round->id,
+        'group_id'      => $group->id,
+        'best_of'       => 2,
         'player_one_id' => $olderPlayerOne->id,
         'player_two_id' => $olderPlayerTwo->id,
-        'created_at' => Carbon::create(2026, 2, 27, 18, 45, 0),
-        'started_at' => Carbon::create(2026, 2, 27, 18, 45, 0),
-        'finished_at' => Carbon::create(2026, 2, 27, 18, 58, 0),
+        'created_at'    => Carbon::create(2026, 2, 27, 18, 45, 0),
+        'started_at'    => Carbon::create(2026, 2, 27, 18, 45, 0),
+        'finished_at'   => Carbon::create(2026, 2, 27, 18, 58, 0),
     ]);
 
     GameSet::factory()->create([
-        'game_id' => $olderGame->id,
-        'player_one_id' => $olderPlayerOne->id,
-        'player_two_id' => $olderPlayerTwo->id,
+        'game_id'          => $olderGame->id,
+        'player_one_id'    => $olderPlayerOne->id,
+        'player_two_id'    => $olderPlayerTwo->id,
         'player_one_score' => 11,
         'player_two_score' => 4,
     ]);
     GameSet::factory()->create([
-        'game_id' => $olderGame->id,
-        'player_one_id' => $olderPlayerOne->id,
-        'player_two_id' => $olderPlayerTwo->id,
+        'game_id'          => $olderGame->id,
+        'player_one_id'    => $olderPlayerOne->id,
+        'player_two_id'    => $olderPlayerTwo->id,
         'player_one_score' => 11,
         'player_two_score' => 7,
     ]);
 
     $latestGame = Game::factory()->create([
-        'event_id' => $event->id,
-        'round_id' => $round->id,
-        'group_id' => $group->id,
-        'best_of' => 2,
+        'event_id'      => $event->id,
+        'round_id'      => $round->id,
+        'group_id'      => $group->id,
+        'best_of'       => 2,
         'player_one_id' => $latestPlayerOne->id,
         'player_two_id' => $latestPlayerTwo->id,
-        'created_at' => Carbon::create(2026, 2, 27, 19, 20, 0),
-        'started_at' => Carbon::create(2026, 2, 27, 19, 20, 0),
-        'finished_at' => Carbon::create(2026, 2, 27, 19, 37, 0),
+        'created_at'    => Carbon::create(2026, 2, 27, 19, 20, 0),
+        'started_at'    => Carbon::create(2026, 2, 27, 19, 20, 0),
+        'finished_at'   => Carbon::create(2026, 2, 27, 19, 37, 0),
     ]);
 
     GameSet::factory()->create([
-        'game_id' => $latestGame->id,
-        'player_one_id' => $latestPlayerOne->id,
-        'player_two_id' => $latestPlayerTwo->id,
+        'game_id'          => $latestGame->id,
+        'player_one_id'    => $latestPlayerOne->id,
+        'player_two_id'    => $latestPlayerTwo->id,
         'player_one_score' => 11,
         'player_two_score' => 6,
     ]);
     GameSet::factory()->create([
-        'game_id' => $latestGame->id,
-        'player_one_id' => $latestPlayerOne->id,
-        'player_two_id' => $latestPlayerTwo->id,
+        'game_id'          => $latestGame->id,
+        'player_one_id'    => $latestPlayerOne->id,
+        'player_two_id'    => $latestPlayerTwo->id,
         'player_one_score' => 11,
         'player_two_score' => 8,
     ]);
@@ -420,11 +434,11 @@ test('tv group match component falls back to latest finished game when no live g
 });
 
 test('tv group match component prefers waiting game over finished game when no live game exists', function () {
-    $event = Event::factory()->create();
+    $event             = Event::factory()->create();
     $finishedPlayerOne = User::factory()->create();
     $finishedPlayerTwo = User::factory()->create();
-    $waitingPlayerOne = User::factory()->create();
-    $waitingPlayerTwo = User::factory()->create();
+    $waitingPlayerOne  = User::factory()->create();
+    $waitingPlayerTwo  = User::factory()->create();
 
     $event->users()->attach([
         $finishedPlayerOne->id,
@@ -435,53 +449,53 @@ test('tv group match component prefers waiting game over finished game when no l
 
     $round = Round::factory()->create([
         'event_id' => $event->id,
-        'number' => 1,
-        'name' => 'Round 1',
+        'number'   => 1,
+        'name'     => 'Round 1',
     ]);
     $group = Group::factory()->create([
         'event_id' => $event->id,
         'round_id' => $round->id,
-        'number' => 1,
-        'name' => 'Group 1',
+        'number'   => 1,
+        'name'     => 'Group 1',
     ]);
 
     $finishedGame = Game::factory()->create([
-        'event_id' => $event->id,
-        'round_id' => $round->id,
-        'group_id' => $group->id,
-        'best_of' => 2,
+        'event_id'      => $event->id,
+        'round_id'      => $round->id,
+        'group_id'      => $group->id,
+        'best_of'       => 2,
         'player_one_id' => $finishedPlayerOne->id,
         'player_two_id' => $finishedPlayerTwo->id,
-        'created_at' => Carbon::create(2026, 2, 27, 18, 45, 0),
-        'started_at' => Carbon::create(2026, 2, 27, 18, 45, 0),
-        'finished_at' => Carbon::create(2026, 2, 27, 18, 58, 0),
+        'created_at'    => Carbon::create(2026, 2, 27, 18, 45, 0),
+        'started_at'    => Carbon::create(2026, 2, 27, 18, 45, 0),
+        'finished_at'   => Carbon::create(2026, 2, 27, 18, 58, 0),
     ]);
 
     GameSet::factory()->create([
-        'game_id' => $finishedGame->id,
-        'player_one_id' => $finishedPlayerOne->id,
-        'player_two_id' => $finishedPlayerTwo->id,
+        'game_id'          => $finishedGame->id,
+        'player_one_id'    => $finishedPlayerOne->id,
+        'player_two_id'    => $finishedPlayerTwo->id,
         'player_one_score' => 11,
         'player_two_score' => 6,
     ]);
     GameSet::factory()->create([
-        'game_id' => $finishedGame->id,
-        'player_one_id' => $finishedPlayerOne->id,
-        'player_two_id' => $finishedPlayerTwo->id,
+        'game_id'          => $finishedGame->id,
+        'player_one_id'    => $finishedPlayerOne->id,
+        'player_two_id'    => $finishedPlayerTwo->id,
         'player_one_score' => 11,
         'player_two_score' => 8,
     ]);
 
     Game::factory()->create([
-        'event_id' => $event->id,
-        'round_id' => $round->id,
-        'group_id' => $group->id,
-        'best_of' => 2,
+        'event_id'      => $event->id,
+        'round_id'      => $round->id,
+        'group_id'      => $group->id,
+        'best_of'       => 2,
         'player_one_id' => $waitingPlayerOne->id,
         'player_two_id' => $waitingPlayerTwo->id,
-        'created_at' => Carbon::create(2026, 2, 27, 19, 20, 0),
-        'started_at' => null,
-        'finished_at' => null,
+        'created_at'    => Carbon::create(2026, 2, 27, 19, 20, 0),
+        'started_at'    => null,
+        'finished_at'   => null,
     ]);
 
     Livewire::test('tv.group-match', ['groupNumber' => 1])
@@ -493,7 +507,7 @@ test('tv group match component prefers waiting game over finished game when no l
 });
 
 test('tv group match component shows current set points from latest game log', function () {
-    $event = Event::factory()->create();
+    $event     = Event::factory()->create();
     $playerOne = User::factory()->create();
     $playerTwo = User::factory()->create();
 
@@ -501,45 +515,45 @@ test('tv group match component shows current set points from latest game log', f
 
     $round = Round::factory()->create([
         'event_id' => $event->id,
-        'number' => 1,
-        'name' => 'Round 1',
+        'number'   => 1,
+        'name'     => 'Round 1',
     ]);
     $group = Group::factory()->create([
         'event_id' => $event->id,
         'round_id' => $round->id,
-        'number' => 1,
-        'name' => 'Group 1',
+        'number'   => 1,
+        'name'     => 'Group 1',
     ]);
 
     $game = Game::factory()->create([
-        'event_id' => $event->id,
-        'round_id' => $round->id,
-        'group_id' => $group->id,
-        'best_of' => 2,
+        'event_id'      => $event->id,
+        'round_id'      => $round->id,
+        'group_id'      => $group->id,
+        'best_of'       => 2,
         'player_one_id' => $playerOne->id,
         'player_two_id' => $playerTwo->id,
-        'started_at' => Carbon::create(2026, 2, 27, 20, 0, 0),
-        'finished_at' => null,
+        'started_at'    => Carbon::create(2026, 2, 27, 20, 0, 0),
+        'finished_at'   => null,
     ]);
 
     GameLog::factory()->create([
-        'game_id' => $game->id,
-        'player_one_id' => $playerOne->id,
-        'player_two_id' => $playerTwo->id,
-        'sequence' => 1,
-        'type' => GameLogType::Score,
-        'side' => GameLogSide::Left,
+        'game_id'          => $game->id,
+        'player_one_id'    => $playerOne->id,
+        'player_two_id'    => $playerTwo->id,
+        'sequence'         => 1,
+        'type'             => GameLogType::Score,
+        'side'             => GameLogSide::Left,
         'player_one_score' => 5,
         'player_two_score' => 2,
     ]);
 
     GameLog::factory()->create([
-        'game_id' => $game->id,
-        'player_one_id' => $playerOne->id,
-        'player_two_id' => $playerTwo->id,
-        'sequence' => 2,
-        'type' => GameLogType::Score,
-        'side' => GameLogSide::Right,
+        'game_id'          => $game->id,
+        'player_one_id'    => $playerOne->id,
+        'player_two_id'    => $playerTwo->id,
+        'sequence'         => 2,
+        'type'             => GameLogType::Score,
+        'side'             => GameLogSide::Right,
         'player_one_score' => 21,
         'player_two_score' => 17,
     ]);
@@ -550,4 +564,109 @@ test('tv group match component shows current set points from latest game log', f
         ->assertSee('21')
         ->assertSee('17')
         ->assertSee('UŽIVO');
+});
+
+test('tv group match component shows ongoing duration from started_at to current time', function () {
+    $now = Carbon::create(2026, 2, 27, 20, 10, 0);
+    Carbon::setTestNow($now);
+
+    $event     = Event::factory()->create();
+    $playerOne = User::factory()->create();
+    $playerTwo = User::factory()->create();
+
+    $event->users()->attach([$playerOne->id, $playerTwo->id]);
+
+    $round = Round::factory()->create([
+        'event_id' => $event->id,
+        'number'   => 1,
+        'name'     => 'Round 1',
+    ]);
+    $group = Group::factory()->create([
+        'event_id' => $event->id,
+        'round_id' => $round->id,
+        'number'   => 1,
+        'name'     => 'Group 1',
+    ]);
+
+    $startedAt = Carbon::create(2026, 2, 27, 20, 7, 25);
+
+    Game::factory()->create([
+        'event_id'      => $event->id,
+        'round_id'      => $round->id,
+        'group_id'      => $group->id,
+        'best_of'       => 2,
+        'player_one_id' => $playerOne->id,
+        'player_two_id' => $playerTwo->id,
+        'started_at'    => $startedAt,
+        'finished_at'   => null,
+    ]);
+
+    $elapsedSeconds   = $startedAt->diffInSeconds($now);
+    $expectedDuration = formatTvDuration($elapsedSeconds);
+
+    Livewire::test('tv.group-match', ['groupNumber' => 1])
+        ->assertSee(tvShortName($playerOne))
+        ->assertSee(tvShortName($playerTwo))
+        ->assertSee('UŽIVO')
+        ->assertSee($expectedDuration);
+
+    Carbon::setTestNow();
+});
+
+test('tv group match component shows finished duration from duration_seconds column', function () {
+    $event     = Event::factory()->create();
+    $playerOne = User::factory()->create();
+    $playerTwo = User::factory()->create();
+
+    $event->users()->attach([$playerOne->id, $playerTwo->id]);
+
+    $round = Round::factory()->create([
+        'event_id' => $event->id,
+        'number'   => 1,
+        'name'     => 'Round 1',
+    ]);
+    $group = Group::factory()->create([
+        'event_id' => $event->id,
+        'round_id' => $round->id,
+        'number'   => 1,
+        'name'     => 'Group 1',
+    ]);
+
+    $finishedDurationSeconds = 507;
+
+    $game = Game::factory()->create([
+        'event_id'         => $event->id,
+        'round_id'         => $round->id,
+        'group_id'         => $group->id,
+        'best_of'          => 2,
+        'player_one_id'    => $playerOne->id,
+        'player_two_id'    => $playerTwo->id,
+        'started_at'       => Carbon::create(2026, 2, 27, 19, 40, 0),
+        'finished_at'      => Carbon::create(2026, 2, 27, 19, 48, 27),
+        'duration_seconds' => $finishedDurationSeconds,
+    ]);
+
+    GameSet::factory()->create([
+        'game_id'          => $game->id,
+        'player_one_id'    => $playerOne->id,
+        'player_two_id'    => $playerTwo->id,
+        'player_one_score' => 11,
+        'player_two_score' => 8,
+    ]);
+
+    GameSet::factory()->create([
+        'game_id'          => $game->id,
+        'player_one_id'    => $playerOne->id,
+        'player_two_id'    => $playerTwo->id,
+        'player_one_score' => 11,
+        'player_two_score' => 9,
+    ]);
+
+    $expectedDuration = formatTvDuration($finishedDurationSeconds);
+
+    Livewire::test('tv.group-match', ['groupNumber' => 1])
+        ->assertSee(tvShortName($playerOne))
+        ->assertSee(tvShortName($playerTwo))
+        ->assertSee('ZAVRŠENO')
+        ->assertSee($expectedDuration);
 });

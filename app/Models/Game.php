@@ -166,17 +166,6 @@ class Game extends Model
         );
     }
 
-    /**
-     * @return array{player_one: int, player_two: int}
-     */
-    public static function summarizeSetPoints(Collection $sets): array
-    {
-        return [
-            'player_one' => (int) $sets->sum(fn (GameSet $set): int => (int) ($set->player_one_score ?? 0)),
-            'player_two' => (int) $sets->sum(fn (GameSet $set): int => (int) ($set->player_two_score ?? 0)),
-        ];
-    }
-
     public static function formatSetPointsSummary(Collection $sets): string
     {
         $scores = $sets

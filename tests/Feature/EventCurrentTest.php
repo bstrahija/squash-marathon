@@ -31,27 +31,3 @@ test('event current returns the latest inserted event regardless of event dates'
 
     Carbon::setTestNow();
 });
-
-test('event current uses insertion order and not start_at ordering', function () {
-    $newerByDateInsertedFirst = Event::factory()->create([
-        'id'       => 101,
-        'name'     => 'Inserted First',
-        'start_at' => now()->addDays(10),
-        'end_at'   => now()->addDays(11),
-    ]);
-
-    $olderByDateInsertedLast = Event::factory()->create([
-        'id'       => 202,
-        'name'     => 'Inserted Last',
-        'start_at' => now()->subDays(10),
-        'end_at'   => now()->subDays(9),
-    ]);
-
-    $current = Event::current();
-
-    expect($current)->not->toBeNull();
-    expect($current?->id)->toBe(202);
-    expect($current?->name)->toBe('Inserted Last');
-    expect($current?->id)->not->toBe($newerByDateInsertedFirst->id);
-    expect($current?->id)->toBe($olderByDateInsertedLast->id);
-});

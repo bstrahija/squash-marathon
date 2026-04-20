@@ -87,9 +87,54 @@ new class extends Component {
             'status' => $isLive ? 'UŽIVO' : ($isFinished ? 'ZAVRŠENO' : 'NA ČEKANJU'),
             'status_class' => $isLive ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : ($isFinished ? 'bg-sky-500/15 text-sky-600 dark:text-sky-400' : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'),
             'status_effect_class' => $isLive ? 'tv-group-status-live' : '',
+            'duration_label' => $this->matchDurationLabel($game, $isLive, $isFinished),
+            'duration_seconds' => $this->matchDurationSeconds($game, $isLive, $isFinished),
+            'duration_is_live' => $game->started_at !== null && $game->finished_at === null,
             'player_one_class' => $this->playerClass($game->player_one_id, $winnerId, $isDraw),
             'player_two_class' => $this->playerClass($game->player_two_id, $winnerId, $isDraw),
         ];
+    }
+
+    private function matchDurationLabel(Game $game, bool $isLive, bool $isFinished): string
+    {
+        $seconds = $this->matchDurationSeconds($game, $isLive, $isFinished);
+
+        if ($seconds === null) {
+            return '—';
+        }
+
+        return $this->formatDuration($seconds);
+    }
+
+    private function matchDurationSeconds(Game $game, bool $isLive, bool $isFinished): ?int
+    {
+        if ($game->started_at && !$game->finished_at) {
+            return $game->started_at->diffInSeconds(now());
+        }
+
+        if ($isFinished && $game->duration_seconds !== null) {
+            return (int) $game->duration_seconds;
+        }
+
+        if ($isFinished && $game->started_at && $game->finished_at) {
+            return $game->started_at->diffInSeconds($game->finished_at);
+        }
+
+        return null;
+    }
+
+    private function formatDuration(int $seconds): string
+    {
+        $seconds = max(0, $seconds);
+        $hours = intdiv($seconds, 3600);
+        $minutes = intdiv($seconds % 3600, 60);
+        $remainingSeconds = $seconds % 60;
+
+        if ($hours > 0) {
+            return sprintf('%d:%02d:%02d', $hours, $minutes, $remainingSeconds);
+        }
+
+        return sprintf('%02d:%02d', $minutes, $remainingSeconds);
     }
 
     private function isLiveGame(Game $game): bool
@@ -106,11 +151,6 @@ new class extends Component {
         $result = Game::determineMatchResultFromSetCollection($game->sets, (int) $game->best_of, $game->player_one_id, $game->player_two_id);
 
         return (bool) ($game->finished_at || $result['is_complete']);
-    }
-
-    private function isWaitingGame(Game $game): bool
-    {
-        return !$game->started_at && !$game->finished_at;
     }
 
     private function playerClass(?int $playerId, ?int $winnerId, bool $isDraw): string
@@ -158,6 +198,58 @@ new class extends Component {
                 <p class="tv-group-name text-muted-foreground font-semibold uppercase tracking-wide">
                     {{ $match['group_name'] }}
                 </p>
+                <div class="text-foreground/80 flex items-center gap-2" x-data="{
+                    initialSeconds: {{ $match['duration_seconds'] ?? 'null' }},
+                    isLive: {{ $match['duration_is_live'] ? 'true' : 'false' }},
+                    currentSeconds: {{ $match['duration_seconds'] ?? 'null' }},
+                    timerId: null,
+                    toInt(value) {
+                        const parsed = Number(value);
+                
+                        return Number.isFinite(parsed) ? Math.max(0, Math.floor(parsed)) : null;
+                    },
+                    formatDuration(totalSeconds) {
+                        if (totalSeconds === null) {
+                            return '—';
+                        }
+                
+                        const safeSeconds = Math.max(0, Math.floor(totalSeconds));
+                        const hours = Math.floor(safeSeconds / 3600);
+                        const minutes = Math.floor((safeSeconds % 3600) / 60);
+                        const seconds = safeSeconds % 60;
+                
+                        if (hours > 0) {
+                            return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                        }
+                
+                        return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                    },
+                    get currentLabel() {
+                        return this.formatDuration(this.currentSeconds);
+                    },
+                    tick() {
+                        if (!this.isLive || this.currentSeconds === null) {
+                            return;
+                        }
+                
+                        this.currentSeconds += 1;
+                    },
+                    init() {
+                        this.currentSeconds = this.toInt(this.initialSeconds);
+                
+                        if (this.isLive && this.currentSeconds !== null) {
+                            this.timerId = setInterval(() => this.tick(), 1000);
+                        }
+                    },
+                    destroy() {
+                        if (this.timerId) {
+                            clearInterval(this.timerId);
+                        }
+                    },
+                }" x-init="init()">
+                    <x-heroicon-o-clock class="h-4 w-4" />
+                    <span class="text-sm font-semibold tracking-wide" x-text="currentLabel">{{ $match['duration_label'] }}</span>
+                </div>
                 <span
                       class="tv-group-status {{ $match['status_class'] }} {{ $match['status_effect_class'] }} rounded-full px-3 py-1 font-semibold tracking-wide">
                     {{ $match['status'] }}
