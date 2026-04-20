@@ -418,15 +418,17 @@
 }
 
 .tv-group-leaderboard {
-    --tv-lb-table: clamp(0.88rem, 1.1vw, 1.08rem);
-    --tv-lb-head: clamp(0.6rem, 0.76vw, 0.8rem);
-    --tv-lb-cell-padding: 0.65rem 0.9rem;
+    --tv-lb-table: clamp(0.75rem, 0.97vw, 0.9rem);
+    --tv-lb-head: clamp(0.51rem, 0.64vw, 0.67rem);
+    --tv-lb-cell-padding: 0.53rem 0.75rem;
+
+    padding: clamp(0.62rem, 0.84vw, 0.92rem);
 }
 
 .tv-group-leaderboard-heading {
-    font-size: clamp(0.6rem, 0.85vw, 0.8rem);
+    font-size: var(--tv-lb-head);
     letter-spacing: 0.18em;
-    margin-bottom: clamp(0.45rem, 0.6vw, 0.7rem);
+    margin-bottom: clamp(0.31rem, 0.44vw, 0.53rem);
 }
 
 .tv-leaderboard.tv-density-comfortable {

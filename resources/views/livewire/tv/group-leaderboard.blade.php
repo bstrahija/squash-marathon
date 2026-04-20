@@ -18,7 +18,7 @@ new class extends Component {
     {
         $event = Event::current();
 
-        if (! $event) {
+        if (!$event) {
             return [
                 'round' => null,
                 'group' => null,
@@ -54,16 +54,16 @@ new class extends Component {
 
 <div class="tv-group-leaderboard tv-leaderboard tv-density-{{ $this->density }} flex h-full min-h-0 flex-col"
     wire:poll.keep-alive.20s>
-    <div class="tv-group-leaderboard-heading flex items-center justify-between text-muted-foreground">
+    <div class="tv-group-leaderboard-heading flex justify-between items-center text-muted-foreground">
         <span class="font-semibold uppercase tracking-[0.16em]">{{ $groupName }}</span>
         <span class="font-semibold uppercase tracking-[0.16em]">{{ $roundName }}</span>
     </div>
 
-    <div class="min-h-0 flex-1 overflow-hidden bg-background/40">
+    <div class="flex-1 bg-background/40 min-h-0 overflow-hidden">
         <div class="h-full overflow-auto">
             <table class="tv-leaderboard-table w-full text-left leading-tight">
                 <thead
-                    class="tv-leaderboard-head sticky top-0 bg-background/90 uppercase tracking-widest text-muted-foreground backdrop-blur-sm">
+                    class="top-0 sticky bg-background/90 backdrop-blur-sm text-muted-foreground uppercase tracking-widest tv-leaderboard-head">
                     <tr>
                         <th class="tv-leaderboard-cell">Igrac</th>
                         <th class="tv-leaderboard-cell">Bod</th>
@@ -74,25 +74,25 @@ new class extends Component {
                 </thead>
                 <tbody class="divide-y divide-border/70">
                     @forelse ($this->standings['rows'] as $row)
-                        <tr class="odd:bg-background/35 even:bg-transparent"
+                        <tr class="even:bg-transparent odd:bg-background/35"
                             wire:key="tv-group-leaderboard-{{ $this->groupNumber }}-{{ $row['id'] }}">
-                            <td class="tv-leaderboard-cell font-medium text-foreground">
+                            <td class="font-medium text-foreground tv-leaderboard-cell">
                                 @if ($row['profile_url'])
-                                    <a href="{{ $row['profile_url'] }}" class="rounded-sm transition hover:underline">
+                                    <a href="{{ $row['profile_url'] }}" class="rounded-sm hover:underline transition">
                                         {{ $row['name'] }}
                                     </a>
                                 @else
                                     <span>{{ $row['name'] }}</span>
                                 @endif
                             </td>
-                            <td class="tv-leaderboard-cell font-semibold text-foreground">{{ $row['points'] }}</td>
-                            <td class="tv-leaderboard-cell text-muted-foreground">{{ $row['wins'] }}</td>
-                            <td class="tv-leaderboard-cell text-muted-foreground">{{ $row['draws'] }}</td>
-                            <td class="tv-leaderboard-cell text-muted-foreground">{{ $row['losses'] }}</td>
+                            <td class="font-semibold text-foreground tv-leaderboard-cell">{{ $row['points'] }}</td>
+                            <td class="text-muted-foreground tv-leaderboard-cell">{{ $row['wins'] }}</td>
+                            <td class="text-muted-foreground tv-leaderboard-cell">{{ $row['draws'] }}</td>
+                            <td class="text-muted-foreground tv-leaderboard-cell">{{ $row['losses'] }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td class="tv-leaderboard-cell text-center text-muted-foreground" colspan="5">
+                            <td class="text-muted-foreground text-center tv-leaderboard-cell" colspan="5">
                                 Jos nema upisanih partija.
                             </td>
                         </tr>
