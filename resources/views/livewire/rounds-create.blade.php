@@ -1,18 +1,15 @@
 <?php
 
 use App\Enums\RoleName;
+use App\Livewire\Concerns\HasGroupPlayerManagement;
 use App\Models\Event;
 use App\Models\Round;
-use App\Models\User;
-use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
 new class extends Component {
-    public ?int $eventId = null;
-
-    public string $eventName = '—';
+    use HasGroupPlayerManagement;
 
     public string $redirectAfterCreate = 'rounds.index';
 
@@ -22,23 +19,9 @@ new class extends Component {
 
     public string $roundName = 'Runda 1';
 
-    /**
-     * @var array<int, int|string>
-     */
-    public array $groupOnePlayerIds = [];
-
-    /**
-     * @var array<int, int|string>
-     */
-    public array $groupTwoPlayerIds = [];
-
-    public ?int $groupOnePlayerToAdd = null;
-
-    public ?int $groupTwoPlayerToAdd = null;
-
     public function mount(): void
     {
-        if (!$this->canManageRounds) {
+        if (! $this->canManageRounds) {
             abort(403);
         }
 
@@ -47,7 +30,7 @@ new class extends Component {
 
         $event = $this->resolveCurrentEvent();
 
-        if (!$event) {
+        if (! $event) {
             return;
         }
 
@@ -55,58 +38,6 @@ new class extends Component {
         $this->eventName = $event->name;
         $this->hydrateRoundDraft();
         $this->resolveCreateMode();
-    }
-
-    #[Computed]
-    public function canManageRounds(): bool
-    {
-        $user = auth()->user();
-
-        return (bool) $user?->hasRole(RoleName::Admin->value);
-    }
-
-    #[Computed]
-    public function eventPlayers(): Collection
-    {
-        if (!$this->eventId) {
-            return collect();
-        }
-
-        return User::query()->whereHas('events', fn($query) => $query->where('events.id', $this->eventId))->orderBy('first_name')->orderBy('last_name')->get();
-    }
-
-    #[Computed]
-    public function eventPlayersById(): Collection
-    {
-        return $this->eventPlayers->keyBy('id');
-    }
-
-    #[Computed]
-    public function availablePlayers(): Collection
-    {
-        $selectedPlayerIds = collect($this->normalizePlayerIds($this->groupOnePlayerIds))
-            ->merge($this->normalizePlayerIds($this->groupTwoPlayerIds))
-            ->unique();
-
-        return $this->eventPlayers->reject(fn(User $player): bool => $selectedPlayerIds->contains($player->id))->values();
-    }
-
-    #[Computed]
-    public function groupOnePlayers(): Collection
-    {
-        return collect($this->normalizePlayerIds($this->groupOnePlayerIds))
-            ->map(fn(int $playerId): ?User => $this->eventPlayersById->get($playerId))
-            ->filter()
-            ->values();
-    }
-
-    #[Computed]
-    public function groupTwoPlayers(): Collection
-    {
-        return collect($this->normalizePlayerIds($this->groupTwoPlayerIds))
-            ->map(fn(int $playerId): ?User => $this->eventPlayersById->get($playerId))
-            ->filter()
-            ->values();
     }
 
     /**
@@ -118,169 +49,23 @@ new class extends Component {
         if ($this->createMode === 'finish') {
             return [
                 'heading' => 'Završi rundu i kreiraj novu',
-                'submit' => 'Spremi rundu',
+                'submit'  => 'Spremi rundu',
             ];
         }
 
         return [
             'heading' => 'Kreiranje prve runde',
-            'submit' => 'Započni rundu',
+            'submit'  => 'Započni rundu',
         ];
-    }
-
-    #[Computed]
-    public function previousRound(): ?Round
-    {
-        if (!$this->eventId) {
-            return null;
-        }
-
-        return Round::previousForEvent($this->eventId, $this->nextRoundNumber);
-    }
-
-    #[Computed]
-    public function hasPreviousRound(): bool
-    {
-        return $this->previousRound !== null;
-    }
-
-    public function updatedGroupOnePlayerToAdd(?int $playerId): void
-    {
-        if (!$playerId) {
-            return;
-        }
-
-        $this->addPlayerToGroup(1);
-    }
-
-    public function updatedGroupTwoPlayerToAdd(?int $playerId): void
-    {
-        if (!$playerId) {
-            return;
-        }
-
-        $this->addPlayerToGroup(2);
-    }
-
-    public function addPlayerToGroup(int $groupNumber): void
-    {
-        if (!$this->canManageRounds) {
-            abort(403);
-        }
-
-        $groupProperty = $this->groupPropertyForNumber($groupNumber);
-        $pickerProperty = $this->pickerPropertyForNumber($groupNumber);
-
-        if (!$groupProperty || !$pickerProperty) {
-            return;
-        }
-
-        $playerId = (int) ($this->{$pickerProperty} ?? 0);
-
-        if ($playerId < 1) {
-            return;
-        }
-
-        if (!$this->eventPlayersById->has($playerId)) {
-            $this->{$pickerProperty} = null;
-
-            return;
-        }
-
-        $groupOneIds = collect($this->normalizePlayerIds($this->groupOnePlayerIds));
-        $groupTwoIds = collect($this->normalizePlayerIds($this->groupTwoPlayerIds));
-
-        if ($groupOneIds->contains($playerId) || $groupTwoIds->contains($playerId)) {
-            $this->addError('groupTwoPlayerIds', 'Igrač može biti samo u jednoj grupi.');
-            $this->{$pickerProperty} = null;
-
-            return;
-        }
-
-        if ($groupProperty === 'groupOnePlayerIds') {
-            $this->groupOnePlayerIds = $groupOneIds->push($playerId)->unique()->values()->all();
-        }
-
-        if ($groupProperty === 'groupTwoPlayerIds') {
-            $this->groupTwoPlayerIds = $groupTwoIds->push($playerId)->unique()->values()->all();
-        }
-
-        $this->{$pickerProperty} = null;
-
-        $otherPickerProperty = $groupNumber === 1 ? 'groupTwoPlayerToAdd' : 'groupOnePlayerToAdd';
-
-        if ((int) ($this->{$otherPickerProperty} ?? 0) === $playerId) {
-            $this->{$otherPickerProperty} = null;
-        }
-
-        $this->resetValidation(['groupOnePlayerIds', 'groupOnePlayerIds.*', 'groupTwoPlayerIds', 'groupTwoPlayerIds.*']);
-    }
-
-    public function removePlayerFromGroup(int $groupNumber, int $playerId): void
-    {
-        if (!$this->canManageRounds) {
-            abort(403);
-        }
-
-        $groupProperty = $this->groupPropertyForNumber($groupNumber);
-
-        if (!$groupProperty) {
-            return;
-        }
-
-        $currentIds = collect($this->normalizePlayerIds($this->{$groupProperty}))
-            ->reject(fn(int $id): bool => $id === $playerId)
-            ->values()
-            ->all();
-
-        $this->{$groupProperty} = $currentIds;
-    }
-
-    public function seedRandomGroups(): void
-    {
-        if (!$this->canManageRounds) {
-            abort(403);
-        }
-
-        [$groupOnePlayerIds, $groupTwoPlayerIds] = Round::splitRandomPlayers($this->eventPlayers);
-
-        $this->groupOnePlayerIds = $groupOnePlayerIds;
-        $this->groupTwoPlayerIds = $groupTwoPlayerIds;
-        $this->groupOnePlayerToAdd = null;
-        $this->groupTwoPlayerToAdd = null;
-
-        $this->resetValidation(['groupOnePlayerIds', 'groupOnePlayerIds.*', 'groupTwoPlayerIds', 'groupTwoPlayerIds.*']);
-    }
-
-    public function seedGroupsFromPreviousRoundPoints(): void
-    {
-        if (!$this->canManageRounds) {
-            abort(403);
-        }
-
-        $previousRound = $this->previousRound;
-
-        if (!$previousRound) {
-            return;
-        }
-
-        [$groupOnePlayerIds, $groupTwoPlayerIds] = Round::splitPlayersFromPreviousRoundByPoints($previousRound, $this->eventPlayersById);
-
-        $this->groupOnePlayerIds = $groupOnePlayerIds;
-        $this->groupTwoPlayerIds = $groupTwoPlayerIds;
-        $this->groupOnePlayerToAdd = null;
-        $this->groupTwoPlayerToAdd = null;
-
-        $this->resetValidation(['groupOnePlayerIds', 'groupOnePlayerIds.*', 'groupTwoPlayerIds', 'groupTwoPlayerIds.*']);
     }
 
     public function saveRound(): void
     {
-        if (!$this->canManageRounds) {
+        if (! $this->canManageRounds) {
             abort(403);
         }
 
-        if (!$this->eventId) {
+        if (! $this->eventId) {
             $this->addError('eventId', 'Nema aktivnog eventa za kreiranje runde.');
 
             return;
@@ -291,24 +76,23 @@ new class extends Component {
 
         $validated = $this->validate(
             [
-                'groupOnePlayerIds' => ['required', 'array', 'min:1'],
-                'groupOnePlayerIds.*' => ['integer', Rule::exists('event_user', 'user_id')->where(fn($query) => $query->where('event_id', $this->eventId))],
-                'groupTwoPlayerIds' => ['required', 'array', 'min:1'],
-                'groupTwoPlayerIds.*' => ['integer', Rule::exists('event_user', 'user_id')->where(fn($query) => $query->where('event_id', $this->eventId))],
+                'groupOnePlayerIds'   => ['required', 'array', 'min:1'],
+                'groupOnePlayerIds.*' => ['integer', Rule::exists('event_user', 'user_id')->where(fn ($query) => $query->where('event_id', $this->eventId))],
+                'groupTwoPlayerIds'   => ['required', 'array', 'min:1'],
+                'groupTwoPlayerIds.*' => ['integer', Rule::exists('event_user', 'user_id')->where(fn ($query) => $query->where('event_id', $this->eventId))],
             ],
             [
-                'groupOnePlayerIds.required' => 'Odaberite igrače za grupu 1.',
-                'groupOnePlayerIds.min' => 'Grupa 1 mora imati barem jednog igrača.',
-                'groupOnePlayerIds.*.exists' => 'Igrači u grupi 1 moraju biti prijavljeni na event.',
-                'groupTwoPlayerIds.required' => 'Odaberite igrače za grupu 2.',
-                'groupTwoPlayerIds.min' => 'Grupa 2 mora imati barem jednog igrača.',
-                'groupTwoPlayerIds.*.exists' => 'Igrači u grupi 2 moraju biti prijavljeni na event.',
+                'groupOnePlayerIds.required'   => 'Odaberite igrače za grupu 1.',
+                'groupOnePlayerIds.min'         => 'Grupa 1 mora imati barem jednog igrača.',
+                'groupOnePlayerIds.*.exists'    => 'Igrači u grupi 1 moraju biti prijavljeni na event.',
+                'groupTwoPlayerIds.required'   => 'Odaberite igrače za grupu 2.',
+                'groupTwoPlayerIds.min'         => 'Grupa 2 mora imati barem jednog igrača.',
+                'groupTwoPlayerIds.*.exists'    => 'Igrači u grupi 2 moraju biti prijavljeni na event.',
             ],
         );
 
-        $groupOneIds = collect($validated['groupOnePlayerIds'])->map(static fn($id): int => (int) $id)->unique()->values();
-
-        $groupTwoIds = collect($validated['groupTwoPlayerIds'])->map(static fn($id): int => (int) $id)->unique()->values();
+        $groupOneIds = collect($validated['groupOnePlayerIds'])->map(static fn ($id): int => (int) $id)->unique()->values();
+        $groupTwoIds = collect($validated['groupTwoPlayerIds'])->map(static fn ($id): int => (int) $id)->unique()->values();
 
         if ($groupOneIds->intersect($groupTwoIds)->isNotEmpty()) {
             $this->addError('groupTwoPlayerIds', 'Igrač može biti samo u jednoj grupi.');
@@ -323,6 +107,11 @@ new class extends Component {
         $this->redirectRoute($this->redirectAfterCreate);
     }
 
+    protected function previousRoundNumber(): int
+    {
+        return $this->nextRoundNumber;
+    }
+
     protected function resolveCurrentEvent(): ?Event
     {
         return Event::current();
@@ -330,7 +119,7 @@ new class extends Component {
 
     protected function hydrateRoundDraft(): void
     {
-        if (!$this->eventId) {
+        if (! $this->eventId) {
             $this->nextRoundNumber = 1;
             $this->roundName = 'Runda 1';
 
@@ -345,11 +134,11 @@ new class extends Component {
     {
         $requestedRoute = request()->query('redirect');
 
-        if (!is_string($requestedRoute)) {
+        if (! is_string($requestedRoute)) {
             return;
         }
 
-        if (!in_array($requestedRoute, ['matches.create'], true)) {
+        if (! in_array($requestedRoute, ['matches.create'], true)) {
             return;
         }
 
@@ -366,7 +155,7 @@ new class extends Component {
             return;
         }
 
-        if (!$this->eventId) {
+        if (! $this->eventId) {
             $this->createMode = 'start';
 
             return;
@@ -375,27 +164,18 @@ new class extends Component {
         $this->createMode = Round::query()->where('event_id', $this->eventId)->exists() ? 'finish' : 'start';
     }
 
-    protected function normalizePlayerIds(array $playerIds): array
+    private function redirectForMissingRound(): void
     {
-        return collect($playerIds)->map(fn($id): int => (int) $id)->filter(fn(int $id): bool => $id > 0)->unique()->values()->all();
-    }
+        $user = auth()->user();
 
-    protected function groupPropertyForNumber(int $groupNumber): ?string
-    {
-        return match ($groupNumber) {
-            1 => 'groupOnePlayerIds',
-            2 => 'groupTwoPlayerIds',
-            default => null,
-        };
-    }
+        if ((bool) $user?->hasRole(RoleName::Admin->value)) {
+            $this->redirectRoute('rounds.create', ['redirect' => 'matches.create']);
 
-    protected function pickerPropertyForNumber(int $groupNumber): ?string
-    {
-        return match ($groupNumber) {
-            1 => 'groupOnePlayerToAdd',
-            2 => 'groupTwoPlayerToAdd',
-            default => null,
-        };
+            return;
+        }
+
+        session()->flash('status', 'Nema aktivne runde. Obratite se administratoru.');
+        $this->redirectRoute('matches.index');
     }
 };
 ?>

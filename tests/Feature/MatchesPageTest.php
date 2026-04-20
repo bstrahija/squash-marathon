@@ -463,7 +463,7 @@ test('matches list shows requested column order', function () {
 
     Livewire::test('matches-list')
         ->assertSee(route('matches.score', ['game' => $game->id]), false)
-        ->assertSeeInOrder(['Setovi', 'Vrijeme', 'Trajanje', 'Grupa', 'Status', 'Akcije']);
+        ->assertSeeInOrder(['Setovi', 'Vrijeme', 'Trajanje', 'Status', 'Akcije']);
 });
 
 test('matches list can filter by player and round', function () {

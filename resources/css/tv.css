@@ -1,45 +1,3 @@
-.tv-container {
-    min-height: 100svh;
-}
-
-.tv-home-header {
-    display: block;
-}
-
-.tv-grid {
-    grid-template-rows: repeat(6, minmax(0, 1fr));
-}
-
-.tv-panel-live {
-    grid-column: 1;
-    grid-row: 1 / -1;
-}
-
-.tv-panel-recent {
-    grid-column: 2;
-    grid-row: 1 / -1;
-}
-
-.tv-panel-right {
-    grid-column: 3;
-    grid-row: 1 / -1;
-}
-
-@media (orientation: landscape) {
-    .tv-home-header {
-        display: none;
-    }
-
-    .tv-container {
-        height: 100svh;
-        overflow: hidden;
-    }
-
-    .tv-grid {
-        height: 100%;
-    }
-}
-
 @media (orientation: landscape) and (max-width: 1024px) and (max-height: 540px) {
     .tv-body {
         overflow-x: hidden;
@@ -59,7 +17,9 @@
         height: auto;
         min-height: calc(100svh - (var(--tv-mobile-landscape-padding) * 2));
         grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-        grid-template-rows: calc(100svh - (var(--tv-mobile-landscape-padding) * 2)) auto;
+        grid-template-rows:
+            calc(100svh - (var(--tv-mobile-landscape-padding) * 2))
+            auto;
         gap: 0.75rem;
     }
 
@@ -74,10 +34,6 @@
         grid-row: 1;
         height: calc(100svh - (var(--tv-mobile-landscape-padding) * 2));
         min-height: calc(100svh - (var(--tv-mobile-landscape-padding) * 2));
-    }
-
-    .tv-panel-live > .grid {
-        padding: var(--tv-mobile-landscape-padding);
     }
 
     .tv-panel-right {
@@ -102,7 +58,7 @@
 
     .tv-panel-leaderboard {
         height: calc(100svh - (var(--tv-mobile-landscape-padding) * 2));
-        min-height: calc(100svh  - (var(--tv-mobile-landscape-padding) * 2));
+        min-height: calc(100svh - (var(--tv-mobile-landscape-padding) * 2));
     }
 }
 
@@ -113,20 +69,7 @@
     }
 
     .tv-container {
-        height: auto;
-        overflow: visible;
         padding-top: clamp(6.15rem, 10vw, 6.75rem);
-    }
-
-    .tv-grid {
-        height: auto;
-        min-height: 100svh;
-    }
-
-    .tv-panel-live,
-    .tv-panel-recent,
-    .tv-panel-right {
-        grid-row: auto;
     }
 
     .tv-panel-live {
@@ -160,6 +103,7 @@
     .tv-grid {
         grid-template-columns: minmax(0, 1fr);
         grid-template-rows: auto auto auto;
+        gap: 0.5rem;
     }
 
     .tv-panel-live,
@@ -173,12 +117,20 @@
         grid-row: 1;
     }
 
+    .tv-panel-live > .grid {
+        gap: 0.5rem;
+    }
+
     .tv-panel-recent {
         grid-row: 2;
     }
 
     .tv-panel-right {
         grid-row: 3;
+    }
+
+    .tv-panel-right > .flex {
+        gap: 0.5rem;
     }
 }
 
@@ -328,13 +280,17 @@
     }
 
     .tv-group-chip {
-        padding: clamp(0.18rem, 0.42vmin, 0.36rem) clamp(0.34rem, 0.7vmin, 0.7rem);
+        padding: clamp(0.18rem, 0.42vmin, 0.36rem)
+            clamp(0.34rem, 0.7vmin, 0.7rem);
     }
 }
 
 @media (orientation: landscape) and (max-height: 540px) {
     .tv-group-grid {
-        grid-template-columns: minmax(0, 1fr) minmax(6.75rem, 22%) minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1fr) minmax(6.75rem, 22%) minmax(
+                0,
+                1fr
+            );
         gap: clamp(0.45rem, 1.2vmin, 0.8rem);
         padding: clamp(0.55rem, 1.4vmin, 0.95rem);
         align-items: center;
@@ -486,22 +442,22 @@
 }
 
 .tv-latest-games {
-    --tv-latest-text: clamp(0.64rem, 0.82vw, 0.82rem);
-    --tv-latest-subtext: clamp(0.5rem, 0.58vw, 0.62rem);
+    --tv-latest-text: clamp(0.86rem, 1.08vw, 1.08rem);
+    --tv-latest-subtext: clamp(0.68rem, 0.8vw, 0.84rem);
     --tv-latest-card-padding: 0.625rem 0.875rem;
 
     padding: clamp(0.75rem, 1vw, 1.1rem);
 }
 
 .tv-latest-games.tv-density-comfortable {
-    --tv-latest-text: clamp(0.74rem, 0.94vw, 0.94rem);
-    --tv-latest-subtext: clamp(0.56rem, 0.7vw, 0.7rem);
+    --tv-latest-text: clamp(1rem, 1.24vw, 1.24rem);
+    --tv-latest-subtext: clamp(0.74rem, 0.92vw, 0.92rem);
     --tv-latest-card-padding: 0.75rem 1rem;
 }
 
 .tv-latest-games.tv-density-compact {
-    --tv-latest-text: clamp(0.6rem, 0.68vw, 0.72rem);
-    --tv-latest-subtext: clamp(0.46rem, 0.5vw, 0.54rem);
+    --tv-latest-text: clamp(0.8rem, 0.92vw, 0.96rem);
+    --tv-latest-subtext: clamp(0.62rem, 0.7vw, 0.74rem);
     --tv-latest-card-padding: 0.5rem 0.75rem;
 }
 

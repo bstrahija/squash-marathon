@@ -2,16 +2,16 @@
 
 use App\Enums\RoleName;
 use App\Models\Game;
-use App\Models\Group;
 use App\Models\Round;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new class extends Component {
+new class extends Component
+{
     use WithPagination;
 
     public ?int $confirmingDeletionId = null;
@@ -19,8 +19,6 @@ new class extends Component {
     public string $playerFilter = '';
 
     public string $roundFilter = '';
-
-    public string $groupFilter = '';
 
     public string $sortBy = 'time';
 
@@ -45,7 +43,7 @@ new class extends Component {
     #[Computed]
     public function matches(): LengthAwarePaginator
     {
-        $query = Game::query()->with(['group', 'round', 'playerOne', 'playerTwo', 'sets' => fn($query) => $query->orderBy('created_at')]);
+        $query = Game::query()->with(['round', 'playerOne', 'playerTwo', 'sets' => fn ($query) => $query->orderBy('created_at')]);
 
         if ($this->playerFilter !== '') {
             $playerId = (int) $this->playerFilter;
@@ -59,10 +57,6 @@ new class extends Component {
             $query->where('round_id', (int) $this->roundFilter);
         }
 
-        if ($this->groupFilter !== '') {
-            $query->where('group_id', (int) $this->groupFilter);
-        }
-
         $this->applySorting($query);
 
         return $query->paginate(50);
@@ -74,14 +68,16 @@ new class extends Component {
     #[Computed]
     public function playerOptions(): array
     {
-        $playerIds = Game::query()
-            ->pluck('player_one_id')
-            ->merge(Game::query()->pluck('player_two_id'))
-            ->filter()
-            ->unique()
-            ->values();
-
-        return User::query()->whereIn('id', $playerIds)->orderBy('first_name')->orderBy('last_name')->get()->mapWithKeys(fn(User $user): array => [$user->id => $user->full_name])->all();
+        return User::query()
+            ->where(function (Builder $query): void {
+                $query->whereIn('id', Game::query()->select('player_one_id')->whereNotNull('player_one_id'))
+                    ->orWhereIn('id', Game::query()->select('player_two_id')->whereNotNull('player_two_id'));
+            })
+            ->orderBy('first_name')
+            ->orderBy('last_name')
+            ->get()
+            ->mapWithKeys(fn (User $user): array => [$user->id => $user->full_name])
+            ->all();
     }
 
     /**
@@ -90,20 +86,12 @@ new class extends Component {
     #[Computed]
     public function roundOptions(): array
     {
-        $roundIds = Game::query()->pluck('round_id')->filter()->unique()->values();
-
-        return Round::query()->whereIn('id', $roundIds)->orderBy('number')->orderBy('id')->get()->mapWithKeys(fn(Round $round): array => [$round->id => $round->name])->all();
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    #[Computed]
-    public function groupOptions(): array
-    {
-        $groupIds = Game::query()->pluck('group_id')->filter()->unique()->values();
-
-        return Group::query()->whereIn('id', $groupIds)->orderBy('number')->orderBy('id')->get()->mapWithKeys(fn(Group $group): array => [$group->id => $group->name])->all();
+        return Round::query()
+            ->whereIn('id', Game::query()->select('round_id')->whereNotNull('round_id')->distinct())
+            ->orderBy('number')
+            ->get()
+            ->mapWithKeys(fn (Round $round): array => [$round->id => $round->name])
+            ->all();
     }
 
     public function updatedPlayerFilter(): void
@@ -112,11 +100,6 @@ new class extends Component {
     }
 
     public function updatedRoundFilter(): void
-    {
-        $this->resetPage();
-    }
-
-    public function updatedGroupFilter(): void
     {
         $this->resetPage();
     }
@@ -133,14 +116,14 @@ new class extends Component {
 
     public function sortByColumn(string $column): void
     {
-        if (!in_array($column, ['time', 'status', 'duration'], true)) {
+        if (! in_array($column, ['time', 'status', 'duration'], true)) {
             return;
         }
 
         if ($this->sortBy === $column) {
             $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
         } else {
-            $this->sortBy = $column;
+            $this->sortBy        = $column;
             $this->sortDirection = 'desc';
         }
 
@@ -149,7 +132,7 @@ new class extends Component {
 
     public function confirmDelete(int $gameId): void
     {
-        if (!$this->canManageMatches) {
+        if (! $this->canManageMatches) {
             return;
         }
 
@@ -163,7 +146,7 @@ new class extends Component {
 
     public function deleteMatch(int $gameId): void
     {
-        if (!$this->canDeleteMatches) {
+        if (! $this->canDeleteMatches) {
             abort(403);
         }
 
@@ -179,46 +162,38 @@ new class extends Component {
 
     public function statusLabel(Game $game): string
     {
-        return match ($this->statusType($game)) {
-            'waiting' => 'NA ČEKANJU',
-            'live' => 'UŽIVO',
-            default => 'ZAVRŠENO',
-        };
+        if ($game->isWaiting()) {
+            return 'NA ČEKANJU';
+        }
+
+        if ($game->isLive()) {
+            return 'UŽIVO';
+        }
+
+        return 'ZAVRŠENO';
     }
 
     public function statusBadgeClass(Game $game): string
     {
-        return match ($this->statusType($game)) {
-            'waiting' => 'border-amber-400/40 bg-amber-400/10 text-amber-700 dark:text-amber-300',
-            'live' => 'border-emerald-400/40 bg-emerald-400/10 text-emerald-700 dark:text-emerald-300',
-            default => 'border-sky-400/40 bg-sky-400/10 text-sky-700 dark:text-sky-300',
-        };
+        if ($game->isWaiting()) {
+            return 'border-amber-400/40 bg-amber-400/10 text-amber-700 dark:text-amber-300';
+        }
+
+        if ($game->isLive()) {
+            return 'border-emerald-400/40 bg-emerald-400/10 text-emerald-700 dark:text-emerald-300';
+        }
+
+        return 'border-sky-400/40 bg-sky-400/10 text-sky-700 dark:text-sky-300';
     }
 
     public function scoreSummary(Game $game): string
     {
-        $scores = $game->sets->filter(fn($set): bool => filled($set->player_one_score) && filled($set->player_two_score))->map(fn($set): string => "{$set->player_one_score}-{$set->player_two_score}")->implode(', ');
-
-        return $scores !== '' ? $scores : '—';
+        return $game->scoreSummary();
     }
 
     public function setResultSummary(Game $game): string
     {
-        $result = Game::determineMatchResultFromSetScores(
-            $game->sets
-                ->map(
-                    fn($set): array => [
-                        'player_one_score' => $set->player_one_score,
-                        'player_two_score' => $set->player_two_score,
-                    ],
-                )
-                ->all(),
-            $game->best_of,
-            $game->player_one_id,
-            $game->player_two_id,
-        );
-
-        return "{$result['player_one_wins']}-{$result['player_two_wins']}";
+        return $game->setResultSummary();
     }
 
     public function scoreRoute(Game $game): string
@@ -228,25 +203,13 @@ new class extends Component {
 
     public function playerClass(Game $game, ?int $playerId): string
     {
-        if (!$playerId) {
+        if (! $playerId) {
             return 'text-foreground';
         }
 
-        $result = Game::determineMatchResultFromSetScores(
-            $game->sets
-                ->map(
-                    fn($set): array => [
-                        'player_one_score' => $set->player_one_score,
-                        'player_two_score' => $set->player_two_score,
-                    ],
-                )
-                ->all(),
-            $game->best_of,
-            $game->player_one_id,
-            $game->player_two_id,
-        );
+        $result = $game->resultFromSets();
 
-        if (!$result['is_complete']) {
+        if (! $result['is_complete']) {
             return 'text-foreground';
         }
 
@@ -259,19 +222,6 @@ new class extends Component {
         }
 
         return 'text-foreground/70';
-    }
-
-    private function statusType(Game $game): string
-    {
-        if (!$game->started_at && !$game->finished_at) {
-            return 'waiting';
-        }
-
-        if ($game->started_at && !$game->finished_at) {
-            return 'live';
-        }
-
-        return 'finished';
     }
 
     private function applySorting(Builder $query): void
@@ -348,23 +298,11 @@ new class extends Component {
                         @endforeach
                     </select>
                 </label>
-
-                <label
-                    class="flex flex-col gap-1 font-semibold text-muted-foreground text-xs uppercase tracking-[0.12em]">
-                    Grupa
-                    <select wire:model.live="groupFilter"
-                        class="bg-background/70 px-3 py-2 border border-border/70 focus:border-foreground/40 rounded-xl focus:outline-none text-foreground text-sm normal-case tracking-normal">
-                        <option value="">Sve grupe</option>
-                        @foreach ($this->groupOptions as $groupOptionId => $groupName)
-                            <option value="{{ $groupOptionId }}">{{ $groupName }}</option>
-                        @endforeach
-                    </select>
-                </label>
             </div>
         </div>
     </div>
 
-    <div class="hidden gap-3 sm:grid sm:grid-cols-3 mb-4">
+    <div class="hidden gap-3 sm:grid sm:grid-cols-2 mb-4">
         <label class="flex flex-col gap-1 font-semibold text-muted-foreground text-xs uppercase tracking-[0.12em]">
             Igrač
             <select wire:model.live="playerFilter"
@@ -383,17 +321,6 @@ new class extends Component {
                 <option value="">Sve runde</option>
                 @foreach ($this->roundOptions as $roundOptionId => $roundName)
                     <option value="{{ $roundOptionId }}">{{ $roundName }}</option>
-                @endforeach
-            </select>
-        </label>
-
-        <label class="flex flex-col gap-1 font-semibold text-muted-foreground text-xs uppercase tracking-[0.12em]">
-            Grupa
-            <select wire:model.live="groupFilter"
-                class="bg-background/70 px-3 py-2 border border-border/70 focus:border-foreground/40 rounded-xl focus:outline-none text-foreground text-sm normal-case tracking-normal">
-                <option value="">Sve grupe</option>
-                @foreach ($this->groupOptions as $groupOptionId => $groupName)
-                    <option value="{{ $groupOptionId }}">{{ $groupName }}</option>
                 @endforeach
             </select>
         </label>
@@ -430,8 +357,7 @@ new class extends Component {
                             @endif
                         </button>
                     </th>
-                    <th class="px-3 py-3">Grupa</th>
-                    <th class="px-3 py-3">
+                    <th class="px-3 py-3 text-left">
                         <button type="button" wire:click="sortByColumn('status')"
                             class="inline-flex items-center gap-1 hover:text-foreground transition">
                             Status
@@ -457,11 +383,11 @@ new class extends Component {
                                 class="block hover:bg-muted/40 -mx-3 -my-3 px-3 py-3 rounded-lg transition">
                                 <p class="font-semibold text-sm">
                                     <span class="{{ $this->playerClass($game, $game->player_one_id) }}">
-                                        {{ $game->playerOne?->full_name ?? '—' }}
+                                        {{ $game->playerOne?->short_name ?? '—' }}
                                     </span>
                                     <span class="text-muted-foreground">vs</span>
                                     <span class="{{ $this->playerClass($game, $game->player_two_id) }}">
-                                        {{ $game->playerTwo?->full_name ?? '—' }}
+                                        {{ $game->playerTwo?->short_name ?? '—' }}
                                     </span>
                                 </p>
                                 <p class="mt-0.5 font-semibold text-foreground text-sm">
@@ -480,12 +406,6 @@ new class extends Component {
                             <a href="{{ $this->scoreRoute($game) }}"
                                 class="block hover:bg-muted/40 -mx-3 -my-3 px-3 py-3 rounded-lg hover:text-foreground transition">
                                 {{ $game->duration_seconds ? sprintf('%d:%02d', intdiv($game->duration_seconds, 60), $game->duration_seconds % 60) : '—' }}
-                            </a>
-                        </td>
-                        <td class="px-3 py-3 font-medium">
-                            <a href="{{ $this->scoreRoute($game) }}"
-                                class="block hover:bg-muted/40 -mx-3 -my-3 px-3 py-3 rounded-lg transition">
-                                {{ $game->group?->name ?? '—' }}
                             </a>
                         </td>
                         <td class="px-3 py-3">

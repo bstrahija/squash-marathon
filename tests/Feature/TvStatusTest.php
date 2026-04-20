@@ -17,20 +17,6 @@ function tvShortName(User $user): string
     return $user->short_name;
 }
 
-function formatTvDuration(int $seconds): string
-{
-    $seconds          = max(0, $seconds);
-    $hours            = intdiv($seconds, 3600);
-    $minutes          = intdiv($seconds % 3600, 60);
-    $remainingSeconds = $seconds % 60;
-
-    if ($hours > 0) {
-        return sprintf('%d:%02d:%02d', $hours, $minutes, $remainingSeconds);
-    }
-
-    return sprintf('%02d:%02d', $minutes, $remainingSeconds);
-}
-
 test('tv status page loads', function () {
     $this->withoutVite();
 
@@ -105,6 +91,48 @@ test('tv event end countdown component shows remaining time and end time', funct
     Carbon::setTestNow();
 });
 
+test('tv event end countdown component shows duration and start time when event has not started', function () {
+    $now = Carbon::create(2026, 2, 27, 8, 0, 0);
+    Carbon::setTestNow($now);
+
+    Event::factory()->create([
+        'name'     => 'Maraton 2026',
+        'start_at' => $now->copy()->addHours(2),
+        'end_at'   => $now->copy()->addHours(26),
+    ]);
+
+    Livewire::test('tv.event-end-countdown')
+        ->assertSee('Countdown do kraja')
+        ->assertSeeHtml('Maraton 2026')
+        ->assertSee('24:00:00')
+        ->assertSee('Počinje')
+        ->assertSee('10:00');
+
+    Carbon::setTestNow();
+});
+
+test('tv event end countdown shows Croatian day and month when event starts on a future date', function () {
+    // now = Friday 2026-04-17, event starts next Sunday 2026-04-19 at 09:00
+    $now = Carbon::create(2026, 4, 17, 12, 0, 0);
+    Carbon::setTestNow($now);
+
+    Event::factory()->create([
+        'name'     => 'Maraton 2026',
+        'start_at' => Carbon::create(2026, 4, 19, 9, 0, 0),
+        'end_at'   => Carbon::create(2026, 4, 20, 9, 0, 0),
+    ]);
+
+    Livewire::test('tv.event-end-countdown')
+        ->assertSee('Countdown do kraja')
+        ->assertSee('24:00:00')
+        ->assertSee('Počinje')
+        ->assertSee('nedjelja')
+        ->assertSee('travnja')
+        ->assertSee('09:00');
+
+    Carbon::setTestNow();
+});
+
 test('event countdown livewire component renders event details', function () {
     $now = Carbon::create(2026, 2, 27, 20, 0, 0);
     Carbon::setTestNow($now);
@@ -160,8 +188,8 @@ test('latest games livewire component shows recent games', function () {
     ]);
 
     Livewire::test('latest-games')
-        ->assertSee($playerOne->full_name)
-        ->assertSee($playerTwo->full_name)
+        ->assertSee($playerOne->short_name)
+        ->assertSee($playerTwo->short_name)
         ->assertSee('11-6')
         ->assertSee('19:50');
 });
@@ -256,10 +284,11 @@ test('tv latest games component shows last 30 games with result and duration', f
     }
 
     Livewire::test('tv.latest-games')
-        ->assertSee($playerOne->full_name)
-        ->assertSee($playerTwo->full_name)
+        ->assertSee($playerOne->short_name)
+        ->assertSee($playerTwo->short_name)
         ->assertSee('Rezultat 11-5, 11-7')
-        ->assertSee('Trajanje 1:31')
+        ->assertSee('1:31')
+        ->assertDontSee('Trajanje 1:31')
         ->assertDontSee('Trajanje 1:01');
 });
 
@@ -336,13 +365,18 @@ test('tv group match component prefers live game over finished game in same grou
         'player_two_score' => 9,
     ]);
 
+    Carbon::setTestNow(Carbon::create(2026, 2, 27, 20, 3, 0));
+
     Livewire::test('tv.group-match', ['groupNumber' => 1])
         ->assertSee(tvShortName($livePlayerOne))
         ->assertSee(tvShortName($livePlayerTwo))
         ->assertSee('UŽIVO')
+        ->assertSee('5:00')
         ->assertSee(route('matches.score', $liveGame), false)
         ->assertDontSee(tvShortName($finishedPlayerOne))
         ->assertDontSee(tvShortName($finishedPlayerTwo));
+
+    Carbon::setTestNow();
 });
 
 test('tv group match component falls back to latest finished game when no live game exists', function () {
@@ -399,15 +433,16 @@ test('tv group match component falls back to latest finished game when no live g
     ]);
 
     $latestGame = Game::factory()->create([
-        'event_id'      => $event->id,
-        'round_id'      => $round->id,
-        'group_id'      => $group->id,
-        'best_of'       => 2,
-        'player_one_id' => $latestPlayerOne->id,
-        'player_two_id' => $latestPlayerTwo->id,
-        'created_at'    => Carbon::create(2026, 2, 27, 19, 20, 0),
-        'started_at'    => Carbon::create(2026, 2, 27, 19, 20, 0),
-        'finished_at'   => Carbon::create(2026, 2, 27, 19, 37, 0),
+        'event_id'         => $event->id,
+        'round_id'         => $round->id,
+        'group_id'         => $group->id,
+        'best_of'          => 2,
+        'player_one_id'    => $latestPlayerOne->id,
+        'player_two_id'    => $latestPlayerTwo->id,
+        'duration_seconds' => 1020,
+        'created_at'       => Carbon::create(2026, 2, 27, 19, 20, 0),
+        'started_at'       => Carbon::create(2026, 2, 27, 19, 20, 0),
+        'finished_at'      => Carbon::create(2026, 2, 27, 19, 37, 0),
     ]);
 
     GameSet::factory()->create([
@@ -429,8 +464,51 @@ test('tv group match component falls back to latest finished game when no live g
         ->assertSee(tvShortName($latestPlayerOne))
         ->assertSee(tvShortName($latestPlayerTwo))
         ->assertSee('ZAVRŠENO')
+        ->assertSee('17:00')
         ->assertDontSee(tvShortName($olderPlayerOne))
         ->assertDontSee(tvShortName($olderPlayerTwo));
+});
+
+test('tv group match component falls back to started_at to now when game is started without finished_at and without duration', function () {
+    $event     = Event::factory()->create();
+    $playerOne = User::factory()->create();
+    $playerTwo = User::factory()->create();
+
+    $event->users()->attach([$playerOne->id, $playerTwo->id]);
+
+    $round = Round::factory()->create([
+        'event_id' => $event->id,
+        'number'   => 1,
+        'name'     => 'Round 1',
+    ]);
+    $group = Group::factory()->create([
+        'event_id' => $event->id,
+        'round_id' => $round->id,
+        'number'   => 1,
+        'name'     => 'Group 1',
+    ]);
+
+    Game::factory()->create([
+        'event_id'         => $event->id,
+        'round_id'         => $round->id,
+        'group_id'         => $group->id,
+        'best_of'          => 2,
+        'player_one_id'    => $playerOne->id,
+        'player_two_id'    => $playerTwo->id,
+        'duration_seconds' => null,
+        'created_at'       => Carbon::create(2026, 2, 27, 19, 50, 0),
+        'started_at'       => Carbon::create(2026, 2, 27, 19, 50, 0),
+        'finished_at'      => null,
+    ]);
+
+    Carbon::setTestNow(Carbon::create(2026, 2, 27, 19, 57, 0));
+
+    Livewire::test('tv.group-match', ['groupNumber' => 1])
+        ->assertSee(tvShortName($playerOne))
+        ->assertSee(tvShortName($playerTwo))
+        ->assertSee('7:00');
+
+    Carbon::setTestNow();
 });
 
 test('tv group match component prefers waiting game over finished game when no live game exists', function () {
@@ -564,109 +642,4 @@ test('tv group match component shows current set points from latest game log', f
         ->assertSee('21')
         ->assertSee('17')
         ->assertSee('UŽIVO');
-});
-
-test('tv group match component shows ongoing duration from started_at to current time', function () {
-    $now = Carbon::create(2026, 2, 27, 20, 10, 0);
-    Carbon::setTestNow($now);
-
-    $event     = Event::factory()->create();
-    $playerOne = User::factory()->create();
-    $playerTwo = User::factory()->create();
-
-    $event->users()->attach([$playerOne->id, $playerTwo->id]);
-
-    $round = Round::factory()->create([
-        'event_id' => $event->id,
-        'number'   => 1,
-        'name'     => 'Round 1',
-    ]);
-    $group = Group::factory()->create([
-        'event_id' => $event->id,
-        'round_id' => $round->id,
-        'number'   => 1,
-        'name'     => 'Group 1',
-    ]);
-
-    $startedAt = Carbon::create(2026, 2, 27, 20, 7, 25);
-
-    Game::factory()->create([
-        'event_id'      => $event->id,
-        'round_id'      => $round->id,
-        'group_id'      => $group->id,
-        'best_of'       => 2,
-        'player_one_id' => $playerOne->id,
-        'player_two_id' => $playerTwo->id,
-        'started_at'    => $startedAt,
-        'finished_at'   => null,
-    ]);
-
-    $elapsedSeconds   = $startedAt->diffInSeconds($now);
-    $expectedDuration = formatTvDuration($elapsedSeconds);
-
-    Livewire::test('tv.group-match', ['groupNumber' => 1])
-        ->assertSee(tvShortName($playerOne))
-        ->assertSee(tvShortName($playerTwo))
-        ->assertSee('UŽIVO')
-        ->assertSee($expectedDuration);
-
-    Carbon::setTestNow();
-});
-
-test('tv group match component shows finished duration from duration_seconds column', function () {
-    $event     = Event::factory()->create();
-    $playerOne = User::factory()->create();
-    $playerTwo = User::factory()->create();
-
-    $event->users()->attach([$playerOne->id, $playerTwo->id]);
-
-    $round = Round::factory()->create([
-        'event_id' => $event->id,
-        'number'   => 1,
-        'name'     => 'Round 1',
-    ]);
-    $group = Group::factory()->create([
-        'event_id' => $event->id,
-        'round_id' => $round->id,
-        'number'   => 1,
-        'name'     => 'Group 1',
-    ]);
-
-    $finishedDurationSeconds = 507;
-
-    $game = Game::factory()->create([
-        'event_id'         => $event->id,
-        'round_id'         => $round->id,
-        'group_id'         => $group->id,
-        'best_of'          => 2,
-        'player_one_id'    => $playerOne->id,
-        'player_two_id'    => $playerTwo->id,
-        'started_at'       => Carbon::create(2026, 2, 27, 19, 40, 0),
-        'finished_at'      => Carbon::create(2026, 2, 27, 19, 48, 27),
-        'duration_seconds' => $finishedDurationSeconds,
-    ]);
-
-    GameSet::factory()->create([
-        'game_id'          => $game->id,
-        'player_one_id'    => $playerOne->id,
-        'player_two_id'    => $playerTwo->id,
-        'player_one_score' => 11,
-        'player_two_score' => 8,
-    ]);
-
-    GameSet::factory()->create([
-        'game_id'          => $game->id,
-        'player_one_id'    => $playerOne->id,
-        'player_two_id'    => $playerTwo->id,
-        'player_one_score' => 11,
-        'player_two_score' => 9,
-    ]);
-
-    $expectedDuration = formatTvDuration($finishedDurationSeconds);
-
-    Livewire::test('tv.group-match', ['groupNumber' => 1])
-        ->assertSee(tvShortName($playerOne))
-        ->assertSee(tvShortName($playerTwo))
-        ->assertSee('ZAVRŠENO')
-        ->assertSee($expectedDuration);
 });

@@ -1,38 +1,68 @@
 <?php
 
+use App\Actions\GetEventPlayerStatsAction;
 use App\Models\Event;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
-new class extends Component {
+new class extends Component
+{
     #[Computed]
     public function leaderboard(): array
     {
         $event = Event::current();
 
-        if (!$event) {
+        if (! $event) {
             return [];
         }
 
-        return $event->leaderboardRows()->all();
+        return app(GetEventPlayerStatsAction::class)
+            ->execute($event)
+            ->map(fn (array $row): array => [
+                'id'           => $row['player']->id,
+                'name'         => $row['player']->full_name,
+                'short_name'   => $row['player']->short_name,
+                'profile_url'  => route('players.show', ['user' => $row['player']->id]),
+                'wins'         => $row['wins'],
+                'draws'        => $row['draws'],
+                'losses'       => $row['losses'],
+                'points'       => $row['wins'] * 3 + $row['draws'] * 2 + $row['losses'],
+                'last_game_at' => $row['last_game_at'],
+            ])
+            ->sort(function (array $left, array $right): int {
+                if ($left['points'] !== $right['points']) {
+                    return $right['points'] <=> $left['points'];
+                }
+
+                if ($left['wins'] !== $right['wins']) {
+                    return $right['wins'] <=> $left['wins'];
+                }
+
+                $leftTime  = $left['last_game_at']?->timestamp ?? 0;
+                $rightTime = $right['last_game_at']?->timestamp ?? 0;
+
+                return $rightTime <=> $leftTime;
+            })
+            ->values()
+            ->all();
     }
 };
 ?>
 
-<div class="border-border bg-card rounded-3xl border p-6 shadow-sm">
+
+<div class="rounded-3xl border border-border bg-card p-6 shadow-sm" wire:poll.20s>
     <div class="flex flex-wrap items-end justify-between gap-4">
         <div>
-            <p class="text-muted-foreground text-xs font-semibold uppercase tracking-[0.2em]">Poredak</p>
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Poredak</p>
             <h2 class="font-display mt-2 text-2xl font-semibold">Bodovi nakon svakog meča</h2>
         </div>
-        <div class="text-muted-foreground text-xs">Pobjeda = 3 boda, remi = 2 boda, poraz = 1 bod</div>
+        <div class="text-xs text-muted-foreground">Pobjeda = 3 boda, remi = 2 boda, poraz = 1 bod</div>
     </div>
-
-    <div class="border-border/70 mt-6 overflow-hidden rounded-2xl border">
+    <div class="mt-6 overflow-hidden rounded-2xl border border-border/70">
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
                 <thead
-                       class="bg-linear-to-r text-muted-foreground from-emerald-400/15 via-amber-400/10 to-sky-400/15 text-xs uppercase tracking-widest">
+                    class="bg-linear-to-r from-emerald-400/15 via-amber-400/10 to-sky-400/15 text-xs uppercase tracking-widest text-muted-foreground">
                     <tr>
                         <th class="px-4 py-3">Igrač</th>
                         <th class="px-4 py-3">
@@ -53,25 +83,25 @@ new class extends Component {
                         </th>
                     </tr>
                 </thead>
-                <tbody class="divide-border/70 divide-y">
+                <tbody class="divide-y divide-border/70">
                     @forelse ($this->leaderboard as $row)
                         <tr class="bg-card transition hover:bg-emerald-400/5"
                             wire:key="leaderboard-{{ $row['id'] }}">
-                            <td class="text-foreground px-4 py-3 font-semibold">
+                            <td class="px-4 py-3 font-semibold text-foreground">
                                 <a href="{{ $row['profile_url'] }}"
-                                   class="rounded-md transition hover:text-emerald-600 hover:underline dark:hover:text-emerald-400">
+                                    class="rounded-md transition hover:text-emerald-600 hover:underline dark:hover:text-emerald-400">
                                     <span class="sm:hidden">{{ $row['short_name'] }}</span>
                                     <span class="hidden sm:inline">{{ $row['name'] }}</span>
                                 </a>
                             </td>
-                            <td class="text-foreground px-4 py-3 font-semibold">{{ $row['points'] }}</td>
-                            <td class="text-muted-foreground px-4 py-3">{{ $row['wins'] }}</td>
-                            <td class="text-muted-foreground px-4 py-3">{{ $row['draws'] }}</td>
-                            <td class="text-muted-foreground px-4 py-3">{{ $row['losses'] }}</td>
+                            <td class="px-4 py-3 font-semibold text-foreground">{{ $row['points'] }}</td>
+                            <td class="px-4 py-3 text-muted-foreground">{{ $row['wins'] }}</td>
+                            <td class="px-4 py-3 text-muted-foreground">{{ $row['draws'] }}</td>
+                            <td class="px-4 py-3 text-muted-foreground">{{ $row['losses'] }}</td>
                         </tr>
                     @empty
                         <tr class="bg-card">
-                            <td class="text-muted-foreground px-4 py-6 text-center text-sm" colspan="5">
+                            <td class="px-4 py-6 text-center text-sm text-muted-foreground" colspan="5">
                                 Još nema upisanih partija.
                             </td>
                         </tr>

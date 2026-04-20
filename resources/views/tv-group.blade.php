@@ -15,12 +15,12 @@
 </head>
 
 <body class="bg-background overflow-hidden text-foreground tv-body">
-    <div class="tv-home-header">
+    <div class="landscape:hidden">
         <x-nav />
     </div>
 
     <div id="tv-group-container"
-        class="bg-background p-2 lg:p-4 md:px-6 md:py-6 w-screen h-screen overflow-hidden text-foreground tv-container">
+        class="bg-background p-2 lg:p-4 md:px-6 md:py-6 w-screen h-screen overflow-hidden text-foreground tv-container min-h-svh landscape:h-svh landscape:overflow-hidden portrait:h-auto portrait:overflow-visible">
         <section class="bg-card shadow-sm border border-border rounded-3xl h-full min-h-0">
             <div class="bg-card/70 shadow-sm border border-border rounded-3xl h-full min-h-0">
                 <livewire:tv.group-match :group-number="$groupNumber" :key="'tv-group-fullscreen-' . $groupNumber" />

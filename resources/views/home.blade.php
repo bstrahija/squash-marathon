@@ -41,10 +41,10 @@
     </section>
 
     <section id="leaderboard" class="scroll-mt-24">
-        <livewire:leaderboard wire:poll.20s />
+        <livewire:leaderboard />
     </section>
 
     <section id="timeline" class="scroll-mt-24">
-        <livewire:timeline wire:poll.20s />
+        <livewire:timeline />
     </section>
 </x-layouts.public-page>

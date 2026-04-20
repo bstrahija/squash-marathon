@@ -1,5 +1,5 @@
 <?php
 
 return [
-    'enabled' => false,
+    'enabled' => env('APP_DEBUG', false),
 ];

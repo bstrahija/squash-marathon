@@ -77,7 +77,7 @@ return [
     |
     */
 
-    'local_simulated_now' => env('APP_LOCAL_SIMULATED_NOW', '2026-04-24 23:15:00'),
+    'local_simulated_now' => env('APP_LOCAL_SIMULATED_NOW'),
 
     /*
     |--------------------------------------------------------------------------
@@ -144,7 +144,7 @@ return [
 
     'maintenance' => [
         'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
-        'store' => env('APP_MAINTENANCE_STORE', 'database'),
+        'store'  => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
 ];

@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use InvalidArgumentException;
 use Spatie\Image\Enums\Fit;
@@ -81,6 +80,48 @@ class Event extends Model implements HasMedia
         return asset('images/placeholder-event.svg');
     }
 
+    /**
+     * Resolve the participants for this event, falling back progressively.
+     *
+     * @return Collection<int, User>
+     */
+    public function resolveParticipants(): Collection
+    {
+        $players = $this->users()->get();
+
+        if ($players->isEmpty()) {
+            $players = User::role(RoleName::Player->value)->get();
+        }
+
+        if ($players->isEmpty()) {
+            $players = User::query()->get();
+        }
+
+        return $players;
+    }
+
+    /**
+     * Return the most recent completed games for this event, sorted newest first.
+     *
+     * @return Collection<int, Game>
+     */
+    public function latestCompletedGames(int $limit = 20): Collection
+    {
+        return Game::query()
+            ->with(['sets', 'playerOne', 'playerTwo'])
+            ->where('event_id', $this->id)
+            ->latest('id')
+            ->get()
+            ->filter(fn (Game $game): bool => $game->resultFromSets()['is_complete'])
+            ->take($limit)
+            ->values();
+    }
+
+    public static function current(): ?self
+    {
+        return self::query()->latest('start_at')->first();
+    }
+
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class)->withTimestamps();
@@ -99,149 +140,5 @@ class Event extends Model implements HasMedia
     public function rounds(): HasMany
     {
         return $this->hasMany(Round::class);
-    }
-
-    public static function current(): ?self
-    {
-        return self::query()->latest('start_at')->first();
-    }
-
-    /**
-     * @return Collection<int, User>
-     */
-    public function resolvedPlayers(): Collection
-    {
-        $players = $this->users()->get();
-
-        if ($players->isEmpty()) {
-            $players = User::role(RoleName::Player->value)->get();
-        }
-
-        if ($players->isEmpty()) {
-            $players = User::query()->get();
-        }
-
-        return $players;
-    }
-
-    /**
-     * @return Collection<int, array{
-     *     player: User,
-     *     wins: int,
-     *     draws: int,
-     *     losses: int,
-     *     games: int,
-     *     points: int,
-     *     last_game_at: Carbon|null
-     * }>
-     */
-    public function leaderboardStats(): Collection
-    {
-        $players = $this->resolvedPlayers();
-
-        $games = $this->games()
-            ->with(['sets'])
-            ->get();
-
-        $stats = $players->mapWithKeys(function (User $user): array {
-            return [
-                $user->id => [
-                    'player'       => $user,
-                    'wins'         => 0,
-                    'draws'        => 0,
-                    'losses'       => 0,
-                    'games'        => 0,
-                    'points'       => 0,
-                    'last_game_at' => null,
-                ],
-            ];
-        });
-
-        foreach ($games as $game) {
-            $result = Game::determineMatchResultFromSetCollection(
-                $game->sets,
-                (int) $game->best_of,
-                $game->player_one_id,
-                $game->player_two_id,
-            );
-
-            if (! $result['is_complete']) {
-                continue;
-            }
-
-            foreach ([$game->player_one_id, $game->player_two_id] as $playerId) {
-                if (! $stats->has($playerId)) {
-                    continue;
-                }
-
-                $row = $stats->get($playerId);
-                $row['games'] += 1;
-
-                if ($result['is_draw']) {
-                    $row['draws'] += 1;
-                    $row['points'] += 2;
-                } elseif ($playerId === $result['winner_id']) {
-                    $row['wins'] += 1;
-                    $row['points'] += 3;
-                } else {
-                    $row['losses'] += 1;
-                    $row['points'] += 1;
-                }
-
-                if (! $row['last_game_at'] || $row['last_game_at']->lt($game->created_at)) {
-                    $row['last_game_at'] = $game->created_at;
-                }
-
-                $stats->put($playerId, $row);
-            }
-        }
-
-        return $stats->values();
-    }
-
-    /**
-     * @return Collection<int, array{
-     *     id: int,
-     *     name: string,
-     *     short_name: string,
-     *     profile_url: string,
-     *     wins: int,
-     *     draws: int,
-     *     losses: int,
-     *     games: int,
-     *     points: int,
-     *     last_game_at: Carbon|null
-     * }>
-     */
-    public function leaderboardRows(): Collection
-    {
-        return $this->leaderboardStats()
-            ->map(fn (array $row): array => [
-                'id'           => $row['player']->id,
-                'name'         => $row['player']->full_name,
-                'short_name'   => $row['player']->short_name,
-                'profile_url'  => route('players.show', ['user' => $row['player']->id]),
-                'wins'         => $row['wins'],
-                'draws'        => $row['draws'],
-                'losses'       => $row['losses'],
-                'games'        => $row['games'],
-                'points'       => $row['points'],
-                'last_game_at' => $row['last_game_at'],
-            ])
-            ->sort(function (array $left, array $right): int {
-                if ($left['points'] !== $right['points']) {
-                    return $right['points'] <=> $left['points'];
-                }
-
-                if ($left['wins'] !== $right['wins']) {
-                    return $right['wins'] <=> $left['wins'];
-                }
-
-                $leftTime  = $left['last_game_at']?->timestamp ?? 0;
-                $rightTime = $right['last_game_at']?->timestamp ?? 0;
-
-                return $rightTime <=> $leftTime;
-            })
-            ->values();
     }
 }

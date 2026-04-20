@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Database\Factories\GameFactory;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -47,7 +46,7 @@ class Game extends Model
 
             if ($game->started_at && $game->finished_at) {
                 $duration               = $game->started_at->diffInSeconds($game->finished_at);
-                $game->duration_seconds = max(0, $duration);
+                $game->duration_seconds = max(0, (int) round($duration));
             }
 
             if (! in_array($game->best_of, self::ALLOWED_BEST_OF_VALUES, true)) {
@@ -116,6 +115,92 @@ class Game extends Model
     }
 
     /**
+     * Determine the match result from the already-loaded sets relationship.
+     *
+     * Requires that the `sets` relationship has been eager-loaded.
+     *
+     * @return array{is_complete: bool, is_draw: bool, winner_id: int|null, player_one_wins: int, player_two_wins: int}
+     */
+    public function resultFromSets(): array
+    {
+        return once(fn (): array => self::determineMatchResultFromSetScores(
+            $this->sets
+                ->map(fn (GameSet $set): array => [
+                    'player_one_score' => $set->player_one_score,
+                    'player_two_score' => $set->player_two_score,
+                ])
+                ->all(),
+            $this->best_of,
+            $this->player_one_id,
+            $this->player_two_id,
+        ));
+    }
+
+    /**
+     * Whether the game has not yet started.
+     */
+    public function isWaiting(): bool
+    {
+        return ! $this->started_at && ! $this->finished_at;
+    }
+
+    /**
+     * Whether the game is currently in progress.
+     *
+     * Falls back to checking the result when sets are loaded.
+     */
+    public function isLive(): bool
+    {
+        return (bool) ($this->started_at && ! $this->isFinished());
+    }
+
+    /**
+     * Whether the game is finished (by timestamp or by completed result).
+     *
+     * When the `sets` relation is loaded, also considers whether the result
+     * is logically complete — even if `finished_at` has not been written yet.
+     */
+    public function isFinished(): bool
+    {
+        if ($this->finished_at) {
+            return true;
+        }
+
+        if ($this->relationLoaded('sets')) {
+            return $this->resultFromSets()['is_complete'];
+        }
+
+        return false;
+    }
+
+    /**
+     * A formatted string of per-set scores, e.g. "11-8, 11-7".
+     *
+     * Requires the `sets` relation to be loaded.
+     */
+    public function scoreSummary(): string
+    {
+        $scores = $this->sets
+            ->filter(fn (GameSet $set): bool => filled($set->player_one_score) && filled($set->player_two_score))
+            ->map(fn (GameSet $set): string => "{$set->player_one_score}-{$set->player_two_score}")
+            ->implode(', ');
+
+        return $scores !== '' ? $scores : '—';
+    }
+
+    /**
+     * A "{player_one_wins}-{player_two_wins}" set-wins summary.
+     *
+     * Requires the `sets` relation to be loaded.
+     */
+    public function setResultSummary(): string
+    {
+        $result = $this->resultFromSets();
+
+        return "{$result['player_one_wins']}-{$result['player_two_wins']}";
+    }
+
+    /**
      * @param  array<int, array<string, mixed>>  $sets
      */
     public static function determineWinnerIdFromSetScores(
@@ -127,53 +212,6 @@ class Game extends Model
         $result = self::determineMatchResultFromSetScores($sets, $bestOf, $playerOneId, $playerTwoId);
 
         return $result['winner_id'];
-    }
-
-    /**
-     * @return array<int, array{player_one_score: int|null, player_two_score: int|null}>
-     */
-    public static function buildSetScoresFromCollection(Collection $sets): array
-    {
-        return $sets
-            ->map(fn (GameSet $set): array => [
-                'player_one_score' => $set->player_one_score,
-                'player_two_score' => $set->player_two_score,
-            ])
-            ->all();
-    }
-
-    /**
-     * @param  Collection<int, GameSet>  $sets
-     * @return array{
-     *     is_complete: bool,
-     *     is_draw: bool,
-     *     winner_id: int|null,
-     *     player_one_wins: int,
-     *     player_two_wins: int
-     * }
-     */
-    public static function determineMatchResultFromSetCollection(
-        Collection $sets,
-        int $bestOf,
-        ?int $playerOneId,
-        ?int $playerTwoId
-    ): array {
-        return self::determineMatchResultFromSetScores(
-            self::buildSetScoresFromCollection($sets),
-            $bestOf,
-            $playerOneId,
-            $playerTwoId
-        );
-    }
-
-    public static function formatSetPointsSummary(Collection $sets): string
-    {
-        $scores = $sets
-            ->filter(fn (GameSet $set): bool => filled($set->player_one_score) && filled($set->player_two_score))
-            ->map(fn (GameSet $set): string => "{$set->player_one_score}-{$set->player_two_score}")
-            ->implode(', ');
-
-        return $scores !== '' ? $scores : '—';
     }
 
     /**
