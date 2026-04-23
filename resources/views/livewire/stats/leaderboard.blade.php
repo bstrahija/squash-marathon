@@ -234,10 +234,10 @@ new class extends Component {
                         <tr class="bg-card transition hover:bg-muted"
                             wire:key="stats-leaderboard-{{ $groupNumber ?? 'main' }}-{{ $row['id'] }}">
                             <td
-                                class="sticky left-0 z-10 w-10 bg-card px-2 py-3 text-right font-semibold text-muted-foreground md:static md:z-auto">
+                                class="sticky left-0 z-20 w-10 bg-card px-2 py-3 text-right font-semibold text-muted-foreground md:static md:z-auto">
                                 {{ $loop->iteration }}</td>
                             <td
-                                class="sticky left-10 z-10 w-[6.5rem] bg-card px-3 py-3 font-semibold text-foreground md:static md:z-auto sm:w-32">
+                                class="sticky left-10 z-20 w-[6.5rem] bg-card px-3 py-3 font-semibold text-foreground md:static md:z-auto sm:w-32">
                                 @if ($row['profile_url'])
                                     <a href="{{ $row['profile_url'] }}"
                                         class="inline-block max-w-full rounded-md transition hover:text-emerald-600 hover:underline dark:hover:text-emerald-400">
