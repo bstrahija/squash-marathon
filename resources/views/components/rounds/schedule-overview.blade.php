@@ -39,11 +39,13 @@
                                     @if ($schedule->game)
                                         <span
                                             class="text-center font-semibold tabular-nums {{ $isLive ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground' }}">
-                                            <span class="text-[10px]">({{ $playerOneSets }})</span> {{ $playerOnePoints }}:{{ $playerTwoPoints }} <span
+                                            <span class="text-[10px]">({{ $playerOneSets }})</span>
+                                            {{ $playerOnePoints }}:{{ $playerTwoPoints }} <span
                                                 class="text-[10px]">({{ $playerTwoSets }})</span>
                                         </span>
                                     @else
-                                        <span class="text-center text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                                        <span
+                                            class="text-center text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                                             vs
                                         </span>
                                     @endif
@@ -60,11 +62,13 @@
                                     @if ($schedule->game)
                                         <span
                                             class="text-center font-semibold tabular-nums {{ $isLive ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground' }}">
-                                            <span class="text-[10px]">({{ $playerOneSets }})</span> {{ $playerOnePoints }}:{{ $playerTwoPoints }} <span
+                                            <span class="text-[10px]">({{ $playerOneSets }})</span>
+                                            {{ $playerOnePoints }}:{{ $playerTwoPoints }} <span
                                                 class="text-[10px]">({{ $playerTwoSets }})</span>
                                         </span>
                                     @else
-                                        <span class="text-center text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                                        <span
+                                            class="text-center text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                                             vs
                                         </span>
                                     @endif

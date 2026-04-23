@@ -7,8 +7,7 @@ use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public bool $linkToScoring = false;
 
     public function mount(bool $linkToScoring = false): void
@@ -21,18 +20,13 @@ new class extends Component
     {
         $event = Event::current();
 
-        if (! $event) {
+        if (!$event) {
             return collect();
         }
 
-        $activeRound = Round::query()
-            ->where('event_id', $event->id)
-            ->where('is_active', true)
-            ->with('groups')
-            ->orderByDesc('number')
-            ->first();
+        $activeRound = Round::query()->where('event_id', $event->id)->where('is_active', true)->with('groups')->orderByDesc('number')->first();
 
-        if (! $activeRound) {
+        if (!$activeRound) {
             return collect();
         }
 
@@ -51,29 +45,17 @@ new class extends Component
             return collect();
         }
 
-        $groupIds = $groups
-            ->pluck('id')
-            ->map(fn ($id): int => (int) $id)
-            ->all();
+        $groupIds = $groups->pluck('id')->map(fn($id): int => (int) $id)->all();
 
-        $roundIds = $groups
-            ->pluck('round_id')
-            ->unique()
-            ->map(fn ($id): int => (int) $id)
-            ->all();
+        $roundIds = $groups->pluck('round_id')->unique()->map(fn($id): int => (int) $id)->all();
 
         return GameSchedule::query()
-            ->with([
-                'playerOne',
-                'playerTwo',
-                'game.sets',
-                'game.gameLogs' => fn ($query) => $query->orderBy('sequence'),
-            ])
+            ->with(['playerOne', 'playerTwo', 'game.sets', 'game.gameLogs' => fn($query) => $query->orderBy('sequence')])
             ->whereIn('round_id', $roundIds)
             ->whereIn('group_id', $groupIds)
             ->orderBy('id')
             ->get()
-            ->reject(fn (GameSchedule $schedule): bool => (bool) $schedule->game?->isFinished())
+            ->reject(fn(GameSchedule $schedule): bool => (bool) $schedule->game?->isFinished())
             ->groupBy('group_id');
     }
 };
