@@ -3,6 +3,7 @@
 use App\Enums\RoleName;
 use App\Models\Event;
 use App\Models\Game;
+use App\Models\GameSchedule;
 use App\Models\GameSet;
 use App\Models\Group;
 use App\Models\Round;
@@ -590,6 +591,117 @@ test('rounds edit livewire can seed players by previous round points', function 
 
     expect($component->instance()->groupOnePlayerIds)->toBe([$players[0]->id, $players[2]->id]);
     expect($component->instance()->groupTwoPlayerIds)->toBe([$players[1]->id, $players[3]->id]);
+});
+
+test('rounds edit livewire shows schedule button only when all event players are assigned', function () {
+    $admin = actingAsRoundsAdmin();
+    $this->actingAs($admin);
+
+    $event = Event::factory()->create([
+        'start_at' => now()->subHour(),
+        'end_at'   => now()->addHour(),
+    ]);
+
+    $round = Round::factory()->create([
+        'event_id' => $event->id,
+        'number'   => 1,
+        'name'     => 'Runda 1',
+    ]);
+
+    $groupOne = Group::factory()->create([
+        'event_id' => $event->id,
+        'round_id' => $round->id,
+        'number'   => 1,
+        'name'     => 'Grupa 1',
+    ]);
+
+    $groupTwo = Group::factory()->create([
+        'event_id' => $event->id,
+        'round_id' => $round->id,
+        'number'   => 2,
+        'name'     => 'Grupa 2',
+    ]);
+
+    $players = User::factory()->count(4)->create();
+    $event->users()->attach($players->pluck('id')->all());
+
+    $groupOne->users()->sync([$players[0]->id, $players[1]->id]);
+    $groupTwo->users()->sync([$players[2]->id]);
+
+    Livewire::test('rounds-edit', ['roundId' => $round->id])
+        ->assertDontSee('Napravi raspored')
+        ->set('groupTwoPlayerIds', [$players[2]->id, $players[3]->id])
+        ->assertSee('Napravi raspored');
+});
+
+test('rounds edit livewire creates balanced double round-robin schedule', function () {
+    $admin = actingAsRoundsAdmin();
+    $this->actingAs($admin);
+
+    $event = Event::factory()->create([
+        'start_at' => now()->subHour(),
+        'end_at'   => now()->addHour(),
+    ]);
+
+    $round = Round::factory()->create([
+        'event_id' => $event->id,
+        'number'   => 1,
+        'name'     => 'Runda 1',
+    ]);
+
+    $groupOne = Group::factory()->create([
+        'event_id' => $event->id,
+        'round_id' => $round->id,
+        'number'   => 1,
+        'name'     => 'Grupa 1',
+    ]);
+
+    $groupTwo = Group::factory()->create([
+        'event_id' => $event->id,
+        'round_id' => $round->id,
+        'number'   => 2,
+        'name'     => 'Grupa 2',
+    ]);
+
+    $players = User::factory()->count(6)->create();
+    $event->users()->attach($players->pluck('id')->all());
+
+    $groupOnePlayers = [$players[0]->id, $players[1]->id, $players[2]->id];
+    $groupTwoPlayers = [$players[3]->id, $players[4]->id, $players[5]->id];
+
+    $groupOne->users()->sync($groupOnePlayers);
+    $groupTwo->users()->sync($groupTwoPlayers);
+    $round->users()->sync($players->pluck('id')->all());
+
+    Livewire::test('rounds-edit', ['roundId' => $round->id])
+        ->call('createSchedule')
+        ->assertRedirect(route('rounds.edit', ['round' => $round->id]))
+        ->assertHasNoErrors();
+
+    $schedules = GameSchedule::query()
+        ->where('round_id', $round->id)
+        ->orderBy('id')
+        ->get();
+
+    expect($schedules)->toHaveCount(12);
+
+    $byGroup = $schedules->groupBy('group_id');
+
+    expect((int) $byGroup->get($groupOne->id, collect())->count())->toBe(6);
+    expect((int) $byGroup->get($groupTwo->id, collect())->count())->toBe(6);
+
+    foreach ($schedules->sliding(2) as $pair) {
+        if ($pair->count() < 2) {
+            continue;
+        }
+
+        [$leftSchedule, $rightSchedule] = $pair->values()->all();
+
+        $leftPlayers  = [(int) $leftSchedule->player_one_id, (int) $leftSchedule->player_two_id];
+        $rightPlayers = [(int) $rightSchedule->player_one_id, (int) $rightSchedule->player_two_id];
+
+        expect(array_intersect($leftPlayers, $rightPlayers))->toBe([]);
+    }
 });
 
 test('non-admin cannot delete round through livewire list', function () {

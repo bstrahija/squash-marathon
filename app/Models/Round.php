@@ -36,7 +36,7 @@ class Round extends Model
     protected function casts(): array
     {
         return [
-            'number' => 'integer',
+            'number'    => 'integer',
             'is_active' => 'boolean',
         ];
     }
@@ -54,6 +54,11 @@ class Round extends Model
     public function games(): HasMany
     {
         return $this->hasMany(Game::class);
+    }
+
+    public function gameSchedules(): HasMany
+    {
+        return $this->hasMany(GameSchedule::class);
     }
 
     public function sets(): HasMany
@@ -172,24 +177,24 @@ class Round extends Model
             self::query()->where('event_id', $eventId)->update(['is_active' => false]);
 
             $round = self::query()->create([
-                'event_id' => $eventId,
-                'number' => $roundNumber,
-                'name' => "Runda {$roundNumber}",
+                'event_id'  => $eventId,
+                'number'    => $roundNumber,
+                'name'      => "Runda {$roundNumber}",
                 'is_active' => true,
             ]);
 
             $groupOne = Group::query()->create([
                 'event_id' => $eventId,
                 'round_id' => $round->id,
-                'number' => 1,
-                'name' => 'Grupa 1',
+                'number'   => 1,
+                'name'     => 'Grupa 1',
             ]);
 
             $groupTwo = Group::query()->create([
                 'event_id' => $eventId,
                 'round_id' => $round->id,
-                'number' => 2,
-                'name' => 'Grupa 2',
+                'number'   => 2,
+                'name'     => 'Grupa 2',
             ]);
 
             $groupOne->users()->sync($groupOnePlayerIds);
@@ -231,7 +236,7 @@ class Round extends Model
                 [
                     'event_id' => $eventId,
                     'round_id' => $round->id,
-                    'number' => 1,
+                    'number'   => 1,
                 ],
                 [
                     'name' => 'Grupa 1',
@@ -242,7 +247,7 @@ class Round extends Model
                 [
                     'event_id' => $eventId,
                     'round_id' => $round->id,
-                    'number' => 2,
+                    'number'   => 2,
                 ],
                 [
                     'name' => 'Grupa 2',
@@ -283,10 +288,10 @@ class Round extends Model
             return [
                 $playerId => [
                     'player_id' => $playerId,
-                    'points' => 0,
-                    'wins' => 0,
-                    'draws' => 0,
-                    'losses' => 0,
+                    'points'    => 0,
+                    'wins'      => 0,
+                    'draws'     => 0,
+                    'losses'    => 0,
                     'sort_name' => mb_strtolower((string) ($player?->full_name ?? (string) $playerId)),
                 ],
             ];
@@ -330,7 +335,7 @@ class Round extends Model
             }
 
             $winnerId = (int) ($result['winner_id'] ?? 0);
-            $loserId = $winnerId === $playerOneId ? $playerTwoId : $playerOneId;
+            $loserId  = $winnerId === $playerOneId ? $playerTwoId : $playerOneId;
 
             if (! $standings->has($winnerId) || ! $standings->has($loserId)) {
                 continue;
