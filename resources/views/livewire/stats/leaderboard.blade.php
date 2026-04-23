@@ -98,13 +98,12 @@ new class extends Component {
 <div class="" wire:poll.20s>
     <div class="overflow-hidden rounded-2xl border border-border bg-card">
         <div class="overflow-x-auto">
-            <table class="w-full min-w-[740px] table-fixed bg-card text-left text-sm">
+            <table class="w-full min-w-185 table-fixed bg-card text-left text-sm">
                 <thead class="bg-card text-xs uppercase tracking-widest text-muted-foreground">
                     <tr>
                         <th class="sticky left-0 z-20 w-10 bg-card px-2 py-3 text-right md:static md:z-auto">
                             #</th>
-                        <th
-                            class="sticky left-10 z-20 w-[6.5rem] bg-card px-3 py-3 font-semibold md:static md:z-auto sm:w-32">
+                        <th class="sticky left-10 z-20 w-26 bg-card px-3 py-3 font-semibold md:static md:z-auto sm:w-32">
                             Igrač</th>
                         <th class="w-14 bg-card px-2 py-3 z-10 relative">
                             <button type="button" wire:click="sortByColumn('points')"
@@ -237,7 +236,7 @@ new class extends Component {
                                 class="sticky left-0 z-20 w-10 bg-card px-2 py-3 text-right font-semibold text-muted-foreground md:static md:z-auto">
                                 {{ $loop->iteration }}</td>
                             <td
-                                class="sticky left-10 z-20 w-[6.5rem] bg-card px-3 py-3 font-semibold text-foreground md:static md:z-auto sm:w-32">
+                                class="sticky left-10 z-20 w-26 bg-card px-3 py-3 font-semibold text-foreground md:static md:z-auto sm:w-32">
                                 @if ($row['profile_url'])
                                     <a href="{{ $row['profile_url'] }}"
                                         class="inline-block max-w-full rounded-md transition hover:text-emerald-600 hover:underline dark:hover:text-emerald-400">
