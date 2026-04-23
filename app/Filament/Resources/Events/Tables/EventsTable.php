@@ -19,10 +19,12 @@ class EventsTable
                     ->searchable(),
                 TextColumn::make('start_at')
                     ->label('Starts')
+                    ->timezone(config('app.display_timezone'))
                     ->dateTime()
                     ->sortable(),
                 TextColumn::make('end_at')
                     ->label('Ends')
+                    ->timezone(config('app.display_timezone'))
                     ->dateTime()
                     ->sortable(),
                 TextColumn::make('users_count')

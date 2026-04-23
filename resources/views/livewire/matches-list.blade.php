@@ -10,8 +10,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new class extends Component
-{
+new class extends Component {
     use WithPagination;
 
     public ?int $confirmingDeletionId = null;
@@ -43,7 +42,7 @@ new class extends Component
     #[Computed]
     public function matches(): LengthAwarePaginator
     {
-        $query = Game::query()->with(['round', 'playerOne', 'playerTwo', 'sets' => fn ($query) => $query->orderBy('created_at')]);
+        $query = Game::query()->with(['round', 'playerOne', 'playerTwo', 'sets' => fn($query) => $query->orderBy('created_at')]);
 
         if ($this->playerFilter !== '') {
             $playerId = (int) $this->playerFilter;
@@ -70,13 +69,12 @@ new class extends Component
     {
         return User::query()
             ->where(function (Builder $query): void {
-                $query->whereIn('id', Game::query()->select('player_one_id')->whereNotNull('player_one_id'))
-                    ->orWhereIn('id', Game::query()->select('player_two_id')->whereNotNull('player_two_id'));
+                $query->whereIn('id', Game::query()->select('player_one_id')->whereNotNull('player_one_id'))->orWhereIn('id', Game::query()->select('player_two_id')->whereNotNull('player_two_id'));
             })
             ->orderBy('first_name')
             ->orderBy('last_name')
             ->get()
-            ->mapWithKeys(fn (User $user): array => [$user->id => $user->full_name])
+            ->mapWithKeys(fn(User $user): array => [$user->id => $user->full_name])
             ->all();
     }
 
@@ -90,7 +88,7 @@ new class extends Component
             ->whereIn('id', Game::query()->select('round_id')->whereNotNull('round_id')->distinct())
             ->orderBy('number')
             ->get()
-            ->mapWithKeys(fn (Round $round): array => [$round->id => $round->name])
+            ->mapWithKeys(fn(Round $round): array => [$round->id => $round->name])
             ->all();
     }
 
@@ -116,14 +114,14 @@ new class extends Component
 
     public function sortByColumn(string $column): void
     {
-        if (! in_array($column, ['time', 'status', 'duration'], true)) {
+        if (!in_array($column, ['time', 'status', 'duration'], true)) {
             return;
         }
 
         if ($this->sortBy === $column) {
             $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
         } else {
-            $this->sortBy        = $column;
+            $this->sortBy = $column;
             $this->sortDirection = 'desc';
         }
 
@@ -132,7 +130,7 @@ new class extends Component
 
     public function confirmDelete(int $gameId): void
     {
-        if (! $this->canManageMatches) {
+        if (!$this->canManageMatches) {
             return;
         }
 
@@ -146,7 +144,7 @@ new class extends Component
 
     public function deleteMatch(int $gameId): void
     {
-        if (! $this->canDeleteMatches) {
+        if (!$this->canDeleteMatches) {
             abort(403);
         }
 
@@ -203,13 +201,13 @@ new class extends Component
 
     public function playerClass(Game $game, ?int $playerId): string
     {
-        if (! $playerId) {
+        if (!$playerId) {
             return 'text-foreground';
         }
 
         $result = $game->resultFromSets();
 
-        if (! $result['is_complete']) {
+        if (!$result['is_complete']) {
             return 'text-foreground';
         }
 
@@ -399,7 +397,7 @@ new class extends Component
                         <td class="px-3 py-3 text-muted-foreground">
                             <a href="{{ $this->scoreRoute($game) }}"
                                 class="block hover:bg-muted/40 -mx-3 -my-3 px-3 py-3 rounded-lg hover:text-foreground transition">
-                                {{ $game->created_at ? $game->created_at->locale('hr')->dayName . ' ' . $game->created_at->format('H:i') : '—' }}
+                                {{ $game->created_at ? $game->created_at->setTimezone(config('app.display_timezone'))->locale('hr')->dayName . ' ' . $game->created_at->setTimezone(config('app.display_timezone'))->format('H:i') : '—' }}
                             </a>
                         </td>
                         <td class="px-3 py-3 text-muted-foreground">

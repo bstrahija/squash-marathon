@@ -14,15 +14,16 @@ class EventSeeder extends Seeder
      */
     public function run(): void
     {
-        $startAt = CarbonImmutable::create(2026, 4, 24, 17, 0, 0);
+        $displayTimezone = (string) config('app.display_timezone');
+        $startAt         = CarbonImmutable::create(2026, 4, 24, 17, 0, 0, $displayTimezone)->utc();
 
         $event = Event::query()->updateOrCreate(
             [
                 'name' => 'Squash 24 sata 2026',
-                'start_at' => $startAt,
             ],
             [
-                'end_at' => $startAt->addHours(24),
+                'start_at' => $startAt,
+                'end_at'   => $startAt->addHours(24),
             ]
         );
 

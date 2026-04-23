@@ -106,7 +106,7 @@
                                 </span>
                                 <p class="text-xs text-muted-foreground">
                                     {{ $game->group?->name ?? '—' }} |
-                                    {{ $game->created_at?->format('d.m.Y H:i') ?? '—' }}
+                                    {{ $game->created_at?->setTimezone(config('app.display_timezone'))->format('d.m.Y H:i') ?? '—' }}
                                 </p>
                             </div>
 

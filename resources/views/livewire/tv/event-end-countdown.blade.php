@@ -5,59 +5,60 @@ use Carbon\CarbonInterface;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed]
     public function status(): array
     {
         $event = Event::current();
 
-        if (! $event) {
+        if (!$event) {
             return [
-                'has_event'         => false,
-                'name'              => null,
-                'is_started'        => false,
-                'is_over'           => false,
-                'starts_at'         => null,
-                'ends_at'           => null,
-                'ends_at_unix'      => null,
+                'has_event' => false,
+                'name' => null,
+                'is_started' => false,
+                'is_over' => false,
+                'starts_at' => null,
+                'ends_at' => null,
+                'ends_at_unix' => null,
                 'remaining_seconds' => null,
-                'remaining_label'   => '—',
-                'duration_label'    => '—',
+                'remaining_label' => '—',
+                'duration_label' => '—',
             ];
         }
 
-        $now      = now();
+        $now = now();
         $startsAt = $event->start_at;
-        $endsAt   = $event->end_at;
+        $endsAt = $event->end_at;
 
-        $isStarted        = $startsAt ? $now->greaterThanOrEqualTo($startsAt) : true;
-        $isOver           = $endsAt ? $now->greaterThanOrEqualTo($endsAt) : false;
-        $secondsRemaining = ($endsAt && $isStarted) ? max(0, (int) round($now->diffInSeconds($endsAt, false))) : null;
+        $isStarted = $startsAt ? $now->greaterThanOrEqualTo($startsAt) : true;
+        $isOver = $endsAt ? $now->greaterThanOrEqualTo($endsAt) : false;
+        $secondsRemaining = $endsAt && $isStarted ? max(0, (int) round($now->diffInSeconds($endsAt, false))) : null;
 
-        $durationSeconds = ($startsAt && $endsAt) ? (int) round($startsAt->diffInSeconds($endsAt)) : null;
-        $durationLabel   = $durationSeconds !== null ? $this->formatDuration($durationSeconds) : '—';
+        $durationSeconds = $startsAt && $endsAt ? (int) round($startsAt->diffInSeconds($endsAt)) : null;
+        $durationLabel = $durationSeconds !== null ? $this->formatDuration($durationSeconds) : '—';
 
         return [
-            'has_event'         => true,
-            'name'              => $event->name,
-            'is_started'        => $isStarted,
-            'is_over'           => $isOver,
-            'starts_at'         => $startsAt,
-            'ends_at'           => $endsAt,
-            'ends_at_unix'      => ($isStarted && $endsAt) ? $endsAt->getTimestamp() : null,
+            'has_event' => true,
+            'name' => $event->name,
+            'is_started' => $isStarted,
+            'is_over' => $isOver,
+            'starts_at' => $startsAt,
+            'ends_at' => $endsAt,
+            'ends_at_unix' => $isStarted && $endsAt ? $endsAt->getTimestamp() : null,
             'remaining_seconds' => $secondsRemaining,
-            'remaining_label'   => $secondsRemaining !== null ? $this->formatDuration($secondsRemaining) : '—',
-            'duration_label'    => $durationLabel,
-            'starts_at_label'   => $isStarted ? null : $this->formatCroatianStartsAt($startsAt),
+            'remaining_label' => $secondsRemaining !== null ? $this->formatDuration($secondsRemaining) : '—',
+            'duration_label' => $durationLabel,
+            'starts_at_label' => $isStarted ? null : $this->formatCroatianStartsAt($startsAt),
         ];
     }
 
     private function formatCroatianStartsAt(?CarbonInterface $startsAt): string
     {
-        if (! $startsAt) {
+        if (!$startsAt) {
             return '—';
         }
+
+        $startsAt = $startsAt->setTimezone(config('app.display_timezone'));
 
         $time = $startsAt->format('H:i');
 
@@ -76,21 +77,21 @@ new class extends Component
         ];
 
         $months = [
-            1  => 'siječnja',
-            2  => 'veljače',
-            3  => 'ožujka',
-            4  => 'travnja',
-            5  => 'svibnja',
-            6  => 'lipnja',
-            7  => 'srpnja',
-            8  => 'kolovoza',
-            9  => 'rujna',
+            1 => 'siječnja',
+            2 => 'veljače',
+            3 => 'ožujka',
+            4 => 'travnja',
+            5 => 'svibnja',
+            6 => 'lipnja',
+            7 => 'srpnja',
+            8 => 'kolovoza',
+            9 => 'rujna',
             10 => 'listopada',
             11 => 'studenog',
             12 => 'prosinca',
         ];
 
-        $dayName   = $days[$startsAt->dayOfWeek];
+        $dayName = $days[$startsAt->dayOfWeek];
         $monthName = $months[$startsAt->month];
 
         return "{$dayName}, {$startsAt->day}. {$monthName} {$time}";
@@ -98,8 +99,8 @@ new class extends Component
 
     private function formatDuration(int $seconds): string
     {
-        $hours            = intdiv($seconds, 3600);
-        $minutes          = intdiv($seconds % 3600, 60);
+        $hours = intdiv($seconds, 3600);
+        $minutes = intdiv($seconds % 3600, 60);
         $remainingSeconds = $seconds % 60;
 
         return sprintf('%02d:%02d:%02d', $hours, $minutes, $remainingSeconds);
@@ -121,57 +122,57 @@ new class extends Component
             const hours = Math.floor(total / 3600);
             const minutes = Math.floor((total % 3600) / 60);
             const secs = total % 60;
-
+    
             return [hours, minutes, secs].map((value) => String(value).padStart(2, '0')).join(':');
         },
         syncFromServer() {
             const rawTargetEpoch = this.$el.dataset.endsAtUnix;
             const nextTargetEpoch = rawTargetEpoch === '' ? null : Number(rawTargetEpoch);
-
+    
             this.targetEpoch = Number.isNaN(nextTargetEpoch) ? null : nextTargetEpoch;
             this.isOver = this.$el.dataset.isOver === '1';
             this.isStarted = this.$el.dataset.isStarted === '1';
-
+    
             if (!this.isStarted) {
                 return;
             }
-
+    
             if (this.targetEpoch === null) {
                 this.displayLabel = '—';
-
+    
                 return;
             }
-
+    
             this.tick();
         },
         tick() {
             if (!this.isStarted || this.targetEpoch === null) {
                 return;
             }
-
+    
             const nowEpoch = Math.floor(Date.now() / 1000);
             const remainingSeconds = Math.max(0, this.targetEpoch - nowEpoch);
-
+    
             if (this.isOver || remainingSeconds === 0) {
                 this.isOver = true;
                 this.displayLabel = '00:00:00';
-
+    
                 return;
             }
-
+    
             this.displayLabel = this.formatDuration(remainingSeconds);
         },
         init() {
             this.syncFromServer();
-
+    
             if (this.$el._tvCountdownTimer) {
                 window.clearInterval(this.$el._tvCountdownTimer);
             }
-
+    
             if (this.$el._tvCountdownObserver) {
                 this.$el._tvCountdownObserver.disconnect();
             }
-
+    
             this.$el._tvCountdownTimer = window.setInterval(() => this.tick(), 1000);
             this.$el._tvCountdownObserver = new MutationObserver(() => this.syncFromServer());
             this.$el._tvCountdownObserver.observe(this.$el, {
@@ -209,7 +210,8 @@ new class extends Component
 
         <p class="mt-2 font-semibold text-muted-foreground uppercase tracking-[0.14em] tv-event-meta">
             @if ($this->status['is_started'])
-                Ends at {{ $this->status['ends_at']?->format('H:i') ?? '—' }}
+                Ends at
+                {{ $this->status['ends_at']?->setTimezone(config('app.display_timezone'))->format('H:i') ?? '—' }}
             @else
                 Počinje {{ $this->status['starts_at_label'] ?? '—' }}
             @endif

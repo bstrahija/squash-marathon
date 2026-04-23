@@ -37,10 +37,12 @@ class UsersTable
                     ->counts('events')
                     ->sortable(),
                 TextColumn::make('created_at')
+                    ->timezone(config('app.display_timezone'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
+                    ->timezone(config('app.display_timezone'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
