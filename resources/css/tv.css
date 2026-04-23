@@ -132,6 +132,23 @@
     .tv-panel-right > .flex {
         gap: 0.5rem;
     }
+
+    .tv-panel-group-leaderboards > .grid {
+        height: auto;
+        min-height: 0;
+        grid-template-rows: auto auto;
+        align-content: start;
+    }
+
+    .tv-panel-group-leaderboards .tv-group-leaderboard {
+        height: auto;
+    }
+
+    .tv-panel-group-leaderboards .tv-group-leaderboard > .flex-1,
+    .tv-panel-group-leaderboards .tv-group-leaderboard > .flex-1 > .h-full {
+        flex: 0 1 auto;
+        height: auto;
+    }
 }
 
 .tv-recent-heading {

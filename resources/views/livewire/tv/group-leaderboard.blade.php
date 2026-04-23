@@ -55,8 +55,8 @@ new class extends Component {
 <div class="tv-group-leaderboard tv-leaderboard tv-density-{{ $this->density }} flex h-full min-h-0 flex-col"
     wire:poll.keep-alive.20s>
     <div class="tv-group-leaderboard-heading flex justify-between items-center text-muted-foreground">
-        <span class="font-semibold uppercase tracking-[0.16em]">{{ $groupName }}</span>
-        <span class="font-semibold uppercase tracking-[0.16em]">{{ $roundName }}</span>
+        <span class="font-semibold uppercase tracking-[0.16em] pl-3">{{ $groupName }}</span>
+        <span class="font-semibold uppercase tracking-[0.16em] pr-3">{{ $roundName }}</span>
     </div>
 
     <div class="flex-1 bg-background/40 min-h-0 overflow-hidden">

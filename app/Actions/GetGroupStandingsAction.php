@@ -15,7 +15,7 @@ class GetGroupStandingsAction
      * @return array{
      *     round: array{id: int, name: string, number: int}|null,
      *     group: array{id: int, name: string, number: int}|null,
-     *     rows: array<int, array{id: int, name: string, profile_url: string|null, points: int, wins: int, draws: int, losses: int}>
+     *     rows: array<int, array{id: int, name: string, profile_url: string|null, points: int, wins: int, draws: int, losses: int, matches: int, sets_won: int, sets_lost: int, points_scored: int, points_allowed: int, duration_seconds: int}>
      * }
      */
     public function execute(Event $event, int $groupNumber): array
@@ -76,13 +76,19 @@ class GetGroupStandingsAction
                 $player = $eventPlayersById->get($row['player_id']);
 
                 return [
-                    'id'          => $row['player_id'],
-                    'name'        => $player?->short_name ?? '—',
-                    'profile_url' => $player ? route('players.show', ['user' => $player->id]) : null,
-                    'points'      => $row['points'],
-                    'wins'        => $row['wins'],
-                    'draws'       => $row['draws'],
-                    'losses'      => $row['losses'],
+                    'id'               => $row['player_id'],
+                    'name'             => $player?->short_name ?? '—',
+                    'profile_url'      => $player ? route('players.show', ['user' => $player->id]) : null,
+                    'points'           => $row['points'],
+                    'wins'             => $row['wins'],
+                    'draws'            => $row['draws'],
+                    'losses'           => $row['losses'],
+                    'matches'          => $row['matches'],
+                    'sets_won'         => $row['sets_won'],
+                    'sets_lost'        => $row['sets_lost'],
+                    'points_scored'    => $row['points_scored'],
+                    'points_allowed'   => $row['points_allowed'],
+                    'duration_seconds' => $row['duration_seconds'],
                 ];
             })
             ->values()
@@ -106,7 +112,7 @@ class GetGroupStandingsAction
     /**
      * @param  Collection<int, Game>  $games
      * @param  Collection<int, User>  $eventPlayersById
-     * @return Collection<int, array{player_id: int, points: int, wins: int, draws: int, losses: int, sort_name: string}>
+     * @return Collection<int, array{player_id: int, points: int, wins: int, draws: int, losses: int, matches: int, sets_won: int, sets_lost: int, points_scored: int, points_allowed: int, duration_seconds: int, sort_name: string}>
      */
     private function groupStandingsByPoints(Group $group, Collection $games, Collection $eventPlayersById): Collection
     {
@@ -121,12 +127,18 @@ class GetGroupStandingsAction
 
             return [
                 $playerId => [
-                    'player_id' => $playerId,
-                    'points'    => 0,
-                    'wins'      => 0,
-                    'draws'     => 0,
-                    'losses'    => 0,
-                    'sort_name' => mb_strtolower((string) ($player?->full_name ?? (string) $playerId)),
+                    'player_id'        => $playerId,
+                    'points'           => 0,
+                    'wins'             => 0,
+                    'draws'            => 0,
+                    'losses'           => 0,
+                    'matches'          => 0,
+                    'sets_won'         => 0,
+                    'sets_lost'        => 0,
+                    'points_scored'    => 0,
+                    'points_allowed'   => 0,
+                    'duration_seconds' => 0,
+                    'sort_name'        => mb_strtolower((string) ($player?->full_name ?? (string) $playerId)),
                 ],
             ];
         });
@@ -156,6 +168,38 @@ class GetGroupStandingsAction
             if (! $standings->has($playerOneId) || ! $standings->has($playerTwoId)) {
                 continue;
             }
+
+            $playerOneRow = $standings->get($playerOneId);
+            $playerTwoRow = $standings->get($playerTwoId);
+
+            $playerOneRow['matches'] += 1;
+            $playerTwoRow['matches'] += 1;
+
+            $playerOneRow['sets_won'] += $result['player_one_wins'];
+            $playerOneRow['sets_lost'] += $result['player_two_wins'];
+            $playerTwoRow['sets_won'] += $result['player_two_wins'];
+            $playerTwoRow['sets_lost'] += $result['player_one_wins'];
+
+            foreach ($game->sets as $set) {
+                if (! is_numeric($set->player_one_score) || ! is_numeric($set->player_two_score)) {
+                    continue;
+                }
+
+                $playerOneScore = (int) $set->player_one_score;
+                $playerTwoScore = (int) $set->player_two_score;
+
+                $playerOneRow['points_scored'] += $playerOneScore;
+                $playerOneRow['points_allowed'] += $playerTwoScore;
+                $playerTwoRow['points_scored'] += $playerTwoScore;
+                $playerTwoRow['points_allowed'] += $playerOneScore;
+            }
+
+            $duration = (int) ($game->duration_seconds ?? 0);
+            $playerOneRow['duration_seconds'] += $duration;
+            $playerTwoRow['duration_seconds'] += $duration;
+
+            $standings->put($playerOneId, $playerOneRow);
+            $standings->put($playerTwoId, $playerTwoRow);
 
             if ($result['is_draw']) {
                 foreach ([$playerOneId, $playerTwoId] as $playerId) {

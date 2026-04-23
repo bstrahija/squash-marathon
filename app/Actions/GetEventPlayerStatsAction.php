@@ -13,7 +13,7 @@ class GetEventPlayerStatsAction
     /**
      * Calculate wins/draws/losses/games stats for every participant of an event.
      *
-     * @return Collection<int, array{player: User, wins: int, draws: int, losses: int, games: int, last_game_at: Carbon|null}>
+     * @return Collection<int, array{player: User, wins: int, draws: int, losses: int, games: int, sets_won: int, sets_lost: int, points_scored: int, points_allowed: int, duration_seconds: int, last_game_at: Carbon|null}>
      */
     public function execute(Event $event): Collection
     {
@@ -27,12 +27,17 @@ class GetEventPlayerStatsAction
         $stats = $players->mapWithKeys(function (User $user): array {
             return [
                 $user->id => [
-                    'player'       => $user,
-                    'wins'         => 0,
-                    'draws'        => 0,
-                    'losses'       => 0,
-                    'games'        => 0,
-                    'last_game_at' => null,
+                    'player'           => $user,
+                    'wins'             => 0,
+                    'draws'            => 0,
+                    'losses'           => 0,
+                    'games'            => 0,
+                    'sets_won'         => 0,
+                    'sets_lost'        => 0,
+                    'points_scored'    => 0,
+                    'points_allowed'   => 0,
+                    'duration_seconds' => 0,
+                    'last_game_at'     => null,
                 ],
             ];
         });
@@ -51,6 +56,25 @@ class GetEventPlayerStatsAction
 
                 $row = $stats->get($playerId);
                 $row['games'] += 1;
+
+                $isPlayerOne = (int) $playerId === (int) $game->player_one_id;
+
+                $row['sets_won'] += $isPlayerOne ? $result['player_one_wins'] : $result['player_two_wins'];
+                $row['sets_lost'] += $isPlayerOne ? $result['player_two_wins'] : $result['player_one_wins'];
+
+                foreach ($game->sets as $set) {
+                    if (! is_numeric($set->player_one_score) || ! is_numeric($set->player_two_score)) {
+                        continue;
+                    }
+
+                    $playerOneScore = (int) $set->player_one_score;
+                    $playerTwoScore = (int) $set->player_two_score;
+
+                    $row['points_scored'] += $isPlayerOne ? $playerOneScore : $playerTwoScore;
+                    $row['points_allowed'] += $isPlayerOne ? $playerTwoScore : $playerOneScore;
+                }
+
+                $row['duration_seconds'] += (int) ($game->duration_seconds ?? 0);
 
                 if ($result['is_draw']) {
                     $row['draws'] += 1;

@@ -28,6 +28,7 @@ Route::middleware('auth')->group(function (): void {
 
 Route::get('/', HomeController::class)->name('home');
 Route::view('/matches', 'matches')->name('matches.index');
+Route::view('/stats', 'stats')->name('stats.index');
 Route::view('/rounds', 'rounds')->name('rounds.index');
 Route::view('/rounds/create', 'rounds-create')
     ->middleware(['auth', 'verified', EnsureUserIsAdmin::class])
