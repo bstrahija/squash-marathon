@@ -3,7 +3,7 @@
     'schedulesByGroup' => collect(),
 ])
 
-<div class="mb-6">
+<div class="mb-6" wire:poll.30s>
     <p class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Raspored</p>
     <h2 class="mt-2 font-display text-2xl font-semibold text-foreground">Planirani mečevi</h2>
 
@@ -21,13 +21,16 @@
                 @else
                     <div class="divide-y divide-border/50">
                         @foreach ($groupSchedules as $schedule)
+                            @php($isLive = (bool) $schedule->game?->isLive())
                             <div
-                                class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 py-2 first:pt-0 last:pb-0">
+                                class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 py-2 first:pt-0 last:pb-0 {{ $isLive ? 'rounded-lg bg-emerald-500/10 px-2' : '' }}">
                                 <span class="truncate text-sm font-semibold text-foreground">
                                     {{ $schedule->playerOne?->short_name ?? ($schedule->playerOne?->full_name ?? '—') }}
                                 </span>
                                 <span
-                                    class="text-center text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">vs</span>
+                                    class="text-center text-xs font-semibold uppercase tracking-[0.16em] {{ $isLive ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground' }}">
+                                    {{ $isLive ? 'LIVE' : 'vs' }}
+                                </span>
                                 <span class="truncate text-right text-sm font-semibold text-foreground">
                                     {{ $schedule->playerTwo?->short_name ?? ($schedule->playerTwo?->full_name ?? '—') }}
                                 </span>

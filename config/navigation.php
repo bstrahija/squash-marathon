@@ -24,6 +24,10 @@ return [
                 'label' => 'Poredak',
                 'route' => 'stats.index',
             ],
+            [
+                'label' => 'Raspored',
+                'route' => 'schedule.index',
+            ],
         ],
         'cta' => [
             'label' => 'Live',

@@ -63,10 +63,11 @@ new class extends Component {
         }
 
         return GameSchedule::query()
-            ->with(['playerOne', 'playerTwo'])
+            ->with(['playerOne', 'playerTwo', 'game'])
             ->where('round_id', $this->roundId)
             ->orderBy('id')
             ->get()
+            ->reject(fn(GameSchedule $schedule): bool => (bool) $schedule->game?->isFinished())
             ->groupBy('group_id');
     }
 

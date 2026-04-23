@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\SocialiteAuthenticatedSessionController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ScheduleController;
 use App\Http\Middleware\EnsureUserCanManageMatches;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use Illuminate\Support\Facades\Route;
@@ -27,6 +28,7 @@ Route::middleware('auth')->group(function (): void {
 });
 
 Route::get('/', HomeController::class)->name('home');
+Route::get('/schedule', ScheduleController::class)->name('schedule.index');
 Route::view('/matches', 'matches')->name('matches.index');
 Route::view('/stats', 'stats')->name('stats.index');
 Route::view('/rounds', 'rounds')->name('rounds.index');
