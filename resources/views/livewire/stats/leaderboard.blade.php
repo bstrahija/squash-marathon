@@ -251,16 +251,21 @@ new class extends Component {
                                     <span class="hidden sm:inline">{{ $row['name'] }}</span>
                                 @endif
                             </td>
-                            <td class="w-14 bg-card px-2 py-3 font-semibold text-foreground">{{ $row['points'] }}</td>
-                            <td class="w-14 bg-card px-2 py-3 text-muted-foreground">{{ $row['matches'] }}</td>
-                            <td class="w-14 bg-card px-2 py-3 text-muted-foreground">{{ $row['wins'] }}</td>
-                            <td class="w-14 bg-card px-2 py-3 text-muted-foreground">{{ $row['draws'] }}</td>
-                            <td class="w-14 bg-card px-2 py-3 text-muted-foreground">{{ $row['losses'] }}</td>
-                            <td class="w-18 bg-card px-2 py-3 text-muted-foreground">
+                            <td class="w-14 bg-card px-2 py-3 font-semibold text-foreground z-10 relative">
+                                {{ $row['points'] }}</td>
+                            <td class="w-14 bg-card px-2 py-3 text-muted-foreground z-10 relative">{{ $row['matches'] }}
+                            </td>
+                            <td class="w-14 bg-card px-2 py-3 text-muted-foreground z-10 relative">{{ $row['wins'] }}
+                            </td>
+                            <td class="w-14 bg-card px-2 py-3 text-muted-foreground z-10 relative">{{ $row['draws'] }}
+                            </td>
+                            <td class="w-14 bg-card px-2 py-3 text-muted-foreground z-10 relative">{{ $row['losses'] }}
+                            </td>
+                            <td class="w-18 bg-card px-2 py-3 text-muted-foreground z-10 relative">
                                 {{ $row['sets_won'] }}/{{ $row['sets_lost'] }}</td>
-                            <td class="w-20 bg-card px-2 py-3 text-muted-foreground">
+                            <td class="w-20 bg-card px-2 py-3 text-muted-foreground z-10 relative">
                                 {{ $row['points_scored'] }}/{{ $row['points_allowed'] }}</td>
-                            <td class="w-20 bg-card px-2 py-3 text-muted-foreground">
+                            <td class="w-20 bg-card px-2 py-3 text-muted-foreground z-10 relative">
                                 {{ $this->formatDuration((int) $row['duration_seconds']) }}</td>
                         </tr>
                     @empty
