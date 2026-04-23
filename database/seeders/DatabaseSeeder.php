@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             RoundSeeder::class,
             GroupSeeder::class,
             GameSeeder::class,
+            GameScheduleSeeder::class,
             GameLogSeeder::class,
         ]);
     }
