@@ -63,7 +63,12 @@ new class extends Component {
         }
 
         return GameSchedule::query()
-            ->with(['playerOne', 'playerTwo', 'game'])
+            ->with([
+                'playerOne',
+                'playerTwo',
+                'game.sets',
+                'game.gameLogs' => fn ($query) => $query->orderBy('sequence'),
+            ])
             ->where('round_id', $this->roundId)
             ->orderBy('id')
             ->get()

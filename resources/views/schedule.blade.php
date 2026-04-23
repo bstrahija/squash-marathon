@@ -13,12 +13,6 @@
     </x-slot:background>
 
     <section class="scroll-mt-24">
-        @if ($groups->isEmpty())
-            <div class="rounded-2xl border border-border/70 bg-card/50 p-4 text-sm text-muted-foreground">
-                Trenutno nema aktivne runde s grupama za prikaz rasporeda.
-            </div>
-        @else
-            <x-rounds.schedule-overview :groups="$groups" :schedules-by-group="$schedulesByGroup" />
-        @endif
+        <livewire:schedule-overview link-to-scoring />
     </section>
 </x-layouts.public-page>
