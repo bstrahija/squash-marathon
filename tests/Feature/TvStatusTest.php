@@ -85,11 +85,13 @@ test('tv event end countdown component shows remaining time and end time', funct
         'end_at'   => $now->copy()->addHour(),
     ]);
 
+    $expectedEndTime = $now->copy()->addHour()->setTimezone(config('app.display_timezone'))->format('H:i');
+
     Livewire::test('tv.event-end-countdown')
         ->assertSee('Event End Countdown')
         ->assertSee('Maraton 2026')
         ->assertSee('01:00:00')
-        ->assertSee('21:00');
+        ->assertSee($expectedEndTime);
 
     Carbon::setTestNow();
 });
@@ -104,12 +106,14 @@ test('tv event end countdown component shows duration and start time when event 
         'end_at'   => $now->copy()->addHours(26),
     ]);
 
+    $expectedStartTime = $now->copy()->addHours(2)->setTimezone(config('app.display_timezone'))->format('H:i');
+
     Livewire::test('tv.event-end-countdown')
         ->assertSee('Countdown do kraja')
         ->assertSeeHtml('Maraton 2026')
         ->assertSee('24:00:00')
         ->assertSee('Počinje')
-        ->assertSee('10:00');
+        ->assertSee($expectedStartTime);
 
     Carbon::setTestNow();
 });
@@ -125,13 +129,17 @@ test('tv event end countdown shows Croatian day and month when event starts on a
         'end_at'   => Carbon::create(2026, 4, 20, 9, 0, 0),
     ]);
 
+    $expectedStartTime = Carbon::create(2026, 4, 19, 9, 0, 0)
+        ->setTimezone(config('app.display_timezone'))
+        ->format('H:i');
+
     Livewire::test('tv.event-end-countdown')
         ->assertSee('Countdown do kraja')
         ->assertSee('24:00:00')
         ->assertSee('Počinje')
         ->assertSee('nedjelja')
         ->assertSee('travnja')
-        ->assertSee('09:00');
+        ->assertSee($expectedStartTime);
 
     Carbon::setTestNow();
 });
@@ -146,9 +154,11 @@ test('event countdown livewire component renders event details', function () {
         'end_at'   => $now->copy()->addMinutes(30),
     ]);
 
+    $expectedEndTime = $now->copy()->addMinutes(30)->setTimezone(config('app.display_timezone'))->format('H:i');
+
     Livewire::test('event-countdown')
         ->assertSee('Maraton 2026')
-        ->assertSee('20:30');
+        ->assertSee($expectedEndTime);
 
     Carbon::setTestNow();
 });
@@ -190,11 +200,13 @@ test('latest games livewire component shows recent games', function () {
         'updated_at'       => $gameTime,
     ]);
 
+    $expectedGameTime = $gameTime->copy()->setTimezone(config('app.display_timezone'))->format('H:i');
+
     Livewire::test('latest-games')
         ->assertSee($playerOne->short_name)
         ->assertSee($playerTwo->short_name)
         ->assertSee('11-6')
-        ->assertSee('19:50');
+        ->assertSee($expectedGameTime);
 });
 
 test('tv leaderboard livewire component shows all event players', function () {

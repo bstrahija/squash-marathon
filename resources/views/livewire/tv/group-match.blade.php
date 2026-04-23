@@ -7,8 +7,7 @@ use App\Models\GameSet;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     use HasGameDisplayHelpers;
 
     public int $groupNumber = 1;
@@ -23,21 +22,21 @@ new class extends Component
     {
         $event = Event::current();
 
-        if (! $event) {
+        if (!$event) {
             return null;
         }
 
         $games = Game::query()
-            ->with(['sets', 'playerOne', 'playerTwo', 'group', 'gameLogs' => fn ($query) => $query->orderBy('sequence')])
+            ->with(['sets', 'playerOne', 'playerTwo', 'group', 'gameLogs' => fn($query) => $query->orderBy('sequence')])
             ->where('event_id', $event->id)
-            ->whereHas('group', fn ($query) => $query->where('number', $this->groupNumber))
+            ->whereHas('group', fn($query) => $query->where('number', $this->groupNumber))
             ->get();
 
         if ($games->isEmpty()) {
             return null;
         }
 
-        $liveGame = $games->filter(fn (Game $game): bool => $this->isLiveGame($game))->sortByDesc('id')->first();
+        $liveGame = $games->filter(fn(Game $game): bool => $this->isLiveGame($game))->sortByDesc('id')->first();
 
         if ($liveGame) {
             return $this->mapGame($liveGame);
@@ -45,7 +44,7 @@ new class extends Component
 
         $latestGame = $games->sortByDesc('id')->first();
 
-        if (! $latestGame) {
+        if (!$latestGame) {
             return null;
         }
 
@@ -55,45 +54,46 @@ new class extends Component
     private function mapGame(Game $game): array
     {
         $orderedSets = $game->sets->sortBy('created_at')->values();
-        $latestSet   = $orderedSets->last();
-        $latestLog   = $game->gameLogs->last();
+        $latestSet = $orderedSets->last();
+        $latestLog = $game->gameLogs->last();
 
         $result = $game->resultFromSets();
 
-        $isLive     = $this->isLiveGame($game);
+        $isLive = $this->isLiveGame($game);
         $isFinished = $this->isFinishedGame($game);
-        $isDraw     = (bool) ($result['is_complete'] && $result['is_draw']);
-        $winnerId   = $result['winner_id'] ?? null;
+        $isDraw = (bool) ($result['is_complete'] && $result['is_draw']);
+        $winnerId = $result['winner_id'] ?? null;
 
         return [
-            'id'                 => $game->id,
-            'score_url'          => route('matches.score', $game),
-            'group_name'         => $game->group?->name ?? "Group {$this->groupNumber}",
-            'player_one'         => $game->playerOne?->short_name ?? 'Igrac 1',
-            'player_two'         => $game->playerTwo?->short_name ?? 'Igrac 2',
-            'player_one_full'    => $game->playerOne?->full_name ?? 'Igrac 1',
-            'player_two_full'    => $game->playerTwo?->full_name ?? 'Igrac 2',
+            'id' => $game->id,
+            'score_url' => route('matches.score', $game),
+            'group_name' => $game->group?->name ?? "Group {$this->groupNumber}",
+            'player_one' => $game->playerOne?->short_name ?? 'Igrac 1',
+            'player_two' => $game->playerTwo?->short_name ?? 'Igrac 2',
+            'player_one_full' => $game->playerOne?->full_name ?? 'Igrac 1',
+            'player_two_full' => $game->playerTwo?->full_name ?? 'Igrac 2',
             'player_one_current' => (int) ($latestLog?->player_one_score ?? ($latestSet?->player_one_score ?? 0)),
             'player_two_current' => (int) ($latestLog?->player_two_score ?? ($latestSet?->player_two_score ?? 0)),
-            'sets_one'           => $result['player_one_wins'],
-            'sets_two'           => $result['player_two_wins'],
-            'timeline'           => $orderedSets
-                ->filter(fn (GameSet $set): bool => filled($set->player_one_score) && filled($set->player_two_score))
+            'sets_one' => $result['player_one_wins'],
+            'sets_two' => $result['player_two_wins'],
+            'timeline' => $orderedSets
+                ->filter(fn(GameSet $set): bool => filled($set->player_one_score) && filled($set->player_two_score))
                 ->map(
-                    fn (GameSet $set): array => [
-                        'id'    => $set->id,
+                    fn(GameSet $set): array => [
+                        'id' => $set->id,
                         'score' => "{$set->player_one_score}:{$set->player_two_score}",
                     ],
                 )
                 ->all(),
-            'duration'            => $this->matchDurationLabel($game, $isLive),
-            'started_at_ts'       => $game->started_at?->timestamp,
-            'is_live'             => $isLive,
-            'status'              => $isLive ? 'UŽIVO' : ($isFinished ? 'ZAVRŠENO' : 'NA ČEKANJU'),
-            'status_class'        => $isLive ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : ($isFinished ? 'bg-sky-500/15 text-sky-600 dark:text-sky-400' : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'),
+            'duration' => $this->matchDurationLabel($game, $isLive),
+            'started_at_ts' => $game->started_at?->timestamp,
+            'finished_at_ts' => $game->finished_at?->timestamp,
+            'is_live' => $isLive,
+            'status' => $isLive ? 'UŽIVO' : ($isFinished ? 'ZAVRŠENO' : 'NA ČEKANJU'),
+            'status_class' => $isLive ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : ($isFinished ? 'bg-sky-500/15 text-sky-600 dark:text-sky-400' : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'),
             'status_effect_class' => $isLive ? 'tv-group-status-live' : '',
-            'player_one_class'    => $this->playerClass($game->player_one_id, $winnerId, $isDraw),
-            'player_two_class'    => $this->playerClass($game->player_two_id, $winnerId, $isDraw),
+            'player_one_class' => $this->playerClass($game->player_one_id, $winnerId, $isDraw),
+            'player_two_class' => $this->playerClass($game->player_two_id, $winnerId, $isDraw),
         ];
     }
 
@@ -118,7 +118,7 @@ new class extends Component
     $match = $this->match;
 @endphp
 
-<div class="tv-group-match flex h-full min-h-0 flex-col" wire:poll.3s>
+<div class="tv-group-match flex h-full min-h-0 flex-col" wire:poll.keep-alive.3s>
     @if ($match)
         <a href="{{ $match['score_url'] }}" aria-label="Open match score"
             class="tv-group-grid grid h-full min-h-0 flex-1 items-stretch overflow-hidden bg-background/35 transition-colors hover:bg-background/50 focus-visible:bg-background/50 focus-visible:outline-none">
@@ -137,39 +137,103 @@ new class extends Component
                     {{ $match['group_name'] }}
                 </p>
                 <p class="tv-group-duration inline-flex items-center gap-1.5 text-muted-foreground text-xs"
+                    data-started-at-ts="{{ $match['started_at_ts'] ?? '' }}"
+                    data-finished-at-ts="{{ $match['finished_at_ts'] ?? '' }}"
+                    data-is-live="{{ $match['is_live'] ? '1' : '0' }}" data-duration-label="{{ $match['duration'] }}"
                     x-data="{
-                        startedAtTs: {{ $match['started_at_ts'] ?? 'null' }},
-                        isLive: {{ $match['is_live'] ? 'true' : 'false' }},
+                        startedAtTs: null,
+                        finishedAtTs: null,
+                        isLive: false,
                         now: Math.floor(Date.now() / 1000),
+                        intervalId: null,
+                        observer: null,
+                        durationLabel: '—',
                         get elapsed() {
-                            if (!this.isLive || this.startedAtTs === null) return null;
+                            if (!this.isLive || this.startedAtTs === null || this.finishedAtTs !== null) {
+                                return null;
+                            }
+                    
                             return Math.max(0, this.now - this.startedAtTs);
                         },
                         formatDuration(totalSeconds) {
                             if (totalSeconds === null || totalSeconds <= 0) {
                                 return '—';
                             }
-
+                    
                             const hours = Math.floor(totalSeconds / 3600);
                             const minutes = Math.floor((totalSeconds % 3600) / 60);
                             const remainingSeconds = totalSeconds % 60;
-
+                    
                             if (hours > 0) {
                                 return `${hours}:${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
                             }
-
+                    
                             return `${minutes}:${String(remainingSeconds).padStart(2, '0')}`;
                         },
-                    }"
-                    x-init="
-                        const _key = '_tvTick' + {{ $groupNumber }};
-                        if (window[_key]) clearInterval(window[_key]);
-                        if (isLive && startedAtTs !== null) {
-                            window[_key] = setInterval(() => { now = Math.floor(Date.now() / 1000); }, 1000);
-                        }
-                    ">
+                        startTick() {
+                            if (this.intervalId !== null) {
+                                return;
+                            }
+                    
+                            if (!this.isLive || this.startedAtTs === null || this.finishedAtTs !== null) {
+                                return;
+                            }
+                    
+                            this.intervalId = window.setInterval(() => {
+                                this.now = Math.floor(Date.now() / 1000);
+                    
+                                if (!this.isLive || this.finishedAtTs !== null) {
+                                    this.stopTick();
+                                }
+                            }, 1000);
+                        },
+                        stopTick() {
+                            if (this.intervalId === null) {
+                                return;
+                            }
+                    
+                            window.clearInterval(this.intervalId);
+                            this.intervalId = null;
+                        },
+                        teardown() {
+                            this.stopTick();
+                    
+                            if (this.observer !== null) {
+                                this.observer.disconnect();
+                                this.observer = null;
+                            }
+                        },
+                        syncFromServer() {
+                            const startedAtRaw = this.$el.dataset.startedAtTs;
+                            const parsedStartedAt = startedAtRaw === '' ? null : Number(startedAtRaw);
+                            const finishedAtRaw = this.$el.dataset.finishedAtTs;
+                            const parsedFinishedAt = finishedAtRaw === '' ? null : Number(finishedAtRaw);
+                    
+                            this.startedAtTs = Number.isNaN(parsedStartedAt) ? null : parsedStartedAt;
+                            this.finishedAtTs = Number.isNaN(parsedFinishedAt) ? null : parsedFinishedAt;
+                            this.isLive = this.$el.dataset.isLive === '1' && this.finishedAtTs === null;
+                            this.durationLabel = this.$el.dataset.durationLabel || '—';
+                    
+                            if (this.isLive && this.startedAtTs !== null) {
+                                this.startTick();
+                            } else {
+                                this.stopTick();
+                            }
+                        },
+                        init() {
+                            this.syncFromServer();
+                    
+                            this.observer = new MutationObserver(() => this.syncFromServer());
+                            this.observer.observe(this.$el, {
+                                attributes: true,
+                                attributeFilter: ['data-started-at-ts', 'data-finished-at-ts', 'data-is-live', 'data-duration-label'],
+                            });
+                    
+                            this.$el.addEventListener('alpine:destroy', () => this.teardown(), { once: true });
+                        },
+                    }" x-init="init()">
                     <x-heroicon-o-clock class="h-4 w-4" aria-hidden="true" />
-                    <span x-show="!isLive" x-cloak>{{ $match['duration'] }}</span>
+                    <span x-show="!isLive" x-cloak x-text="durationLabel"></span>
                     <span x-show="isLive" x-cloak x-text="formatDuration(elapsed)"></span>
                 </p>
                 <span
