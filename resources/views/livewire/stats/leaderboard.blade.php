@@ -21,7 +21,7 @@ new class extends Component {
 
     public function sortByColumn(string $column): void
     {
-        if (!in_array($column, ['points', 'matches', 'wins', 'draws', 'losses', 'sets_won', 'points_scored', 'duration_seconds'], true)) {
+        if (!in_array($column, ['points', 'matches', 'wins', 'draws', 'losses', 'sets_difference', 'points_difference', 'duration_seconds'], true)) {
             return;
         }
 
@@ -45,7 +45,21 @@ new class extends Component {
         }
 
         if ($this->groupNumber !== null) {
-            return app(GetGroupStandingsAction::class)->execute($event, $this->groupNumber)['rows'];
+            return collect(app(GetGroupStandingsAction::class)->execute($event, $this->groupNumber)['rows'])
+                ->map(function (array $row): array {
+                    $setsWon = (int) ($row['sets_won'] ?? 0);
+                    $setsLost = (int) ($row['sets_lost'] ?? 0);
+                    $pointsScored = (int) ($row['points_scored'] ?? 0);
+                    $pointsAllowed = (int) ($row['points_allowed'] ?? 0);
+
+                    return [
+                        ...$row,
+                        'sets_difference' => $setsWon - $setsLost,
+                        'points_difference' => $pointsScored - $pointsAllowed,
+                    ];
+                })
+                ->values()
+                ->all();
         }
 
         return app(GetEventPlayerStatsAction::class)
@@ -62,8 +76,10 @@ new class extends Component {
                     'losses' => $row['losses'],
                     'sets_won' => $row['sets_won'],
                     'sets_lost' => $row['sets_lost'],
+                    'sets_difference' => (int) $row['sets_won'] - (int) $row['sets_lost'],
                     'points_scored' => $row['points_scored'],
                     'points_allowed' => $row['points_allowed'],
+                    'points_difference' => (int) $row['points_scored'] - (int) $row['points_allowed'],
                     'duration_seconds' => $row['duration_seconds'],
                     'points' => $row['wins'] * 3 + $row['draws'] * 2 + $row['losses'],
                 ],
@@ -181,11 +197,11 @@ new class extends Component {
                             </button>
                         </th>
                         <th class="w-18 bg-card px-2 py-3 z-10 relative">
-                            <button type="button" wire:click="sortByColumn('sets_won')"
+                            <button type="button" wire:click="sortByColumn('sets_difference')"
                                 class="inline-flex items-center gap-1 font-semibold cursor-pointer whitespace-nowrap">
                                 S
                                 <span class="inline-flex h-3.5 w-3.5 items-center justify-center">
-                                    @if ($sortBy === 'sets_won')
+                                    @if ($sortBy === 'sets_difference')
                                         @if ($sortDirection === 'asc')
                                             <x-heroicon-o-chevron-up class="w-3.5 h-3.5" />
                                         @else
@@ -196,11 +212,11 @@ new class extends Component {
                             </button>
                         </th>
                         <th class="w-20 bg-card px-2 py-3 z-10 relative">
-                            <button type="button" wire:click="sortByColumn('points_scored')"
+                            <button type="button" wire:click="sortByColumn('points_difference')"
                                 class="inline-flex items-center gap-1 font-semibold cursor-pointer whitespace-nowrap">
                                 P
                                 <span class="inline-flex h-3.5 w-3.5 items-center justify-center">
-                                    @if ($sortBy === 'points_scored')
+                                    @if ($sortBy === 'points_difference')
                                         @if ($sortDirection === 'asc')
                                             <x-heroicon-o-chevron-up class="w-3.5 h-3.5" />
                                         @else
@@ -261,9 +277,11 @@ new class extends Component {
                             <td class="w-14 bg-card px-2 py-3 text-muted-foreground z-10 relative">{{ $row['losses'] }}
                             </td>
                             <td class="w-18 bg-card px-2 py-3 text-muted-foreground z-10 relative">
-                                {{ $row['sets_won'] }}/{{ $row['sets_lost'] }}</td>
+                                {{ sprintf('%+d', (int) $row['sets_difference']) }} ({{ $row['sets_won'] }}/{{ $row['sets_lost'] }})
+                            </td>
                             <td class="w-20 bg-card px-2 py-3 text-muted-foreground z-10 relative">
-                                {{ $row['points_scored'] }}/{{ $row['points_allowed'] }}</td>
+                                {{ sprintf('%+d', (int) $row['points_difference']) }} ({{ $row['points_scored'] }}/{{ $row['points_allowed'] }})
+                            </td>
                             <td class="w-20 bg-card px-2 py-3 text-muted-foreground z-10 relative">
                                 {{ $this->formatDuration((int) $row['duration_seconds']) }}</td>
                         </tr>
