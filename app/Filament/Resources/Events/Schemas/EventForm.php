@@ -24,10 +24,12 @@ class EventForm
                     ->maxLength(255),
                 DateTimePicker::make('start_at')
                     ->label('Starts at')
+                    ->timezone(config('app.display_timezone'))
                     ->seconds(false)
                     ->required(),
                 DateTimePicker::make('end_at')
                     ->label('Ends at')
+                    ->timezone(config('app.display_timezone'))
                     ->seconds(false)
                     ->after('start_at')
                     ->required(),

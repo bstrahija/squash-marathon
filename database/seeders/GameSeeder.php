@@ -11,6 +11,14 @@ use Illuminate\Support\Carbon;
 
 class GameSeeder extends Seeder
 {
+    private const MATCH_MIN_DURATION_SECONDS = 420;
+
+    private const MATCH_MAX_DURATION_SECONDS = 720;
+
+    private const SET_MIN_DURATION_SECONDS = 120;
+
+    private const SET_MAX_DURATION_SECONDS = 420;
+
     /**
      * Run the database seeds.
      */
@@ -83,7 +91,7 @@ class GameSeeder extends Seeder
                 $createdAt      = Carbon::createFromTimestamp(
                     random_int($segmentStart, $segmentEndSafe)
                 );
-                $gameDurationSeconds = random_int(900, 2700);
+                $gameDurationSeconds = random_int(self::MATCH_MIN_DURATION_SECONDS, self::MATCH_MAX_DURATION_SECONDS);
                 $gameStartedAt       = $createdAt->copy();
                 $gameFinishedAt      = $gameStartedAt->copy()->addSeconds($gameDurationSeconds);
 
@@ -114,10 +122,23 @@ class GameSeeder extends Seeder
                 foreach ($setWinners as $setIndex => $playerOneWins) {
                     $scores = $this->generateSetScores($playerOneWins);
 
-                    $minimumSeconds     = 240;
-                    $maxForSet          = max($minimumSeconds, $remainingSeconds - ($minimumSeconds * ($setCount - $setIndex - 1)));
+                    $setsLeftAfterCurrent = $setCount - $setIndex - 1;
+
+                    $minimumSeconds = max(
+                        self::SET_MIN_DURATION_SECONDS,
+                        $remainingSeconds - (self::SET_MAX_DURATION_SECONDS * $setsLeftAfterCurrent),
+                    );
+                    $maxForSet = min(
+                        self::SET_MAX_DURATION_SECONDS,
+                        $remainingSeconds - (self::SET_MIN_DURATION_SECONDS * $setsLeftAfterCurrent),
+                    );
+
+                    if ($maxForSet < $minimumSeconds) {
+                        $maxForSet = $minimumSeconds;
+                    }
+
                     $setDurationSeconds = $setIndex === $setCount - 1
-                        ? max($minimumSeconds, $remainingSeconds)
+                        ? max(self::SET_MIN_DURATION_SECONDS, $remainingSeconds)
                         : random_int($minimumSeconds, $maxForSet);
 
                     $setFinishedAt = $setStartAt->copy()->addSeconds($setDurationSeconds);
@@ -214,7 +235,7 @@ class GameSeeder extends Seeder
                 'updated_at'       => $createdAt,
             ]);
 
-            $firstSetDurationSeconds = random_int(360, 900);
+            $firstSetDurationSeconds = random_int(210, 420);
             $firstSetStartedAt       = $startedAt->copy();
             $firstSetFinishedAt      = $firstSetStartedAt->copy()->addSeconds($firstSetDurationSeconds);
             $firstSetScores          = $this->generateSetScores((bool) random_int(0, 1));

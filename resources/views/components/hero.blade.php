@@ -1,3 +1,7 @@
+@php
+    $eventStartLocal = \App\Models\Event::current()?->start_at?->setTimezone(config('app.display_timezone'));
+@endphp
+
 <section class="grid items-center gap-10 lg:grid-cols-[1.2fr_0.8fr]">
     <div class="space-y-6">
         <div
@@ -7,7 +11,7 @@
                 Squash Arena Čakovec
             </a> <span
                 class="rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-amber-700 dark:text-amber-300">
-                24. travnja, 17:00</span>
+                {{ $eventStartLocal?->locale('hr')->translatedFormat('j. F, H:i') ?? '24. travnja, 17:00' }}</span>
             <span class="rounded-full border border-sky-400/40 bg-sky-400/10 px-3 py-1 text-sky-700 dark:text-sky-300">24
                 sata</span>
         </div>

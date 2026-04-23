@@ -16,14 +16,17 @@ return [
                 'route' => 'rounds.index',
             ],
             [
-                'label' => 'Ekipa',
-                'route' => 'home',
+                'label'    => 'Ekipa',
+                'route'    => 'home',
                 'fragment' => 'participants',
             ],
             [
                 'label' => 'Poredak',
-                'route' => 'home',
-                'fragment' => 'leaderboard',
+                'route' => 'stats.index',
+            ],
+            [
+                'label' => 'Raspored',
+                'route' => 'schedule.index',
             ],
         ],
         'cta' => [

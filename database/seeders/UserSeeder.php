@@ -46,13 +46,13 @@ class UserSeeder extends Seeder
             ['first_name' => 'Andrija', 'last_name' => 'Munđar', 'email' => 'andrija.mundar@example.com', 'is_admin' => false],
             ['first_name' => 'Tomislav', 'last_name' => 'Pavlic', 'email' => 'tomislav.pavlic@example.com', 'is_admin' => false],
             ['first_name' => 'Damjan', 'last_name' => 'Petričević', 'email' => 'damjan.petricevic@example.com', 'is_admin' => false],
-            ['first_name' => 'Predrag', 'last_name' => 'Rojko', 'email' => 'predrag.rojko@example.com', 'is_admin' => false],
             ['first_name' => 'Dalibor', 'last_name' => 'Strišković', 'email' => 'dalibor.striskovic@example.com', 'is_admin' => false],
             ['first_name' => 'Darko', 'last_name' => 'Terek', 'email' => 'darko.terek@example.com', 'is_admin' => false],
             ['first_name' => 'Matija', 'last_name' => 'Terek', 'email' => 'matija.terek@example.com', 'is_admin' => false],
             ['first_name' => 'Igor', 'last_name' => 'Vibović', 'email' => 'igor.vibovic@example.com', 'is_admin' => false],
             ['first_name' => 'Ivan', 'last_name' => 'Zlatarek', 'email' => 'ivan.zlatarek@example.com', 'is_admin' => false],
-            ['first_name' => 'Krešimir', 'last_name' => 'Zvonarek', 'email' => 'kresimir.zvonarek@example.com', 'is_admin' => false],
+            ['first_name' => 'Nebojša', 'last_name' => 'Mikulić', 'email' => 'nebojsa.mikulic@example.com', 'is_admin' => false],
+            ['first_name' => 'Boris', 'last_name' => 'Bistrović', 'email' => 'boris.bistrovic@example.com', 'is_admin' => false],
             ['first_name' => 'Vedran', 'last_name' => 'Žbulj', 'email' => 'vedran.zbulj@gmail.com', 'is_admin' => true],
         ];
 

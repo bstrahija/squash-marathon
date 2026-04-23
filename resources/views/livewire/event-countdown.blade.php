@@ -4,26 +4,25 @@ use App\Models\Event;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed]
     public function status(): array
     {
         $event = Event::current();
 
-        if (! $event) {
+        if (!$event) {
             return [
-                'has_event'       => false,
-                'name'            => null,
-                'starts_at'       => null,
-                'ends_at'         => null,
-                'is_over'         => false,
+                'has_event' => false,
+                'name' => null,
+                'starts_at' => null,
+                'ends_at' => null,
+                'is_over' => false,
                 'remaining_label' => null,
             ];
         }
 
-        $now              = now();
-        $endsAt           = $event->end_at;
+        $now = now();
+        $endsAt = $event->end_at;
         $secondsRemaining = $endsAt ? (int) round($now->diffInSeconds($endsAt, false)) : null;
 
         if ($secondsRemaining !== null && $secondsRemaining < 0) {
@@ -31,24 +30,24 @@ new class extends Component
         }
 
         return [
-            'has_event'       => true,
-            'name'            => $event->name,
-            'starts_at'       => $event->start_at,
-            'ends_at'         => $endsAt,
-            'is_over'         => $endsAt ? $now->greaterThanOrEqualTo($endsAt) : false,
+            'has_event' => true,
+            'name' => $event->name,
+            'starts_at' => $event->start_at,
+            'ends_at' => $endsAt,
+            'is_over' => $endsAt ? $now->greaterThanOrEqualTo($endsAt) : false,
             'remaining_label' => $secondsRemaining !== null ? $this->formatDuration($secondsRemaining) : null,
         ];
     }
 
     private function formatDuration(int $seconds): string
     {
-        $seconds          = max(0, $seconds);
-        $hours            = intdiv($seconds, 3600);
-        $minutes          = intdiv($seconds % 3600, 60);
+        $seconds = max(0, $seconds);
+        $hours = intdiv($seconds, 3600);
+        $minutes = intdiv($seconds % 3600, 60);
         $remainingSeconds = $seconds % 60;
 
         if ($hours >= 24) {
-            $days  = intdiv($hours, 24);
+            $days = intdiv($hours, 24);
             $hours = $hours % 24;
 
             return sprintf('%dd %dh %dmin', $days, $hours, $minutes);
@@ -77,17 +76,17 @@ new class extends Component
         </div>
         <div class="flex items-center gap-2">
             <button aria-label="Toggle theme" aria-pressed="false"
-                    class="border-border bg-background/70 text-foreground hover:border-foreground/40 relative flex h-9 w-9 items-center justify-center rounded-full border transition hover:-translate-y-0.5"
-                    data-theme-toggle title="Toggle theme" type="button">
+                class="border-border bg-background/70 text-foreground hover:border-foreground/40 relative flex h-9 w-9 items-center justify-center rounded-full border transition hover:-translate-y-0.5"
+                data-theme-toggle title="Toggle theme" type="button">
                 <x-heroicon-o-sun aria-hidden="true"
-                                  class="absolute inset-0 m-auto h-3.5 w-3.5 scale-100 opacity-100 transition duration-300"
-                                  data-theme-icon="sun" />
+                    class="absolute inset-0 m-auto h-3.5 w-3.5 scale-100 opacity-100 transition duration-300"
+                    data-theme-icon="sun" />
                 <x-heroicon-o-moon aria-hidden="true"
-                                   class="absolute inset-0 m-auto h-3.5 w-3.5 scale-75 opacity-0 transition duration-300"
-                                   data-theme-icon="moon" />
+                    class="absolute inset-0 m-auto h-3.5 w-3.5 scale-75 opacity-0 transition duration-300"
+                    data-theme-icon="moon" />
             </button>
             <span
-                  class="border-border/70 bg-background/70 text-foreground rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em]">
+                class="border-border/70 bg-background/70 text-foreground rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em]">
                 {{ $this->status['is_over'] ? 'Završeno' : 'U tijeku' }}
             </span>
         </div>
@@ -95,7 +94,7 @@ new class extends Component
 
     @if (!$this->status['has_event'])
         <div
-             class="border-border/70 bg-background/70 text-muted-foreground mt-6 rounded-2xl border border-dashed px-4 py-6 text-sm">
+            class="border-border/70 bg-background/70 text-muted-foreground mt-6 rounded-2xl border border-dashed px-4 py-6 text-sm">
             Još nema aktivnog događaja.
         </div>
     @else
@@ -109,10 +108,10 @@ new class extends Component
             <div class="border-border/70 bg-background/70 rounded-2xl border p-4">
                 <p class="text-muted-foreground text-xs font-semibold uppercase tracking-[0.2em]">Vrijeme kraja</p>
                 <p class="font-display text-foreground mt-3 text-3xl font-semibold">
-                    {{ $this->status['ends_at']?->format('H:i') ?? '—' }}
+                    {{ $this->status['ends_at']?->setTimezone(config('app.display_timezone'))->format('H:i') ?? '—' }}
                 </p>
                 <p class="text-muted-foreground mt-1 text-xs">
-                    {{ $this->status['ends_at']?->format('d.m.Y') ?? '—' }}
+                    {{ $this->status['ends_at']?->setTimezone(config('app.display_timezone'))->format('d.m.Y') ?? '—' }}
                 </p>
             </div>
         </div>

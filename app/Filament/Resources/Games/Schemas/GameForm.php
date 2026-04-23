@@ -97,7 +97,7 @@ class GameForm
                     ->dehydrated()
                     ->afterStateUpdated(function (Get $get, Set $set, ?int $state): void {
                         $count = max((int) $state, 1);
-                        $sets = $get('sets') ?? [];
+                        $sets  = $get('sets') ?? [];
 
                         if (! is_array($sets)) {
                             $sets = [];
@@ -140,19 +140,21 @@ class GameForm
                     ->searchable(),
                 DateTimePicker::make('started_at')
                     ->label('Started at')
+                    ->timezone(config('app.display_timezone'))
                     ->seconds(false),
                 DateTimePicker::make('finished_at')
                     ->label('Finished at')
+                    ->timezone(config('app.display_timezone'))
                     ->seconds(false),
                 Repeater::make('sets')
                     ->relationship()
                     ->columns([
                         'default' => 2,
-                        'sm' => 2,
-                        'md' => 2,
-                        'lg' => 2,
-                        'xl' => 2,
-                        '2xl' => 2,
+                        'sm'      => 2,
+                        'md'      => 2,
+                        'lg'      => 2,
+                        'xl'      => 2,
+                        '2xl'     => 2,
                     ])
                     ->itemLabel(function (array $state): string {
                         $setNumber = (int) data_get($state, 'set_number', 0);
@@ -204,8 +206,8 @@ class GameForm
                     ->content(function (Get $get): string {
                         $playerOneId = $get('player_one_id');
                         $playerTwoId = $get('player_two_id');
-                        $bestOf = (int) $get('best_of');
-                        $sets = $get('sets') ?? [];
+                        $bestOf      = (int) $get('best_of');
+                        $sets        = $get('sets') ?? [];
 
                         if (! $playerOneId || ! $playerTwoId) {
                             return 'Select players to calculate the game winner.';
@@ -250,13 +252,13 @@ class GameForm
         $suffix = match ($setNumber % 100) {
             11, 12, 13 => 'th',
             default => match ($setNumber % 10) {
-                1 => 'st',
-                2 => 'nd',
-                3 => 'rd',
+                1       => 'st',
+                2       => 'nd',
+                3       => 'rd',
                 default => 'th',
             },
         };
 
-        return $setNumber.$suffix.' set';
+        return $setNumber . $suffix . ' set';
     }
 }

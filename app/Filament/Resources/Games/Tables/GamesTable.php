@@ -59,6 +59,7 @@ class GamesTable
                     })
                     ->wrap(),
                 TextColumn::make('created_at')
+                    ->timezone(config('app.display_timezone'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -119,7 +120,7 @@ class GamesTable
             return '—';
         }
 
-        $minutes = intdiv($seconds, 60);
+        $minutes          = intdiv($seconds, 60);
         $remainingSeconds = $seconds % 60;
 
         return sprintf('%d:%02d', $minutes, $remainingSeconds);
