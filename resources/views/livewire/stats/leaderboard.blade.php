@@ -52,16 +52,9 @@ new class extends Component {
                     $pointsScored = (int) ($row['points_scored'] ?? 0);
                     $pointsAllowed = (int) ($row['points_allowed'] ?? 0);
 
-                    $payload = [
-                        ...$row,
-                        'sets_difference' => $setsWon - $setsLost,
-                        'points_difference' => $pointsScored - $pointsAllowed,
-                    ];
+                    $payload = [...$row, 'sets_difference' => $setsWon - $setsLost, 'points_difference' => $pointsScored - $pointsAllowed];
 
-                    return [
-                        ...$payload,
-                        'efficiency' => $this->efficiencyFromRow($payload),
-                    ];
+                    return [...$payload, 'efficiency' => $this->efficiencyFromRow($payload)];
                 })
                 ->values()
                 ->all();
@@ -90,10 +83,7 @@ new class extends Component {
                         'points' => $row['wins'] * 3 + $row['draws'] * 2 + $row['losses'],
                     ];
 
-                    return [
-                        ...$payload,
-                        'efficiency' => $this->efficiencyFromRow($payload),
-                    ];
+                    return [...$payload, 'efficiency' => $this->efficiencyFromRow($payload)];
                 })(),
             )
             ->values()
@@ -125,17 +115,17 @@ new class extends Component {
      * Composite efficiency from results, sets, and points.
      *
      * Formula (0-100):
-        * - 45% match points rate
-        * - 27% set win rate
-        * - 18% point win rate
-        * - 10% play-time efficiency
+     * - 45% match points rate
+     * - 27% set win rate
+     * - 18% point win rate
+     * - 10% play-time efficiency
      *
      * Match points rate uses this league's scoring (W=3, D=2, L=1),
      * normalized by max possible points over played matches.
-        *
-        * Play-time efficiency prefers lower average match duration. A 30-minute
-        * average or faster receives full time score; slower averages scale down.
-        * If no duration has been recorded yet, time score is neutral.
+     *
+     * Play-time efficiency prefers lower average match duration. A 30-minute
+     * average or faster receives full time score; slower averages scale down.
+     * If no duration has been recorded yet, time score is neutral.
      *
      * @param  array<string, mixed>  $row
      */
@@ -157,7 +147,7 @@ new class extends Component {
         $durationSeconds = max(0, (int) ($row['duration_seconds'] ?? 0));
 
         $maxMatchPoints = $matches * 3;
-        $earnedMatchPoints = ($wins * 3) + ($draws * 2) + ($losses * 1);
+        $earnedMatchPoints = $wins * 3 + $draws * 2 + $losses * 1;
         $matchRate = $maxMatchPoints > 0 ? $earnedMatchPoints / $maxMatchPoints : 0.0;
 
         $totalSets = $setsWon + $setsLost;
@@ -175,7 +165,7 @@ new class extends Component {
             $timeRate = 0.5;
         }
 
-        return round((($matchRate * 0.45) + ($setRate * 0.27) + ($pointRate * 0.18) + ($timeRate * 0.1)) * 100, 1);
+        return round(($matchRate * 0.45 + $setRate * 0.27 + $pointRate * 0.18 + $timeRate * 0.1) * 100, 1);
     }
 };
 ?>
@@ -355,7 +345,8 @@ new class extends Component {
                             <td class="w-20 bg-card px-2 py-3 text-muted-foreground z-10 relative">
                                 {{ number_format((float) $row['efficiency'], 1) }}%
                             </td>
-                            <td class="w-14 bg-card px-2 py-3 text-muted-foreground z-10 relative">{{ $row['matches'] }}
+                            <td class="w-14 bg-card px-2 py-3 text-muted-foreground z-10 relative">
+                                {{ $row['matches'] }}
                             </td>
                             <td class="w-14 bg-card px-2 py-3 text-muted-foreground z-10 relative">{{ $row['wins'] }}
                             </td>
@@ -364,10 +355,12 @@ new class extends Component {
                             <td class="w-14 bg-card px-2 py-3 text-muted-foreground z-10 relative">{{ $row['losses'] }}
                             </td>
                             <td class="w-18 bg-card px-2 py-3 text-muted-foreground z-10 relative">
-                                {{ sprintf('%+d', (int) $row['sets_difference']) }} ({{ $row['sets_won'] }}/{{ $row['sets_lost'] }})
+                                {{ sprintf('%+d', (int) $row['sets_difference']) }}
+                                ({{ $row['sets_won'] }}/{{ $row['sets_lost'] }})
                             </td>
                             <td class="w-20 bg-card px-2 py-3 text-muted-foreground z-10 relative">
-                                {{ sprintf('%+d', (int) $row['points_difference']) }} ({{ $row['points_scored'] }}/{{ $row['points_allowed'] }})
+                                {{ sprintf('%+d', (int) $row['points_difference']) }}
+                                ({{ $row['points_scored'] }}/{{ $row['points_allowed'] }})
                             </td>
                             <td class="w-20 bg-card px-2 py-3 text-muted-foreground z-10 relative">
                                 {{ $this->formatDuration((int) $row['duration_seconds']) }}</td>

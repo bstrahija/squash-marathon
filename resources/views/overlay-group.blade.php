@@ -20,7 +20,8 @@
     </style>
 </head>
 
-<body class="overflow-hidden" style="background: transparent !important; width: 100vw; height: 100vh; margin: 0; padding: 0;">
+<body class="overflow-hidden"
+    style="background: transparent !important; width: 100vw; height: 100vh; margin: 0; padding: 0;">
     <livewire:overlay.group-match :group-number="$groupNumber" :key="'overlay-group-' . $groupNumber" />
     @livewireScripts
 </body>

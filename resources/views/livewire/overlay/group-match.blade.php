@@ -76,6 +76,7 @@ new class extends Component
             'serves_player_two'  => $isLive && $servingPlayerId !== null && $servingPlayerId === $game->player_two_id,
             'duration'           => $this->matchDurationLabel($game, $isLive),
             'started_at_ts'      => $game->started_at?->timestamp,
+            'finished_at_ts'     => $game->finished_at?->timestamp,
             'is_live'            => $isLive,
             'is_finished'        => $isFinished,
             'status'             => $isLive ? 'UŽIVO' : ($isFinished ? 'ZAVRŠENO' : 'NA ČEKANJU'),
@@ -102,6 +103,7 @@ new class extends Component
         data-score-b="{{ $match['player_two_current'] }}"
         data-is-live="{{ $match['is_live'] ? '1' : '0' }}"
         data-started-at="{{ $match['started_at_ts'] ?? '' }}"
+        data-finished-at="{{ $match['finished_at_ts'] ?? '' }}"
         data-duration="{{ $match['duration'] }}"
     @endif
     x-data="{
@@ -111,10 +113,13 @@ new class extends Component
         currentScoreB: {{ $match['player_two_current'] ?? 0 }},
         isLive: {{ ($match && $match['is_live']) ? 'true' : 'false' }},
         startedAtTs: {{ $match['started_at_ts'] ?? 'null' }},
+        finishedAtTs: {{ $match['finished_at_ts'] ?? 'null' }},
         staticDuration: '{{ $match['duration'] ?? '—' }}',
         now: Math.floor(Date.now() / 1000),
+        intervalId: null,
+        observer: null,
         get elapsed() {
-            if (!this.isLive || this.startedAtTs === null) return null;
+            if (!this.isLive || this.startedAtTs === null || this.finishedAtTs !== null) return null;
             return Math.max(0, this.now - this.startedAtTs);
         },
         formatDuration(totalSeconds) {
@@ -127,46 +132,88 @@ new class extends Component
             }
             return `${minutes}:${String(secs).padStart(2, '0')}`;
         },
-    }"
-    x-init="
-        if (window._overlayTick) clearInterval(window._overlayTick);
-        if (window._overlayObs) window._overlayObs.disconnect();
-
-        window._overlayTick = setInterval(() => { now = Math.floor(Date.now() / 1000); }, 1000);
-
-        window._overlayObs = new MutationObserver((mutations) => {
-            for (const m of mutations) {
-                if (m.attributeName === 'data-score-a') {
-                    const v = Number($el.dataset.scoreA);
-                    if (v !== currentScoreA) {
-                        currentScoreA = v;
-                        flashA = true;
-                        setTimeout(() => { flashA = false; }, 350);
-                    }
-                }
-                if (m.attributeName === 'data-score-b') {
-                    const v = Number($el.dataset.scoreB);
-                    if (v !== currentScoreB) {
-                        currentScoreB = v;
-                        flashB = true;
-                        setTimeout(() => { flashB = false; }, 350);
-                    }
-                }
-                if (m.attributeName === 'data-is-live') {
-                    isLive = $el.dataset.isLive === '1';
-                }
-                if (m.attributeName === 'data-started-at') {
-                    const v = $el.dataset.startedAt;
-                    startedAtTs = v ? Number(v) : null;
-                    now = Math.floor(Date.now() / 1000);
-                }
-                if (m.attributeName === 'data-duration') {
-                    staticDuration = $el.dataset.duration;
-                }
+        startTick() {
+            if (this.intervalId !== null) {
+                return;
             }
-        });
-        window._overlayObs.observe($el, { attributes: true, attributeFilter: ['data-score-a', 'data-score-b', 'data-is-live', 'data-started-at', 'data-duration'] });
-    ">
+
+            if (!this.isLive || this.startedAtTs === null || this.finishedAtTs !== null) {
+                return;
+            }
+
+            this.intervalId = window.setInterval(() => {
+                this.now = Math.floor(Date.now() / 1000);
+
+                if (!this.isLive || this.finishedAtTs !== null) {
+                    this.stopTick();
+                }
+            }, 1000);
+        },
+        stopTick() {
+            if (this.intervalId === null) {
+                return;
+            }
+
+            window.clearInterval(this.intervalId);
+            this.intervalId = null;
+        },
+        syncFromServer() {
+            const scoreA = Number(this.$el.dataset.scoreA);
+            if (!Number.isNaN(scoreA) && scoreA !== this.currentScoreA) {
+                this.currentScoreA = scoreA;
+                this.flashA = true;
+                setTimeout(() => {
+                    this.flashA = false;
+                }, 350);
+            }
+
+            const scoreB = Number(this.$el.dataset.scoreB);
+            if (!Number.isNaN(scoreB) && scoreB !== this.currentScoreB) {
+                this.currentScoreB = scoreB;
+                this.flashB = true;
+                setTimeout(() => {
+                    this.flashB = false;
+                }, 350);
+            }
+
+            const startedAtRaw = this.$el.dataset.startedAt;
+            const parsedStartedAt = startedAtRaw === '' ? null : Number(startedAtRaw);
+            this.startedAtTs = Number.isNaN(parsedStartedAt) ? null : parsedStartedAt;
+
+            const finishedAtRaw = this.$el.dataset.finishedAt;
+            const parsedFinishedAt = finishedAtRaw === '' ? null : Number(finishedAtRaw);
+            this.finishedAtTs = Number.isNaN(parsedFinishedAt) ? null : parsedFinishedAt;
+
+            this.isLive = this.$el.dataset.isLive === '1' && this.finishedAtTs === null;
+            this.staticDuration = this.$el.dataset.duration || '—';
+
+            if (this.isLive && this.startedAtTs !== null) {
+                this.startTick();
+            } else {
+                this.stopTick();
+            }
+        },
+        teardown() {
+            this.stopTick();
+
+            if (this.observer !== null) {
+                this.observer.disconnect();
+                this.observer = null;
+            }
+        },
+        init() {
+            this.syncFromServer();
+
+            this.observer = new MutationObserver(() => this.syncFromServer());
+            this.observer.observe(this.$el, {
+                attributes: true,
+                attributeFilter: ['data-score-a', 'data-score-b', 'data-is-live', 'data-started-at', 'data-finished-at', 'data-duration'],
+            });
+
+            this.$el.addEventListener('alpine:destroy', () => this.teardown(), { once: true });
+        },
+    }"
+    x-init="init()">
     @if ($match)
         <div class="flex w-full max-w-3xl flex-col items-center gap-2">
 
