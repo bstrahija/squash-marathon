@@ -15,6 +15,10 @@
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/favicon-16x16.png') }}" />
     <link rel="icon" type="image/x-icon" href="{{ asset('images/favicon.ico') }}" />
     <link rel="manifest" href="{{ asset('images/site.webmanifest') }}" />
+    @if (config('services.umami.website_id'))
+        <script defer src="https://cloud.umami.is/script.js" data-website-id="{{ config('services.umami.website_id') }}">
+        </script>
+    @endif
     <x-theme-init />
     @vite(['resources/css/app.css', 'resources/js/blade-theme.ts'])
     @livewireStyles

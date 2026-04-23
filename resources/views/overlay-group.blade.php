@@ -5,6 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Overlay - Grupa {{ $groupNumber }}</title>
+    @if (config('services.umami.website_id'))
+        <script defer src="https://cloud.umami.is/script.js" data-website-id="{{ config('services.umami.website_id') }}">
+        </script>
+    @endif
     @vite(['resources/css/app.css', 'resources/js/blade-theme.ts'])
     @livewireStyles
     <style>
@@ -15,7 +19,8 @@
     </style>
 </head>
 
-<body class="overflow-hidden" style="background: transparent !important; width: 100vw; height: 100vh; margin: 0; padding: 0;">
+<body class="overflow-hidden"
+    style="background: transparent !important; width: 100vw; height: 100vh; margin: 0; padding: 0;">
     <livewire:overlay.group-match :group-number="$groupNumber" :key="'overlay-group-' . $groupNumber" />
     @livewireScripts
 </body>
