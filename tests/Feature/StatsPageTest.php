@@ -102,5 +102,12 @@ test('main stats leaderboard can be sorted from header clicks', function () {
         ->assertSeeInOrder([$zulu->full_name, $ana->full_name, $mark->full_name])
         ->call('sortByColumn', 'points_difference')
         ->assertSet('sortDirection', 'asc')
+        ->assertSeeInOrder([$mark->full_name, $ana->full_name, $zulu->full_name])
+        ->call('sortByColumn', 'efficiency')
+        ->assertSet('sortBy', 'efficiency')
+        ->assertSet('sortDirection', 'desc')
+        ->assertSeeInOrder([$zulu->full_name, $ana->full_name, $mark->full_name])
+        ->call('sortByColumn', 'efficiency')
+        ->assertSet('sortDirection', 'asc')
         ->assertSeeInOrder([$mark->full_name, $ana->full_name, $zulu->full_name]);
 });

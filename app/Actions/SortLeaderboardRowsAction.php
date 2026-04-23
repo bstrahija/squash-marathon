@@ -10,7 +10,7 @@ class SortLeaderboardRowsAction
      */
     public function execute(array $rows, string $sortBy, string $sortDirection): array
     {
-        $allowedColumns = ['points', 'wins', 'draws', 'losses', 'matches', 'sets_difference', 'points_difference', 'duration_seconds'];
+        $allowedColumns = ['points', 'efficiency', 'wins', 'draws', 'losses', 'matches', 'sets_difference', 'points_difference', 'duration_seconds'];
         $sortBy         = in_array($sortBy, $allowedColumns, true) ? $sortBy : 'points';
         $sortDirection  = $sortDirection === 'asc' ? 'asc' : 'desc';
 
