@@ -30,7 +30,7 @@ test('tv status page loads', function () {
     $response->assertSee('col-start-2');
     $response->assertSee('Grupa 1');
     $response->assertSee('Grupa 2');
-    $response->assertSeeInOrder(['Event End Countdown', 'Recent Matches']);
+    $response->assertSeeInOrder(['Event End Countdown', 'Raspored']);
 });
 
 test('tv group page shows selected group match from url parameter', function () {
