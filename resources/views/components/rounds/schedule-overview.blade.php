@@ -32,6 +32,9 @@
                             @php($playerTwoPoints = (int) ($latestLog?->player_two_score ?? ($latestSet?->player_two_score ?? 0)))
                             @if ($canLinkToScore)
                                 <a href="{{ route('schedule.play', ['gameSchedule' => $schedule->id]) }}"
+                                    @if (! $schedule->game)
+                                        onclick="return confirm('Otvoriti bodovanje ovog meča? Ako meč još ne postoji, bit će kreiran.')"
+                                    @endif
                                     class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 py-2 first:pt-0 last:pb-0 transition hover:bg-muted/40 {{ $isLive ? 'rounded-lg bg-emerald-500/10 px-2' : '' }}">
                                     <span class="truncate text-sm font-semibold text-foreground">
                                         {{ $schedule->playerOne?->short_name ?? ($schedule->playerOne?->full_name ?? '—') }}

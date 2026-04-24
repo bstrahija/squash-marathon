@@ -182,6 +182,50 @@ test('schedule rows are clickable only for logged in users', function () {
     $authResponse = $this->actingAs($player)->get('/schedule');
     $authResponse->assertSuccessful();
     $authResponse->assertSee(route('schedule.play', ['gameSchedule' => $schedule->id]), false);
+    $authResponse->assertSee("return confirm('Otvoriti bodovanje ovog meča? Ako meč još ne postoji, bit će kreiran.')", false);
+});
+
+test('schedule rows with existing game open directly without confirmation dialog', function () {
+    $this->withoutVite();
+
+    Role::findOrCreate(RoleName::Player->value);
+
+    $player = User::factory()->create();
+    $player->assignRole(RoleName::Player->value);
+
+    $event = Event::factory()->create([
+        'start_at' => now()->subHour(),
+        'end_at'   => now()->addHour(),
+    ]);
+
+    $round = Round::factory()->create([
+        'event_id'  => $event->id,
+        'is_active' => true,
+    ]);
+
+    $group = Group::factory()->create([
+        'event_id' => $event->id,
+        'round_id' => $round->id,
+        'number'   => 1,
+    ]);
+
+    $game = Game::factory()->create([
+        'event_id' => $event->id,
+        'round_id' => $round->id,
+        'group_id' => $group->id,
+    ]);
+
+    $schedule = GameSchedule::factory()->create([
+        'round_id' => $round->id,
+        'group_id' => $group->id,
+        'game_id'  => $game->id,
+    ]);
+
+    $response = $this->actingAs($player)->get('/schedule');
+
+    $response->assertSuccessful();
+    $response->assertSee(route('schedule.play', ['gameSchedule' => $schedule->id]), false);
+    $response->assertDontSee("return confirm('Otvoriti bodovanje ovog meča? Ako meč još ne postoji, bit će kreiran.')", false);
 });
 
 test('schedule play route creates game when missing and redirects to score page', function () {
